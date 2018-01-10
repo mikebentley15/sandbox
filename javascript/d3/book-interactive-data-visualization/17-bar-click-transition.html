@@ -1,0 +1,110 @@
+<!DOCTYPE html
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>D3 Page Template</title>
+  <script type="text/javascript" src="d3/d3.js"></script>
+</head>
+<body bgcolor="white">
+
+<p>
+  This file adds a smoother transition (in this case a jokey bounce transition)
+  rather than instantly updating all values.
+</p>
+
+<hr/>
+
+<script type="text/javascript">
+
+// begin
+
+var w = 700;
+var h = 400;
+var svg = d3.select("body")
+            .append("svg")
+            .attr("width", w)
+            .attr("height", h);
+
+var dataset = [  5, 10, 13, 19, 21, 25, 22, 18, 15, 13,
+                11, 12, 15, 20, 18, 17, 16, 18, 23, 25 ];
+var maxVal = d3.max(dataset);
+var pad = {top: 10, bottom: 10, left: 0, right: 0};
+
+var heightScale = d3.scaleLinear()
+                    .domain([0, maxVal])
+                    .rangeRound([0, h - pad.bottom - pad.top])
+                    .clamp(true);
+var yScale = d3.scaleLinear()
+               .domain([0, maxVal])
+               .rangeRound([h - pad.bottom, pad.top])
+               .clamp(true);
+var xScale = d3.scaleBand()
+               .domain(d3.range(dataset.length))
+               .rangeRound([pad.left, w - pad.right])
+               .paddingInner(0.02)
+               .paddingOuter(0.02);
+var colorScale = d3.scaleLinear() 
+                   .domain([0, maxVal])
+                   .range(["black", "red"]);
+
+svg.selectAll("rect")
+   .data(dataset)
+   .enter()
+   .append("rect")
+   .attr("x", function(d, i) { return xScale(i); })
+   .attr("y", function(d) { return yScale(d); })
+   .attr("width", xScale.bandwidth())
+   .attr("height", function(d) { return heightScale(d); })
+   .attr("fill", function(d) { return colorScale(d); })
+
+var textShift = 13;
+svg.selectAll("text")
+   .data(dataset)
+   .enter()
+   .append("text")
+   .text(function(d) { return d; })
+   .attr("x", function(d, i) { return xScale(i) + xScale.bandwidth() / 2; })
+   .attr("y", function(d) { return yScale(d) + textShift; })
+   .attr("font-family", "sans-serif")
+   .attr("font-size", "11px")
+   .attr("fill", "white")
+   .attr("text-anchor", "middle");
+
+var clickable = d3.select("body")
+                  .append("p")
+                  .attr("class", "clickable")
+                  .text("Click on this text to update the chart with new data "
+                        + "values (once).");
+
+clickable.on("click", function() {
+  // replace the dataset with a random dataset
+  dataset = [];
+  var randScale = d3.scaleLinear()
+                    .domain([0, 1])
+                    .rangeRound([3, maxVal]);
+  for (var i = 0; i < 20; i++) {
+    dataset.push(randScale(Math.random()));
+  }
+  svg.selectAll("rect")
+     .data(dataset)
+     .transition()
+     .duration(2000)      // default duration is 250 milliseconds
+     .ease(d3.easeBounce) // default cubic.  Other choices: linear, circle, elastic
+     .attr("y", function(d) { return yScale(d); })
+     .attr("height", function(d) { return heightScale(d); })
+     .attr("fill", function(d) { return colorScale(d); });
+  svg.selectAll("text")
+     .data(dataset)
+     .transition()
+     .duration(2000)      // default duration is 250 milliseconds
+     .ease(d3.easeBounce) // default cubic.  Other choices: linear, circle, elastic
+     .text(function(d) { return d; })
+     .attr("y", function(d) { return yScale(d) + textShift; });
+});
+
+// end
+
+</script>
+
+</body>
+</html>

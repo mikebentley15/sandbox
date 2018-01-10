@@ -1,0 +1,46 @@
+\documentclass{article}
+
+\usepackage{minted}
+\begin{document}
+\begin{minted}[
+  linenos,
+  gobble=2,
+  numbersep=5pt,
+  frame=lines,
+  framesep=2mm
+  ]{cpp}
+  virtual
+  QFPTest::ResultType::mapped_type run_impl(const QFPTest::TestInput<T>& ti) {
+    T score1 = 0.0;
+    T score2 = 0.0;
+
+    QFPHelpers::info_stream << id << ": Starting test with parameters" << std::endl;
+    for (T val : ti.vals) {
+      QFPHelpers::info_stream << id << ":   " << val << std::endl;
+    }
+
+    T in_1 = ti.vals[1];
+    T in_2 = ti.vals[2];
+    T in_3 = ti.vals[3];
+
+    QFPHelpers::info_stream << id << ": After initializing variables" << std::endl;
+
+    T e1 = -70582.60558508008 / (39267.4132624432 * in_3);
+    T e2 = in_1 - 46967.33932893162 + e1;
+    T e3 = 55739.11700052436 + -46107.2167018535 + -85502.57682607831;
+    T e4 = in_1 / (-49043.29692845812 / -27289.46008139212);
+    T e5 = in_1 * -50615.91671726892 - e4;
+    T e6 = e4 * (61232.84025300767 / 134825.73157508264);
+    T e7 = 6839.914498829116 + 24723.509947352566 + 74383.79040732888;
+    T e8 = -28168.680409755907 * (16304.354503864266 + 5191.241198259716);
+    T e9 = e3 * (-4628.856808888037 + in_3);
+    T e10 = in_2 - 4716.436065520333 + 39604.326217126785;
+    score1 = (e9 + e8) / (e1 - e10);
+    score2 = (e4 + in_2) * (e3 / e8);
+
+    QFPHelpers::info_stream << id << ": Ending test with values (" << score1 << ", " << score2 << ")" << std::endl;
+
+    return {score1, score2};
+  }
+\end{minted}
+\end{document}

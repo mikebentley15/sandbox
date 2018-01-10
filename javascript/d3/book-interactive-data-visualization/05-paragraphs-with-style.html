@@ -1,0 +1,45 @@
+<!DOCTYPE html
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>D3 Page Template</title>
+  <script type="text/javascript" src="d3/d3.js"></script>
+</head>
+<body bgcolor="white">
+
+<p>
+  This file demonstrates how to style the dynamically generated elements based
+  on a value in the data.  Here, those rows that have a <b>Deliciousness</b>
+  score of less than 7 are black, otherwise they are red.
+</p>
+
+<hr/>
+
+<script type="text/javascript">
+
+d3.csv("data/01.csv", function (error, dataset) {
+  if (error) {
+    console.log(error);
+  } else {
+    console.log(dataset);
+    d3.select("body").selectAll("p")
+      .data(dataset)
+      .enter()
+      .append("p")
+      .text(function(d) {
+        return d["Food"] + " -> " + d["Deliciousness"];
+      })
+      .style("color", function(d) {
+        if (d["Deliciousness"] < 7) {
+          return "black";
+        } else {
+          return "red";
+        }
+      });
+  }
+});
+
+</script>
+
+</body>
+</html>

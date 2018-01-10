@@ -1,0 +1,36 @@
+<!DOCTYPE html
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>D3 Page Template</title>
+  <script type="text/javascript" src="d3/d3.js"></script>
+</head>
+<body bgcolor="white">
+
+<p>
+  This file demonstrates that you can make multiple HTML elements in D3 using
+  data from a CSV file.  Cool, huh?  Each new paragraph below corresponds to a
+  row in the CSV file.
+</p>
+
+<hr/>
+
+<script type="text/javascript">
+
+d3.csv("data/01.csv", function (error, dataset) {
+  if (error) {
+    console.log(error);
+  } else {
+    console.log(dataset);
+    d3.select("body").selectAll("p")
+      .data(dataset)
+      .enter()
+      .append("p")
+      .text("New paragraph!");
+  }
+});
+
+</script>
+
+</body>
+</html>

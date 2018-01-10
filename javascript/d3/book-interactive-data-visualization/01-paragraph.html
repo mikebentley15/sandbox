@@ -1,0 +1,24 @@
+<!DOCTYPE html
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>D3 Page Template</title>
+  <script type="text/javascript" src="d3/d3.js"></script>
+</head>
+<body bgcolor="white">
+
+<p>
+  This script demonstrates how you can use D3 to create new HTML content.  See
+  below a dynamically generated paragraph:
+</p>
+
+<hr/>
+
+<script type="text/javascript">
+
+d3.select("body").append("p").text("New paragraph!");
+
+</script>
+
+</body>
+</html>

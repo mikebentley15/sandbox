@@ -1,0 +1,368 @@
+diff -Nuir orig/scripts/app/_buildChords.js minimal-fix/scripts/app/_buildChords.js
+--- orig/scripts/app/_buildChords.js	2018-01-08 11:17:56.197101000 -0700
++++ minimal-fix/scripts/app/_buildChords.js	2018-01-08 11:17:57.764119000 -0700
+@@ -87,71 +87,41 @@
+     import_chord.matrix(import_matrix);
+     export_chord.matrix(export_matrix);
+ 
+-    var tempLabels=[];
+-    var tempChords=[];
+-
+-    for (var i=0; i < e_labels.length; i++) {
+-        e_labels[i].label='null';
+-        e_chords[i].label='null';
+-    }
+-
+-    for (var i=0; i < export_chord.groups().length; i++) {
++    var ec_groups = export_chord.groups();
++    var ec_chords = export_chord.chords();
++    ec_groups.sort(function(a,b) { return a.index - b.index; });
++    ec_chords.sort(function(a,b) { return a.source.index - b.source.index; });
++    for (var i=0; i < ec_groups.length; i++) {
+         var d={}
+-        var g=export_chord.groups()[i];
+-        var c=export_chord.chords()[i];
++        var g=ec_groups[i];
++        var c=ec_chords[i];
+         d.index=i;
+         d.angle= (g.startAngle + g.endAngle) / 2;
+         d.label = e_nameByIndex[g.index];
+         d.exports= c.source.value;
+-        var bIndex=e_buf_indexByName[d.label];
+-        if (typeof bIndex != 'undefined') {  //Country already exists so re-purpose node.
+-            e_labels[bIndex].angle= d.angle;
+-            e_labels[bIndex].label= d.label;
+-            e_labels[bIndex].index= i;
+-            e_labels[bIndex].exports= d.exports;
+-
+-            e_chords[bIndex].index= i;
+-            e_chords[bIndex].label= d.label;
+-            e_chords[bIndex].source= c.source;
+-            e_chords[bIndex].target= c.target;
+-            e_chords[bIndex].exports = d.exports;
+-
+-        }
+-        else { //Country doesnt currently exist so save for later
+-            tempLabels.push(d);
+-            tempChords.push(c);
+-        }
+-    }
+-
+-    //Now use up unused indexes
+-    for (var i=0; i < e_labels.length; i++) {
+-        if (e_labels[i].label=="null") {
+-            var o=tempLabels.pop();
+-            e_labels[i].index=e_indexByName[o.label];
+-            e_labels[i].label= o.label;
+-            e_labels[i].angle= o.angle;
+-            e_labels[i].exports= o.exports;
+-
+-            var c=tempChords.pop();
+-            e_chords[i].label= o.label;
+-            e_chords[i].index= i;
+-            e_chords[i].source= c.source;
+-            e_chords[i].target= c.target;
+-            e_chords[i].exports= c.exports;
+-
+-        }
+-    }
+ 
+-
+-    tempLabels=[];
+-    tempChords=[];
+-
+-    for (var i=0; i < i_labels.length; i++) {
+-        i_labels[i].label='null';
+-        i_chords[i].label='null';
+-    }
+-
+-    for (var i=0; i < import_chord.groups().length; i++) {
++        // create a new object instead of overwriting
++        // overwriting changes the data bound to d3 objects, which is not what
++        // we want
++        e_labels[i] = {};
++        e_labels[i].angle = d.angle;
++        e_labels[i].label = d.label;
++        e_labels[i].index = i;
++        e_labels[i].exports = d.exports;
++
++        e_chords[i] = {};
++        e_chords[i].index = i;
++        e_chords[i].label = d.label;
++        e_chords[i].source = c.source;
++        e_chords[i].target = c.target;
++        e_chords[i].exports = d.exports;
++    }
++
++    var ic_groups = import_chord.groups();
++    var ic_chords = import_chord.chords();
++    ic_groups.sort(function(a,b) { return a.index - b.index; });
++    ic_chords.sort(function(a,b) { return a.source.index - b.source.index; });
++    for (var i=0; i < ic_groups.length; i++) {
+         var d={}
+         var g=import_chord.groups()[i];
+         var c=import_chord.chords()[i];
+@@ -159,43 +129,22 @@
+         d.angle= (g.startAngle + g.endAngle) / 2;
+         d.label = i_nameByIndex[g.index];
+         d.imports = c.source.value;
+-        var bIndex=i_buf_indexByName[d.label];
+-        if (typeof bIndex != 'undefined') {  //Country already exists so re-purpose node.
+-            i_labels[bIndex].angle= d.angle;
+-            i_labels[bIndex].label= d.label;
+-            i_labels[bIndex].imports= d.imports;
+-            i_labels[bIndex].index= i;
+-
+-            i_chords[bIndex].index= i;
+-            i_chords[bIndex].label= d.label;
+-            i_chords[bIndex].source= c.source;
+-            i_chords[bIndex].target= c.target;
+-            i_chords[bIndex].imports= d.imports;
+-
+-        }
+-        else { //Country doesnt currently exist so save for later
+-            tempLabels.push(d);
+-            tempChords.push(c);
+-        }
+-    }
+-
+-    //Now use up unused indexes
+-    for (var i=0; i < i_labels.length; i++) {
+-        if (i_labels[i].label=="null") {
+-            var o=tempLabels.pop();
+-            i_labels[i].index=i_indexByName[o.label];
+-            i_labels[i].label= o.label;
+-            i_labels[i].angle= o.angle;
+-            i_labels[i].imports= o.imports;
+-
+-            var c=tempChords.pop();
+-            i_chords[i].label= o.label;
+-            i_chords[i].index= i;
+-            i_chords[i].source= c.source;
+-            i_chords[i].target= c.target;
+-            i_chords[i].imports= c.imports;
+ 
+-        }
++        // create a new object instead of overwriting
++        // overwriting changes the data bound to d3 objects, which is not what
++        // we want
++        i_labels[i] = {};
++        i_labels[i].angle = d.angle;
++        i_labels[i].label = d.label;
++        i_labels[i].imports = d.imports;
++        i_labels[i].index = i;
++
++        i_chords[i] = {};
++        i_chords[i].index = i;
++        i_chords[i].label = d.label;
++        i_chords[i].source = c.source;
++        i_chords[i].target = c.target;
++        i_chords[i].imports = d.imports;
+     }
+ 
+     function getFirstIndex(index,indexes) {
+diff -Nuir orig/scripts/app/update.js minimal-fix/scripts/app/update.js
+--- orig/scripts/app/update.js	2018-01-08 11:17:56.272101000 -0700
++++ minimal-fix/scripts/app/update.js	2018-01-08 14:07:59.380896000 -0700
+@@ -6,22 +6,22 @@
+ 
+    // mainLabel.style("font-size",innerRadius *.05);
+ 
+-    eText = eGroup.selectAll("g.group")
++    eText = eGroup.selectAll("text")
+         .data(e_labels, function (d) {
+             return d.label;
+         });
+ 
+-    iText = iGroup.selectAll("g.group")
++    iText = iGroup.selectAll("text")
+         .data(i_labels, function (d) {
+             return d.label;
+         });
+ 
+-    eChords=eGroup.selectAll("g.chord")
++    eChords=eGroup.selectAll("path")
+         .data(e_chords, function (d) {
+             return d.label;
+         });
+ 
+-    iChords=iGroup.selectAll("g.chord")
++    iChords=iGroup.selectAll("path")
+         .data(i_chords, function (d) {
+             return d.label;
+         });
+@@ -30,16 +30,14 @@
+     var fs=innerRadius *.1;
+     td=formatCurrency(td);
+ 
+-    dGroup.transition()
+-        .select("text")
++    dGroup.select("text")
++        .transition()
+         .delay(delay)
+         .text(td)
+         .attr("transform", "translate(" + (outerRadius - (td.length * fs/2)/2) + ","  + (outerRadius*1.1) +")")
+         .style("font-size", fs + "px");
+ 
+     eText.enter()
+-        .append("g")
+-        .attr("class", "group")
+         .append("text")
+         .attr("class","export")
+         .attr("dy", ".35em")
+@@ -51,53 +49,63 @@
+         })
+         .text(function(d) { return  (d.index+1)  + ". " + d.label; })
+         .on("mouseover", function (d) { node_onMouseOver(d); })
+-        .on("mouseout", function (d) {node_onMouseOut(d); });
++        .on("mouseout", function (d) {node_onMouseOut(d); })
++        .attr("fill-opacity", 1e-6)
++        .transition()
++        .duration(delay-10)
++        .attr("fill-opacity", 1e-6);
+ 
+     eText.transition()
+         .duration(delay-10)
+-        .select("text")
+-        .attr("dy", ".35em")
+         .attr("text-anchor", function(d) { return d.angle > Math.PI ? "end" : null; })
+         .attr("transform", function(d) {
+             return "rotate(" + (d.angle * 180 / Math.PI - 90) + ")"
+                 + "translate(" + (innerRadius + 6) + ")"
+                 + (d.angle > Math.PI ? "rotate(180)" : "");
+         })
+-        .text(function(d) { return  (d.index+1)  + ". " + d.label; });
++        .text(function(d) { return  (d.index+1)  + ". " + d.label; })
++        .attr("fill-opacity", 1.0);
+ 
+-    eText.exit().remove();
++    eText.exit()
++        .transition()
++        .duration(delay / 2)
++        .attr("fill-opacity", 1e-6)
++        .attr("transform", "translate(0,0)scale(0.01)")
++        .remove();
+ 
+     eChords.enter()
+-        .append("g")
+-        .attr("class","chord")
+         .append("path")
+         .attr("class","chord")
+         .style("stroke", function(d) { return d3.rgb(getExportColor(d.source.index)).darker(); })
+         .style("fill", function(d) { return getExportColor(d.source.index); })
+-        .style("fill-opacity", function (d,i) { return .85*(topCountryCount- d.index)/topCountryCount})
+         .attr("d", d3.svg.arc_chord().radius(innerRadius))
+-        .style("opacity",0)
+         .on("mouseover", function (d) { node_onMouseOver(d); })
+-        .on("mouseout", function (d) {node_onMouseOut(d); });
+-
++        .on("mouseout", function (d) {node_onMouseOut(d); })
++        .style("fill-opacity", 1e-6)
++        .style("stroke-opacity", 1e-6)
++        .transition()
++        .duration(delay)
++        .style("stroke-opacity", function (d,i) { return Math.max(.85*(topCountryCount-d.index)/topCountryCount,.2);})
++        .style("fill-opacity", function (d,i) { return .85*(topCountryCount-d.index)/topCountryCount});
+ 
+     eChords.transition()
+-        .select("path")
+         .duration(delay)
+         .attr("d", d3.svg.arc_chord().radius(innerRadius))
+         .style("stroke", function(d) { return d3.rgb(getExportColor(d.source.index)).darker(); })
+         .style("fill", function(d) { return getExportColor(d.source.index); })
+         .style("stroke-opacity", function (d,i) { return Math.max(.85*(topCountryCount-d.index)/topCountryCount,.2);})
+-        .style("fill-opacity", function (d,i) { return .85*(topCountryCount-d.index)/topCountryCount})
+-        .style("opacity",1);
++        .style("fill-opacity", function (d,i) { return .85*(topCountryCount-d.index)/topCountryCount});
+ 
+ 
+     eChords.exit()
++        .transition()
++        .duration(delay/2)
++        .attr("stroke-opacity", 1e-6)
++        .attr("fill-opacity", 1e-6)
++        .attr("transform", "scale(0.01)")
+         .remove();
+ 
+     iText.enter()
+-        .append("g")
+-        .attr("class", "group")
+         .append("text")
+         .attr("class","import")
+         .attr("dy", ".35em")
+@@ -109,43 +117,46 @@
+         })
+         .text(function(d) { return  (d.index+1)  + ". " + d.label; })
+         .on("mouseover", function (d) { node_onMouseOver(d); })
+-        .on("mouseout", function (d) {node_onMouseOut(d); });
++        .on("mouseout", function (d) {node_onMouseOut(d); })
++        .attr("fill-opacity", 1e-6)
++        .transition()
++        .duration(delay-10)
++        .attr("fill-opacity", 1.0);
+ 
+     iText.transition()
+-        .select("text")
+         .duration(delay-10)
+-        .attr("dy", ".35em")
+         .attr("text-anchor", function(d) { return d.angle > Math.PI ? "end" : null; })
+         .attr("transform", function(d) {
+             return "rotate(" + (d.angle * 180 / Math.PI - 90) + ")"
+                 + "translate(" + (innerRadius + 6) + ")"
+                 + (d.angle > Math.PI ? "rotate(180)" : "");
+         })
+-        .text(function(d) { return  (d.index+1)  + ". " + d.label; });
++        .text(function(d) { return  (d.index+1)  + ". " + d.label; })
++        .attr("fill-opacity", 1.0);
+ 
+     iText.exit()
+-        .attr("class", "exit")
+         .transition()
+-        .duration(delay)
+-        .attr("y",0)
++        .duration(delay / 2)
+         .attr("fill-opacity",1e-6)
++        .attr("transform", "translate(0,0)scale(0.01)")
+         .remove();
+ 
+     iChords.enter()
+-        .append("g")
+-        .attr("class","chord")
+         .append("path")
+         .attr("class","chord")
+         .style("stroke", function(d) { return d3.rgb(getImportColor(d.source.index)).darker(); })
+-        .style("stroke-opacity", function (d,i) { return Math.max(.85*(topCountryCount-d.index)/topCountryCount,.2);})
+         .style("fill", function(d) { return getImportColor(d.source.index); })
+-        .style("fill-opacity", function (d,i) { return .7*(topCountryCount- d.index)/topCountryCount})
+         .attr("d", d3.svg.arc_chord().radius(innerRadius))
+         .on("mouseover", function (d) { node_onMouseOver(d); })
+-        .on("mouseout", function (d) {node_onMouseOut(d); });
++        .on("mouseout", function (d) {node_onMouseOut(d); })
++        .style("stroke-opacity", 1e-6)
++        .style("fill-opacity", 1e-6)
++        .transition()
++        .duration(delay-10)
++        .style("stroke-opacity", function (d,i) { return Math.max(.85*(topCountryCount-d.index)/topCountryCount,.2);})
++        .style("fill-opacity", function (d,i) { return .7*(topCountryCount- d.index)/topCountryCount});
+ 
+     iChords.transition()
+-        .select("path")
+         .duration(delay-10)
+         .attr("d", d3.svg.arc_chord().radius(innerRadius))
+         .style("stroke", function(d) { return d3.rgb(getImportColor(d.source.index)).darker(); })
+@@ -153,10 +164,13 @@
+         .style("stroke-opacity", function (d,i) { return Math.max(.85*(topCountryCount-d.index)/topCountryCount,.2);})
+         .style("fill-opacity", function (d,i) { return .7*(topCountryCount- d.index)/topCountryCount});
+ 
+-
+     iChords.exit()
++        .transition()
++        .duration(delay / 2)
++        .attr("stroke-opacity", 1e-6)
++        .attr("fill-opacity", 1e-6)
++        .attr("transform", "scale(0.01)")
+         .remove();
+-
+ }
+ 
+ function updateMonths(y,m) {

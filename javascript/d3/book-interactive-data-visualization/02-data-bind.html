@@ -1,0 +1,29 @@
+<!DOCTYPE html
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>D3 Page Template</title>
+  <script type="text/javascript" src="d3/d3.js"></script>
+</head>
+<body bgcolor="white">
+
+<p>
+  This file demonstrates that you can make multiple HTML elements using D3,
+  based on a specific dataset.  In this case, and array of 5 elements.
+</p>
+
+<hr/>
+
+<script type="text/javascript">
+
+var dataset = [5, 10, 15, 20, 25];
+d3.select("body").selectAll("p")
+  .data(dataset)
+  .enter()
+  .append("p")
+  .text("New paragraph!");
+
+</script>
+
+</body>
+</html>

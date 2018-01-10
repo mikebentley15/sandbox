@@ -1,0 +1,184 @@
+<!DOCTYPE html PUBLIC "-//W3C/DTD XHTML 1.0 Strict//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <style type="text/css">
+* { margin: 0px; padding: 0px; }
+body { margin: 10px; }
+h1, h2 { font-size: 1.2em; }
+p { margin-bottom: 1em; }
+div#menu button { padding: 3px .5em; margin-left: 10px; }
+svg { border: 1px solid black; margin-top: 20px; }
+  </style>
+  <script type="text/javascript">
+// <![CDATA[
+
+var balls = [];
+var canvas = { w: 0, h: 0 };      // size of the canvas
+var timer = null;
+var m_last_mouse = { x: 0, y: 0 };// previous mouse position
+var mouse_move_tol = 15;          // mouse space trigger
+var vel_min = 1;                  // minimum speed
+var vel_max = 7;                  // maximum speed
+var ball_pit = null;
+
+function rnd(n)     { return Math.random() * n; }
+function rnd_int(n) { return parseInt(rnd(n)); }
+function rnd_sign() { return rnd(1) > 0.5 ? 1 : -1; }
+function rnd_range(a, b) { return a + rnd(b - a); }
+
+function create_ball(o_parent) {
+  o_parent.appendChild(balls[0].cloneNode(true));
+  init_ball(balls[balls.length-1]);
+  window.status = balls.length;  // TODO: what is this?
+  return balls[balls.length-1];
+}
+
+function create_ball_at_mouse(e) {
+  e = e ? e : event;
+  var new_ball = create_ball(ball_pit);
+  new_ball._x = e.offsetX;
+  new_ball._y = e.offsetY;
+  update_ball(new_ball);
+  console.log('Created ball # ' + balls.length +
+              ' at (' + new_ball._x + ', ' + new_ball._y + ')');
+}
+
+function init_ball(o_ball) {
+  o_ball._x = parseInt(o_ball.getAttribute('cx'));
+  o_ball._y = parseInt(o_ball.getAttribute('cy'));
+  o_ball._r = parseInt(o_ball.getAttribute('r'));
+  o_ball._vx = rnd_sign() * rnd_range(vel_min, vel_max);
+  o_ball._vy = rnd_range(vel_min, vel_max);
+  update_ball(o_ball);
+}
+
+function move_ball(o_ball) {
+  o_ball._x += o_ball._vx;
+  o_ball._y += o_ball._vy;
+
+  var boundary = {
+    left: o_ball._r,
+    right: canvas.w - o_ball._r,
+    top: o_ball._r,
+    bottom: canvas.h - o_ball._r
+  };
+
+  // If the move goes past the border, then bounce
+  if (o_ball._vx < 0 && o_ball._x < boundary.left) {
+    o_ball._x = 2*boundary.left - o_ball._x;
+    o_ball._vx *= -1;
+  }
+  if (o_ball._vx > 0 && o_ball._x > boundary.right) {
+    o_ball._x = 2*boundary.right - o_ball._x;
+    o_ball._vx *= -1;
+  }
+  if (o_ball._vy < 0 && o_ball._y < boundary.top) {
+    o_ball._y = 2*boundary.top - o_ball._y;
+    o_ball._vy *= -1;
+  }
+  if (o_ball._vy > 0 && o_ball._y > boundary.bottom) {
+    o_ball._y= 2*boundary.bottom - o_ball._y;
+    o_ball._vy *= -1;
+  }
+
+  // Set the visual element
+  update_ball(o_ball);
+}
+
+function update_ball(o_ball) {
+  o_ball.setAttribute("cx", o_ball._x);
+  o_ball.setAttribute("cy", o_ball._y);
+}
+
+function animate_stuff() {
+  for (var i = balls.length; i--; ) {
+    move_ball(balls[i]);
+  }
+}
+
+function start_animation() {
+  if (!timer) {
+    timer = setInterval(animate_stuff, 20);
+  }
+}
+
+function stop_animation() {
+  if (!timer) {
+    return false;
+  }
+  clearInterval(timer);
+  timer = null;
+}
+
+function toggle_animation() {
+  if (timer) {
+    return stop_animation();
+  } else {
+    return start_animation();
+  }
+}
+
+function mouse_down(e) {
+  e = e ? e : event;
+  m_last_mouse.x = e.offsetX;
+  m_last_mouse.y = e.offsetY;
+  ball_pit.onmousemove = mouse_move;
+  ball_pit.onmouseup = mouse_up;
+}
+
+function mouse_move(e) {
+  e = e ? e : event;
+  // manhattan distance
+  dist = Math.abs(e.offsetX - m_last_mouse.x) + Math.abs(e.offsetY - m_last_mouse.y);
+  if (dist > mouse_move_tol) {
+    m_last_mouse.x = e.offsetX;
+    m_last_mouse.y = e.offsetY;
+    create_ball_at_mouse(e);
+  }
+  return false;
+}
+
+function mouse_up(e) {
+  ball_pit.onmousemove = null;
+  ball_pit.onmouseup = null;
+}
+
+function init() {
+  ball_pit = document.getElementById('ball-pit');
+  get_window_coordinates();
+  balls = ball_pit.getElementsByTagName('circle');
+  for (var i = balls.length; i--; ) {
+    init_ball(balls[i]);
+  }
+  ball_pit.onmousedown = mouse_down;
+}
+
+function get_window_coordinates() {
+  canvas.w = parseInt(ball_pit.getAttribute('width'));
+  canvas.h = parseInt(ball_pit.getAttribute('height'));
+}
+
+window.onresize = get_window_coordinates;
+window.onload = init;
+
+// ]]>
+  </script>
+</head>
+<body bgcolor="white">
+  <div id="instructions">
+    <h1>Interval-based animation</h1>
+    <p>Click and drag to create more.</p>
+  </div>
+  <div id="menu">
+    <button onclick="start_animation()">Start</button>
+    <button onclick="stop_animation()">Stop</button>
+    <button onclick="toggle_animation()">Toggle</button>
+  </div>
+  <div id="svg">
+    <svg id="ball-pit" width="800" height="600">
+      <circle fill="grey" cx="20" cy="60" r="6" />
+    </svg>
+  </div>
+</body>
+</html>

@@ -1,0 +1,5 @@
+2 4
+topic_one 0
+topic_two 1
+topic_one 1
+topic_two 0

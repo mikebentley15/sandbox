@@ -1,0 +1,92 @@
+<html>
+<head>
+  <script src="./js/nouislider.js"></script>
+  <link rel="stylesheet" type="text/css" href="./css/nouislider.css" />
+  <!--
+  <script src="./js/nouislider.min.js"></script>
+  <script src="https://refreshless.com/noUiSlider/distribute/nouislider.js?v=1000"></script>
+  -->
+  <meta charset="utf-8">
+  <meta namd="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
+  <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+  <style type="text/css">
+div#sliderrange {
+  width: 500px;
+  /*height: 60px;*/
+  display: inline-block;
+  background-color: white;
+}
+
+body {
+  background-color: red;
+}
+
+.slider {
+  margin: 10px;
+  display: inline-block;
+  height: 200px;
+}
+
+#sliders {
+  background-color: green;
+}
+
+#red .noUi-connect {
+  background-color: #c0392b;
+}
+
+#green .noUi-connect {
+  background-color: #27ae60;
+}
+
+#blue .noUi-connect {
+  background-color: #2980b9;
+}
+  </style>
+</head>
+<body>
+  <div id="sliders">
+    <div class="slider" id="red"></div>
+    <div class="slider" id="green"></div>
+    <div class="slider" id="blue"></div>
+  </div>
+  <div id="sliderrange"></div>
+  <div id="otherslider"></div>
+  <button onclick="setup()">setup</button>
+  <script>
+function setup() {
+  var rangeslider = document.getElementById('sliderrange');
+  //rangeslider.innerHTML += "hello there ";
+
+  noUiSlider.create(rangeslider, {
+    start: [ 4000 ],
+    range: {
+      'min': [  2000 ],
+      'max': [ 10000 ]
+    }
+  });
+
+  var sliders = document.getElementsByClassName('slider');
+
+  for (var i = 0; i < sliders.length; i++) {
+    noUiSlider.create(sliders[i], {
+      start: 127,
+      connect: [true, false],
+      orientation: "vertical",
+      range: {
+        'min': 0,
+        'max': 255
+      }
+    });
+  }
+
+  otherslider = $("#otherslider").slider();
+}
+
+//$(setup)
+setup();
+  </script>
+</body>
+</html>

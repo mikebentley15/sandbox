@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Basic Animation</title>
+  <style type="text/css">
+div#fooObject {
+  position: relative;
+  margin-left: 0px;
+  width: 5em;
+  line-height: 3em;
+  background: lightblue;
+  border: 2px dotted blue;
+  white-space: nowrap;
+  padding: 0.5em;
+  text-align: center;
+}
+  </style>
+  <script type="text/javascript">
+var foo = null;
+
+function doMove() {
+  foo.style.margin = parseInt(foo.style.margin) + 1 + 'px';  // Move right by 1px
+  setTimeout(doMove, 20); // call again in 20 ms
+}
+
+function init() {
+  foo = document.getElementById('fooObject');
+  foo.style.margin = '0px';
+  doMove();
+}
+
+window.onload = init;
+  </script>
+</head>
+<body bgcolor="white">
+  <h1>Javascript animation: Demo 1</h1>
+  <h2>Recursive setTimeout-based animation</h2>
+  <div id="fooObject" style="margin: 0px">I am foo.</div>
+</body>
+</html>

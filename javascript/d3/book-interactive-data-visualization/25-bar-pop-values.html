@@ -1,0 +1,112 @@
+<!DOCTYPE html
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>D3 Page Template</title>
+    <script type="text/javascript" src="d3/d3.js"></script>
+  </head>
+  <body bgcolor="white">
+    <button id="delete">-</button><br/>
+    <script type="text/javascript">
+function genPoint(bounds) {
+  return Math.round(bounds[0] + Math.random() * (bounds[1] - bounds[0]));
+}
+function genData(n, bounds) {
+  dataset = [];
+  for (var i = 0; i < n; i++) {
+    dataset.push(genPoint(bounds));
+  }
+  return dataset;
+}
+var minVal = 3;
+var maxVal = 25;
+var n = 20;
+var w = 700;
+var h = 400;
+var pad = { left: 0, right: 0, top: 0, bottom: 0 };
+
+var dataset = genData(n, [minVal, maxVal]);
+var svg = d3.select("body")
+            .append("svg")
+            .attr("width", w)
+            .attr("height", h);
+var barScale = d3.scaleBand()
+                 .domain(d3.range(dataset.length))
+                 .rangeRound([pad.left, w - pad.right])
+                 .paddingInner(0.08)
+                 .paddingOuter(0);
+var yScale = d3.scaleLinear()
+               .domain([0, maxVal])
+               .rangeRound([h - pad.bottom, pad.top]);
+var heightScale = d3.scaleLinear()
+                    .domain([0, maxVal])
+                    .rangeRound([0, h - pad.top - pad.bottom]);
+var colorScale = d3.scaleLinear()
+                   .domain([0, maxVal])
+                   .range(["blue", "red"]);
+svg.append("g")
+   .attr("id", "bars")
+   .selectAll("rect")
+   .data(dataset)
+   .enter()
+   .append("rect")
+   .attr("x", function(d, i) { return barScale(i); })
+   .attr("y", function(d) { return yScale(d); })
+   .attr("width", barScale.bandwidth())
+   .attr("height", function(d) { return heightScale(d); })
+   .attr("fill", function(d) { return colorScale(d); });
+
+var textYShift = 12; // px
+svg.append("g")
+   .attr("id", "bar_labels")
+   .selectAll("text")
+   .data(dataset)
+   .enter()
+   .append("text")
+   .text(function(d) { return d; })
+   .attr("x", function(d, i) { return barScale(i) + barScale.bandwidth()/2; })
+   .attr("y", function(d) { return yScale(d) + textYShift; })
+   .attr("font-family", "sans-serif")
+   .attr("font-size", "11px")
+   .attr("fill", "white")
+   .attr("text-anchor", "middle");
+
+d3.select("button#delete").on("click", function() {
+  var bars = svg.select("g#bars").selectAll("rect");
+  var labels = svg.select("g#bar_labels").selectAll("text");
+  var rmTime = 500; // ms
+
+  // Remove the last bar
+  dataset.pop();
+  bars.data(dataset)
+      .exit()
+      .transition()
+      .duration(rmTime)
+      .attr("x", w)
+      .remove();
+  labels.data(dataset)
+        .exit()
+        .transition()
+        .duration(rmTime)
+        .attr("x", w + barScale.bandwidth() / 2)
+        .remove();
+
+  // update the scales
+  barScale.domain(d3.range(dataset.length));
+
+  // Resize the remaining bars
+  bars.data(dataset)
+      .transition()
+      .duration(rmTime)
+      .attr("x", function(d, i) { return barScale(i); })
+      .attr("width", barScale.bandwidth());
+  labels.data(dataset)
+        .transition()
+        .duration(rmTime)
+        .attr("x", function(d, i) {
+          return barScale(i) + barScale.bandwidth() / 2;
+        });
+});
+    </script>
+  </body>
+</html>

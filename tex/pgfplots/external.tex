@@ -1,0 +1,17 @@
+\documentclass{minimal}
+
+\usepackage{tikz}
+\usetikzlibrary{external}  % allows tikz to make cached figs
+\tikzexternalize % turn on external library
+
+\begin{document}
+\begin{tikzpicture}
+  \node{root}
+    child {node {left}}
+    child {node {right}
+      child {node {child}}
+      child {node {child}}
+    };
+\end{tikzpicture}
+A simple image is \tikz \fill (0,0) circle(5pt);.
+\end{document}

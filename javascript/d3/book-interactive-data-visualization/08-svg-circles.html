@@ -1,0 +1,54 @@
+<!DOCTYPE html
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>D3 Page Template</title>
+  <script type="text/javascript" src="d3/d3.js"></script>
+  <style type="text/css">
+div.bar {
+  display: inline-block;
+  width: 20px;
+  height: 75px;  /* we'll override this later */
+  background-color: teal;
+  margin-left: 2px;
+}
+  </style>
+</head>
+<body bgcolor="white">
+
+<p>
+  This file demonstrates using d3 to create <b>svg</b> elements using data.
+  Here, we are making circles from our same dataset as before.  D3 is usually
+  used to generate SVG elements.
+</p>
+
+<hr/>
+
+<script type="text/javascript">
+
+var w = 500;
+var h = 75;
+var svg = d3.select("body")
+            .append("svg")
+            .attr("width", w)
+            .attr("height", h);
+dataset = [5, 10, 15, 20, 25];
+circles = svg.selectAll("circle")
+             .data(dataset)
+             .enter()
+             .append("circle");
+circles.attr("cx", function(d, i) {
+    return (i * 50) + 25;
+  })
+  .attr("cy", h/2)
+  .attr("r", function(d) {
+    return d;
+  })
+  .attr("fill", "yellow")
+  .attr("stroke", "orange")
+  .attr("stroke-width", function(d) { return d/2; });
+
+</script>
+
+</body>
+</html>

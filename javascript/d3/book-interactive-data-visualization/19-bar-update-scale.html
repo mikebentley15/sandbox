@@ -1,0 +1,127 @@
+<!DOCTYPE html
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>D3 Page Template</title>
+  <script type="text/javascript" src="d3/d3.js"></script>
+</head>
+<body bgcolor="white">
+
+<p>
+  This file now updates the scale each time data is generated.  With each new
+  generated data set, the maximum possible random value increases, which
+  requires the update to the scale.
+</p>
+
+<hr/>
+
+<script type="text/javascript">
+
+// begin
+
+function generateDataset(n, minVal, maxVal) {
+  dataset = [];
+  var randScale = d3.scaleLinear()
+                    .domain([0, 1])
+                    .rangeRound([minVal, maxVal]);
+  for (var i = 0; i < n; i++) {
+    dataset.push(randScale(Math.random()));
+  }
+  return dataset;
+}
+
+var w = 700;
+var h = 400;
+var svg = d3.select("body")
+            .append("svg")
+            .attr("width", w)
+            .attr("height", h);
+
+var datasetLength = 40;
+var maxVal = 25;
+var minVal = 3;
+var dataset = generateDataset(datasetLength, minVal, maxVal);
+var pad = {top: 10, bottom: 10, left: 0, right: 0};
+
+var heightScale = d3.scaleLinear()
+                    .domain([0, maxVal])
+                    .rangeRound([0, h - pad.bottom - pad.top]);
+var yScale = d3.scaleLinear()
+               .domain([0, maxVal])
+               .rangeRound([h - pad.bottom, pad.top]);
+var xScale = d3.scaleBand()
+               .domain(d3.range(dataset.length))
+               .rangeRound([pad.left, w - pad.right])
+               .paddingInner(0.02)
+               .paddingOuter(0);
+var colorScale = d3.scaleLinear() 
+                   .domain([0, maxVal])
+                   .range(["black", "red"]);
+
+svg.selectAll("rect")
+   .data(dataset)
+   .enter()
+   .append("rect")
+   .attr("x", function(d, i) { return xScale(i); })
+   .attr("y", function(d) { return yScale(d); })
+   .attr("width", xScale.bandwidth())
+   .attr("height", function(d) { return heightScale(d); })
+   .attr("fill", function(d) { return colorScale(d); })
+
+var textShift = 13;
+svg.selectAll("text")
+   .data(dataset)
+   .enter()
+   .append("text")
+   .text(function(d) { return d; })
+   .attr("x", function(d, i) { return xScale(i) + xScale.bandwidth() / 2; })
+   .attr("y", function(d) { return yScale(d) + textShift; })
+   .attr("font-family", "sans-serif")
+   .attr("font-size", "11px")
+   .attr("fill", "white")
+   .attr("text-anchor", "middle");
+
+var clickable = d3.select("body")
+                  .append("p")
+                  .attr("class", "clickable")
+                  .text("Click on this text to update the chart with new data "
+                        + "values (once).");
+
+clickable.on("click", function() {
+  // replace the dataset with a random dataset
+  maxVal += 1;
+  dataset = generateDataset(datasetLength, minVal, maxVal);
+
+  // update both yScale and colorScale
+  heightScale.domain([0, maxVal])
+  yScale.domain([0, maxVal]);
+  colorScale.domain([0, maxVal]);
+
+  var delayScale = d3.scaleLinear()
+                     .domain([0, dataset.length-1])
+                     .range([0, 500]);
+  svg.selectAll("rect")
+     .data(dataset)
+     .transition()
+     .delay(function(d, i) { return delayScale(i); })
+     .duration(500)
+     .ease(d3.easeCubic)
+     .attr("y", function(d) { return yScale(d); })
+     .attr("height", function(d) { return heightScale(d); })
+     .attr("fill", function(d) { return colorScale(d); });
+  svg.selectAll("text")
+     .data(dataset)
+     .transition()
+     .delay(function(d, i) { return delayScale(i); })
+     .duration(500)
+     .ease(d3.easeCubic)
+     .text(function(d) { return d; })
+     .attr("y", function(d) { return yScale(d) + textShift; });
+});
+
+// end
+
+</script>
+
+</body>
+</html>

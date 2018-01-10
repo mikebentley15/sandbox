@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>D3 Page Template</title>
+    <script type="text/javascript" src="d3/d3.js"></script>
+    <style type="text/css">
+rect.compare {
+  fill: purple;
+}
+
+div#controls { display: block; }
+div#sort-buttons,
+div#start-stop-buttons {
+  display: block;
+  margin: 10px;
+  height: 40px;
+}
+
+input { display: none; }
+input:checked + label {
+  background-image: linear-gradient(to top,#969696,#727272);
+  box-shadow: inset 0 1px 6px rgba(41, 41, 41, 0.2),
+                    0 1px 2px rgba(0, 0, 0, 0.05);
+  cursor: default;
+  color: #E6E6E6;
+  border-color: transparent;
+  text-shadow: 0 1px 1px rgba(40, 40, 40, 0.75);
+}
+
+input + label {
+  padding: 5px 10px;
+  background-color: #eee;
+  border: 1px solid black;
+}
+
+input:checked + label:hover {
+  background-color: #ddd;
+}
+
+    </style>
+  </head>
+  <body bgcolor="white">
+    <div id="controls">
+      <button id="add">+</button>
+      <div id="sort-buttons">
+        Sorting Algorithm: 
+        <input type="radio" name="sorts" id="sort-selectionsort"
+               value="selection" checked />
+        <label for="sort-selectionsort">Selection Sort</label>
+        <input type="radio" name="sorts" id="sort-insertionsort" value="insertion" />
+        <label for="sort-insertionsort" class="btn">Insertion Sort</label>
+        <input type="radio" name="sorts" id="sort-bubblesort" value="bubble" />
+        <label for="sort-bubblesort" class="btn">Bubble Sort</label>
+      </div>
+      <div id="start-stop-buttons">
+        <input type="radio" name="startstop" id="start" value="start">
+        <label for="start">Start</label>
+        <input type="radio" name="startstop" id="stop" value="stop" checked>
+        <label for="stop">Stop</label>
+      </div>
+    </div>
+    <script type="text/javascript">
+// To remove arbitrary elements, there needs to be a way to individually and
+// uniquely distinguish them.
+
+// TODO: make a map of sort-name -> function pointer
+// TODO: use that map to auto-generate the sorting algorithm radio buttons
+
+var ptidx = 0;
+var datakey = function(d) { return d.i; };
+var step_delay = 100; // ms
+var swap_duration = 200; // ms
+var animation_time = 0; // ms of when to do the next animation
+var dataset = [];
+
+// Define Comparison and Swap types for capture-playback of sorting
+// These are our actions in the plan of sorting
+function Comparison(i, j) { this.i = i; this.j = j; }
+function Swap(i, j) { this.i = i; this.j = j; }
+
+function genPoint(bounds) {
+  ptidx += 1;
+  return {
+    d: Math.round(bounds[0] + Math.random() * (bounds[1] - bounds[0])),
+    i: ptidx
+  };
+}
+function genData(n, bounds) {
+  dataset = [];
+  for (var i = 0; i < n; i++) {
+    dataset.push(genPoint(bounds));
+  }
+  return dataset;
+}
+
+var minVal = 3;
+var maxVal = 25;
+var n = 20;
+var w = 700;
+var h = 400;
+var pad = { left: 0, right: 0, top: 0, bottom: 0 };
+
+var dataset = genData(n, [minVal, maxVal]);
+var svg = d3.select("body")
+            .append("svg")
+            .attr("width", w)
+            .attr("height", h);
+var barScale = d3.scaleBand()
+                 .domain(d3.range(dataset.length))
+                 .rangeRound([pad.left, w - pad.right])
+                 .paddingInner(0.08)
+                 .paddingOuter(0);
+var yScale = d3.scaleLinear()
+               .domain([0, maxVal])
+               .rangeRound([h - pad.bottom, pad.top]);
+var heightScale = d3.scaleLinear()
+                    .domain([0, maxVal])
+                    .rangeRound([0, h - pad.top - pad.bottom]);
+var colorScale = d3.scaleLinear()
+                   .domain([0, maxVal])
+                   .range(["blue", "red"]);
+svg.append("g")
+   .attr("id", "bars")
+   .selectAll("rect")
+   .data(dataset, datakey)
+   .enter()
+   .append("rect")
+   .attr("x", function(d, i) { return barScale(i); })
+   .attr("y", function(d) { return yScale(d.d); })
+   .attr("width", barScale.bandwidth())
+   .attr("height", function(d) { return heightScale(d.d); })
+   .attr("fill", function(d) { return colorScale(d.d); });
+
+var textYShift = 12; // px
+svg.append("g")
+   .attr("id", "bar_labels")
+   .selectAll("text")
+   .data(dataset, datakey)
+   .enter()
+   .append("text")
+   .text(function(d) { return d.d; })
+   .attr("x", function(d, i) { return barScale(i) + barScale.bandwidth()/2; })
+   .attr("y", function(d) { return yScale(d.d) + textYShift; })
+   .attr("font-family", "sans-serif")
+   .attr("font-size", "11px")
+   .attr("fill", "white")
+   .attr("text-anchor", "middle");
+
+function updateSvg() {
+  var removeDuration = 500; // ms
+  var moveDuration = 500; // ms
+  var bars = svg.select("g#bars")
+                .selectAll("rect")
+                .data(dataset, datakey);
+  var labels = svg.select("g#bar_labels")
+                  .selectAll("text")
+                  .data(dataset, datakey);
+
+  // remove deleted bars
+  bars.exit()
+      .transition()
+      .duration(removeDuration)
+      .ease(d3.easeCubic)
+      .attr("y", yScale(0))
+      .attr("height", heightScale(0))
+      .remove();
+  labels.exit()
+        .transition()
+        .duration(removeDuration)
+        .ease(d3.easeCubic)
+        .attr("y", yScale(0) + textYShift)
+        .remove();
+
+  // update the scales
+  barScale.domain(d3.range(dataset.length));
+
+  // Add the new bar(s)
+  var xFunc = function(d, i) {
+    // have it off the screen and come in
+    return d3.max([w + barScale.step(),
+                   barScale.step() * (barScale.paddingOuter()*2 + i)]);
+  };
+  bars.enter()
+      .append("rect")
+      .attr("x", xFunc)
+      .attr("y", function(d) { return yScale(d.d); })
+      .attr("width", barScale.bandwidth())
+      .attr("height", function(d) { return heightScale(d.d); })
+      .attr("fill", function(d) { return colorScale(d.d); })
+    .merge(bars)
+      .transition()
+      //.delay(removeDuration)
+      .duration(moveDuration)
+      .attr("x", function(d, i) { return barScale(i); })
+      .attr("y", function(d) { return yScale(d.d); })
+      .attr("width", barScale.bandwidth())
+      .attr("height", function(d) { return heightScale(d.d); })
+      .attr("fill", function(d) { return colorScale(d.d); });
+  labels.enter()
+        .append("text")
+        .text(function(d) { return d.d; })
+        .attr("x", function(d, i) {
+          return xFunc(d.d, i) + barScale.bandwidth() / 2;
+        })
+        .attr("y", function(d) { return yScale(d.d) + textYShift; })
+        .attr("font-family", "sans-serif")
+        .attr("font-size", "11px")
+        .attr("fill", "white")
+        .attr("text-anchor", "middle")
+      .merge(labels)
+        .transition()
+        //.delay(removeDuration)
+        .duration(moveDuration)
+        .attr("x", function(d, i) { return barScale(i) + barScale.bandwidth() / 2; })
+        .attr("y", function(d) { return yScale(d.d) + textYShift; });
+}
+
+d3.select("button#add").on("click", function() {
+  dataset.push(genPoint([minVal, maxVal]));
+  updateSvg();
+});
+
+function remove(idx) {
+  dataset.splice(idx, 1);
+  updateSvg();
+}
+
+function compare_animate(compare_func, a, b) {
+  var i_a = dataset.indexOf(a);
+  var i_b = dataset.indexOf(b);
+
+  // Set a future event to occur
+  setTimeout(
+    function() {
+      svg.select("g#bars")
+         .selectAll("rect")
+         .classed("compare", function(d) { return a === d || b === d; });
+    },
+    animation_time + step_delay
+  );
+
+  // return the actual comparison
+  return compare_func(a, b);
+}
+
+function swap_animate(swap_func, arr, a, b) {
+  
+  return swap_func(arr, a, b);
+}
+    </script>
+  </body>
+</html>

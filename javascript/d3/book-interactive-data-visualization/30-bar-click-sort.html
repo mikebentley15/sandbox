@@ -1,0 +1,221 @@
+<!DOCTYPE html
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>D3 Page Template</title>
+    <script type="text/javascript" src="d3/d3.js"></script>
+    <style type="text/css">
+/* This is a cool effect, but has another symptom.  It makes D3 transitions
+ * slower, so for example, the text will move faster than the rect when
+ * disappearing.
+ */
+rect:hover {
+  fill: orange;
+  -moz-transition: all 0.1s;
+  -o-transition: all 0.1s;
+  -webkit-transition: all 0.1s;
+  transition: all 0.1s;
+}
+    </style>
+  </head>
+  <body bgcolor="white">
+    <button id="add">+</button><br/>
+    <script type="text/javascript">
+// To remove arbitrary elements, there needs to be a way to individually and
+// uniquely distinguish them.
+
+var ptidx = 0;
+var datakey = function(d) { return d.i; };
+function genPoint(bounds) {
+  ptidx += 1;
+  return {
+    d: Math.round(bounds[0] + Math.random() * (bounds[1] - bounds[0])),
+    i: ptidx
+  };
+}
+function genData(n, bounds) {
+  dataset = [];
+  for (var i = 0; i < n; i++) {
+    dataset.push(genPoint(bounds));
+  }
+  return dataset;
+}
+function stable_sorted(array, compare) {
+  // default to (a - b) for compare
+  compare = compare || function(a, b) { return a-b; };
+  var indices = d3.range(array.length);
+  indices.sort(function(a, b) {
+    var order = compare(array[a], array[b]);
+    if (order != 0) {
+      return order;
+    }
+    if (a < b) {
+      return -1;
+    } else {
+      return 1;
+    }
+  });
+  var sorted = Array(array.length);
+  for (var i = 0; i < array.length; i++) {
+    sorted[i] = array[indices[i]];
+  }
+  return sorted;
+}
+function sortBars() {
+  // The standard does not guarentee that Array.sort() is stable
+  //dataset.sort(function(a, b) { return a.d - b.d; });
+  dataset = stable_sorted(dataset, function(a, b) { return a.d - b.d; });
+  updateSvg();
+
+  // Below would sort the display, but not the data
+  // once updateSvg() is called, then it would go back to the same ordering
+  // it was at before.
+  //var bars = d3.select("g#bars").selectAll("rect").data(dataset, datakey);
+  //var labels = d3.select("g#bar_labels").selectAll("text").data(dataset, datakey);
+  //bars.sort(function(a, b) { return d3.ascending(a.d, b.d); })
+  //    .transition()
+  //    .duration(1000)
+  //    .attr("x", function(d, i) { return barScale(i); });
+  //labels.sort(function(a, b) { return d3.ascending(a.d, b.d); })
+  //      .transition()
+  //      .duration(1000)
+  //      .attr("x", function(d, i) {
+  //        return barScale(i) + barScale.bandwidth() / 2;
+  //      });
+}
+var minVal = 3;
+var maxVal = 25;
+var n = 20;
+var w = 700;
+var h = 400;
+var pad = { left: 0, right: 0, top: 0, bottom: 0 };
+
+var dataset = genData(n, [minVal, maxVal]);
+var svg = d3.select("body")
+            .append("svg")
+            .attr("width", w)
+            .attr("height", h)
+            .on("click", sortBars);
+var barScale = d3.scaleBand()
+                 .domain(d3.range(dataset.length))
+                 .rangeRound([pad.left, w - pad.right])
+                 .paddingInner(0.08)
+                 .paddingOuter(0);
+var yScale = d3.scaleLinear()
+               .domain([0, maxVal])
+               .rangeRound([h - pad.bottom, pad.top]);
+var heightScale = d3.scaleLinear()
+                    .domain([0, maxVal])
+                    .rangeRound([0, h - pad.top - pad.bottom]);
+var colorScale = d3.scaleLinear()
+                   .domain([0, maxVal])
+                   .range(["blue", "red"]);
+svg.append("g")
+   .attr("id", "bars")
+   .selectAll("rect")
+   .data(dataset, datakey)
+   .enter()
+   .append("rect")
+   .attr("x", function(d, i) { return barScale(i); })
+   .attr("y", function(d) { return yScale(d.d); })
+   .attr("width", barScale.bandwidth())
+   .attr("height", function(d) { return heightScale(d.d); })
+   .attr("fill", function(d) { return colorScale(d.d); });
+
+var textYShift = 12; // px
+svg.append("g")
+   .attr("id", "bar_labels")
+   .selectAll("text")
+   .data(dataset, datakey)
+   .enter()
+   .append("text")
+   .text(function(d) { return d.d; })
+   .attr("x", function(d, i) { return barScale(i) + barScale.bandwidth()/2; })
+   .attr("y", function(d) { return yScale(d.d) + textYShift; })
+   .attr("font-family", "sans-serif")
+   .attr("font-size", "11px")
+   .attr("fill", "white")
+   .attr("text-anchor", "middle");
+
+function updateSvg() {
+  var removeDuration = 500; // ms
+  var moveDuration = 500; // ms
+  var bars = svg.select("g#bars")
+                .selectAll("rect")
+                .data(dataset, datakey);
+  var labels = svg.select("g#bar_labels")
+                  .selectAll("text")
+                  .data(dataset, datakey);
+
+  // remove deleted bars
+  bars.exit()
+      .transition()
+      .duration(removeDuration)
+      .ease(d3.easeCubic)
+      .attr("y", yScale(0))
+      .attr("height", heightScale(0))
+      .remove();
+  labels.exit()
+        .transition()
+        .duration(removeDuration)
+        .ease(d3.easeCubic)
+        .attr("y", yScale(0) + textYShift)
+        .remove();
+
+  // update the scales
+  barScale.domain(d3.range(dataset.length));
+
+  // Add the new bar(s)
+  var xFunc = function(d, i) {
+    // have it off the screen and come in
+    return d3.max([w + barScale.step(),
+                   barScale.step() * (barScale.paddingOuter()*2 + i)]);
+  };
+  bars.enter()
+      .append("rect")
+      .attr("x", xFunc)
+      .attr("y", function(d) { return yScale(d.d); })
+      .attr("width", barScale.bandwidth())
+      .attr("height", function(d) { return heightScale(d.d); })
+      .attr("fill", function(d) { return colorScale(d.d); })
+    .merge(bars)
+      .transition()
+      //.delay(removeDuration)
+      .duration(moveDuration)
+      .attr("x", function(d, i) { return barScale(i); })
+      .attr("y", function(d) { return yScale(d.d); })
+      .attr("width", barScale.bandwidth())
+      .attr("height", function(d) { return heightScale(d.d); })
+      .attr("fill", function(d) { return colorScale(d.d); });
+  labels.enter()
+        .append("text")
+        .text(function(d) { return d.d; })
+        .attr("x", function(d, i) {
+          return xFunc(d.d, i) + barScale.bandwidth() / 2;
+        })
+        .attr("y", function(d) { return yScale(d.d) + textYShift; })
+        .attr("font-family", "sans-serif")
+        .attr("font-size", "11px")
+        .attr("fill", "white")
+        .attr("text-anchor", "middle")
+      .merge(labels)
+        .transition()
+        //.delay(removeDuration)
+        .duration(moveDuration)
+        .attr("x", function(d, i) { return barScale(i) + barScale.bandwidth() / 2; })
+        .attr("y", function(d) { return yScale(d.d) + textYShift; });
+}
+
+d3.select("button#add").on("click", function() {
+  dataset.push(genPoint([minVal, maxVal]));
+  updateSvg();
+});
+
+function remove(idx) {
+  dataset.splice(idx, 1);
+  updateSvg();
+}
+
+    </script>
+  </body>
+</html>

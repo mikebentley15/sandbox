@@ -1,0 +1,43 @@
+<!DOCTYPE html
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>D3 Page Template</title>
+  <script type="text/javascript" src="d3/d3.js"></script>
+  <style type="text/css">
+div.bar {
+  display: inline-block;
+  width: 20px;
+  height: 75px;  /* we'll override this later */
+  background-color: teal;
+  margin-left: 2px;
+}
+  </style>
+</head>
+<body bgcolor="white">
+
+<p>
+  This file is similar to the last one for making a bar chart with <b>div</b>
+  elements.  This time, the data is random instead of fixed.  Refresh the page
+  to see what I mean.
+</p>
+
+<hr/>
+
+<script type="text/javascript">
+
+dataset = [];
+for (var i = 0; i < 25; i++) {
+  dataset.push(Math.random() * 30);
+}
+d3.select("body").selectAll("div")
+  .data(dataset)
+  .enter()
+  .append("div")
+  .classed("bar", true)
+  .style("height", function(d) { return (d*5) + "px"; });
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<head>
+<meta charset="utf-8">
+<title>Sphere Spirals</title>
+<style>
+@import url(maps.css);
+.outline {
+  pointer-events: all;
+  cursor: move;
+}
+.graticule,
+.outline {
+  stroke: #ccc;
+  stroke-opacity: .5;
+  fill: none;
+}
+.front {
+  stroke: #000;
+  fill: #0f0;
+  fill-opacity: .75;
+}
+.back {
+  stroke: #ccc;
+  fill: #000;
+}
+</style>
+</head>
+<body bgcolor="white">
+<h1>Sphere Spirals</h1>
+
+<div id="map"></div>
+
+<div class="wrapper">
+  <p><a href="http://en.wikipedia.org/wiki/M._C._Escher">M. C. Escher</a> used <a href="../loxodrome/">loxodromes</a> in
+  <a href="http://www.mcescher.com/Gallery/recogn-bmp/LW428.jpg">Sphere Spirals</a> and
+  <a href="http://www.mcescher.com/Gallery/recogn-bmp/LW427.jpg">Sphere Surface with Fish</a>.
+  <p>Eight <a href="http://mathworld.wolfram.com/SphericalSpiral.html">spherical spirals</a> are used to generate four polygons going from pole to pole.
+</div>
+
+<script src="d3/d3.v3.js"></script>
+<script src="app.js"></script>
+</body>

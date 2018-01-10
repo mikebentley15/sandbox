@@ -1,0 +1,28 @@
+\documentclass{article}
+
+\usepackage{graphicx,url}
+\usepackage{proof}
+\usepackage{framed}
+\usepackage{etaremune}
+
+\usepackage{graphicx}
+\usepackage{graphviz}
+\usepackage{tikz}
+\usepackage{dot2texi}
+\usetikzlibrary{shapes,arrows,automata}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amsthm,amssymb,amsfonts}
+\usepackage{paralist}
+
+\usepackage{xcolor}
+\usepackage{etoolbox}  % For boolean vars, i.e. \newtoggle{}
+
+\begin{document}
+  \begin{compactenum}
+  \item \hfill
+    \begin{center}
+      \digraph[scale=1.0]{MyGraph}{rankdir=LR; a->b; b->c}
+    \end{center}
+  \end{compactenum}
+\end{document}

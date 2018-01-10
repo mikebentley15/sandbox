@@ -1,0 +1,17 @@
+\documentclass[tikz]{standalone}
+\usepackage{pgfplots}
+\begin{document}
+\begin{tikzpicture}
+  \begin{axis}[
+    axis x line=middle,
+    axis y line=middle,
+    ylabel=$y$,
+    xlabel=$x$,
+    ]
+    \addplot [domain=-3:3, samples=50]
+      ({t^3 - 3*t},
+       {3*t^3 - 9});
+    % I don't know why this doesn't work.  I need to find out later.
+  \end{axis}
+\end{tikzpicture}
+\end{document}

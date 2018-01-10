@@ -1,0 +1,25 @@
+<!DOCTYPE html
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>D3 Page Template</title>
+    <script type="text/javascript" src="d3/d3.js"></script>
+  </head>
+  <body bgcolor="white">
+    <script type="text/javascript">
+var graticules = d3.geoGraticule()
+                   .extent([-90, -90], [90, 90]);
+var path = d3.geoPath();
+var w = 600;
+var h = 600;
+var svg = d3.select("body").append("svg")
+            .attr("width", w)
+            .attr("height", h);
+svg.append("path")
+   .datum(graticules)
+   .attr("d", path)
+   .attr("stroke", "black")
+   .attr("stroke-width", "0.25");
+    </script>
+  </body>
+</html>

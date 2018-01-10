@@ -1,0 +1,135 @@
+<!DOCTYPE html
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>D3 Page Template</title>
+  <script type="text/javascript" src="d3/d3.js"></script>
+</head>
+<body bgcolor="white">
+
+<p>
+  This file is like the last, but now has three stages to the transition.
+</p>
+<ol>
+  <li>Becomes small blue balls</li>
+  <li>Move to the new location</li>
+  <li>Resize and take on the new color</li>
+</ol>
+
+<hr/>
+
+    <script type="text/javascript">
+function genData(n) {
+  dataset = [];
+  var xRange = Math.random() * 1000;
+  var yRange = Math.random() * 1000;
+  for (var i = 0; i < n; i++) {
+    var d = {x: Math.floor(Math.random() * xRange),
+             y: Math.floor(Math.random() * yRange)};
+    dataset.push(d);
+  }
+  return dataset;
+}
+
+// Create a random dataset
+n = 100;
+dataset = genData(n);
+
+// Display the dataset
+var w = 700;
+var h = 400;
+var pad = {left: 30, right: 10, top: 10, bottom: 20};
+var xMax = d3.max(dataset, function(d) { return Number(d.x); });
+var yMax = d3.max(dataset, function(d) { return Number(d.y); });
+var rMin = 2;
+var rMax = 5;
+var xScale = d3.scaleLinear()
+               .domain([0, xMax])
+               .range([pad.left, w - pad.right])
+               .clamp(true);
+var yScale = d3.scaleLinear()
+               .domain([0, yMax])
+               .range([h - pad.bottom, pad.top])
+               .clamp(true);
+var rScale = d3.scaleLinear()
+               .domain([0, yMax])
+               .range([rMin, rMax]);
+var colorScale = d3.scaleLinear()
+                   .domain([0, xMax])
+                   .range(["rgb(174,0,144)", "rgb(243,162,229)"])
+                   .clamp(true);
+var xAxis = d3.axisBottom(xScale)
+              .ticks(5);
+var yAxis = d3.axisLeft(yScale)
+              .ticks(5);
+var svg = d3.select("body")
+            .append("svg")
+            .attr("width", w)
+            .attr("height", h);
+var points = svg.selectAll("circle")
+                .data(dataset)
+                .enter()
+                .append("circle")
+                .attr("cx", function(d) { return xScale(d.x); })
+                .attr("cy", function(d) { return yScale(d.y); })
+                .attr("r", function(d) { return rScale(d.y); })
+                .attr("fill", function(d) { return colorScale(d.x); });
+svg.append("g")
+   .attr("class", "x_axis")
+   .attr("transform", "translate(0," + (h - pad.bottom) + ")")
+   .call(xAxis);
+svg.append("g")
+   .attr("class", "y_axis")
+   .attr("transform", "translate(" + pad.left + ",0)")
+   .call(yAxis);
+
+svg.attr("class", "clickable").on("click", function() {
+  // Update the data and rebind
+  dataset = genData(n);
+  
+  // Update the scales
+  xMax = d3.max(dataset, function(d) { return d.x; });
+  yMax = d3.max(dataset, function(d) { return d.y; });
+  xScale.domain([0, xMax]);
+  yScale.domain([0, yMax]);
+  rScale.domain([0, yMax]);
+  colorScale.domain([0, xMax]);
+
+  // Update the points
+  var duration = 1000; // ms
+  points.data(dataset)
+        .transition()
+        .duration(duration)
+        //.each("start", function(d) {
+        //  console.log(d);
+        //})
+        .on("start", function() {  // executes at the beginning of the transition
+          // do not use transitions here, or it will cancel the parent one
+          d3.select(this)
+            .attr("fill", "blue")
+            .attr("r", 2);
+        })
+        .attr("cx", function(d) { return xScale(d.x); })
+        .attr("cy", function(d) { return yScale(d.y); })
+        .on("end", function() {
+          // it is okay to use transitions here since the parent is done
+          d3.select(this)
+            .transition()
+            .duration(duration / 2)
+            .attr("fill", function(d) { return colorScale(d.x); })
+            .attr("r", function(d) { return rScale(d.y); });
+        });
+
+  // Update the axes
+  svg.select(".x_axis")
+     .transition()
+     .duration(duration)
+     .call(xAxis);
+  svg.select(".y_axis")
+     .transition()
+     .duration(duration)
+     .call(yAxis);
+});
+    </script>
+  </body>
+</html>

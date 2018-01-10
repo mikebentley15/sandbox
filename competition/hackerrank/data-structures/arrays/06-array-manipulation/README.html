@@ -1,0 +1,36 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+</head>
+<body>
+<h1 id="array-manipulation">Array Manipulation</h1>
+<p>You are given a list(1-indexed) of size <span class="math inline">\(n\)</span>, initialized with zeroes. You have to perform operations on the list and output the maximum of final values of all the <span class="math inline">\(n\)</span> elements in the list. For every operation, you are given three integers <span class="math inline">\(a\)</span>, <span class="math inline">\(b\)</span> and <span class="math inline">\(k\)</span> and you have to add value <span class="math inline">\(k\)</span> to all the elements ranging from index <span class="math inline">\(a\)</span> to <span class="math inline">\(b\)</span> (both inclusive).</p>
+<p>For example, consider a list <span class="math inline">\(a\)</span> of size 3. The initial list would be <span class="math inline">\(A\)</span> = [<span class="math inline">\(0\)</span>, <span class="math inline">\(0\)</span>, <span class="math inline">\(0\)</span>] and after performing the update <span class="math inline">\(u(a,b,k)\)</span> = <span class="math inline">\((2,3,30)\)</span>, the new list would be <span class="math inline">\(a\)</span> = [0, 30, 30]. Here, we've added value 30 to elements between indices 2 and 3. Note the index of the list starts from 1.</p>
+<h2 id="input-format">Input Format</h2>
+<p>The first line will contain two integers <span class="math inline">\(n\)</span> and <span class="math inline">\(m\)</span> separated by a single space. Next <span class="math inline">\(m\)</span> lines will contain three integers <span class="math inline">\(a\)</span>, <span class="math inline">\(b\)</span> and <span class="math inline">\(k\)</span> separated by a single space. Numbers in list are numbered from 1 to <span class="math inline">\(n\)</span>.</p>
+<h2 id="constraints">Constraints</h2>
+<ul>
+<li><span class="math inline">\(3 \leq n \leq 10^7\)</span></li>
+<li><span class="math inline">\(1 \leq m \leq 2 \cdot 10^5\)</span></li>
+<li><span class="math inline">\(1 \leq a \leq b \leq n\)</span></li>
+<li><span class="math inline">\(0 \leq k \leq 10^9\)</span></li>
+</ul>
+<h2 id="output-format">Output Format</h2>
+<p>Print in a single line the maximum value in the updated list.</p>
+<h2 id="sample-input">Sample Input</h2>
+<pre><code>5 3
+1 2 100
+2 5 100
+3 4 100</code></pre>
+<h2 id="sample-output">Sample Output</h2>
+<pre><code>200</code></pre>
+<h2 id="explanation">Explanation</h2>
+<p>After first update list will be <code>100 100 0 0 0</code>. After second update list will be <code>100 200 100 100 100</code>. After third update list will be <code>100 200 200 200 100</code>. So the required answer will be <code>200</code>.</p>
+</body>
+</html>
