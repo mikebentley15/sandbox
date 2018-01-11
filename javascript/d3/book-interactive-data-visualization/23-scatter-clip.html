@@ -1,21 +1,23 @@
 <!DOCTYPE html
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>D3 Page Template</title>
-    <script type="text/javascript" src="d3/d3.js"></script>
-    <style type="text/css">
-      div.bar {
-        display: inline-block;
-        width: 20px;
-        height: 75px;  /* we'll override this later */
-        background-color: teal;
-        margin-left: 2px;
-      }
-    </style>
-  </head>
-  <body bgcolor="white">
-    <script type="text/javascript">
+<head>
+  <meta charset="utf-8" />
+  <title>D3 Page Template</title>
+  <script type="text/javascript" src="d3/d3.js"></script>
+  <style type="text/css">
+  </style>
+</head>
+<body bgcolor="white">
+
+<p>
+  This file is the same as the last one, except it has a clipping rectangle to
+  make sure the circles do not show outside of the plotting region.
+</p>
+
+<hr/>
+
+<script type="text/javascript">
+
 function genData(n) {
   dataset = [];
   var xRange = Math.random() * 1000;
@@ -134,6 +136,8 @@ svg.attr("class", "clickable").on("click", function() {
      .duration(duration)
      .call(yAxis);
 });
-    </script>
-  </body>
+
+</script>
+
+</body>
 </html>

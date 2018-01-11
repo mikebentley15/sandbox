@@ -1,13 +1,25 @@
 <!DOCTYPE html
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>D3 Page Template</title>
-    <script type="text/javascript" src="d3/d3.js"></script>
-  </head>
-  <body bgcolor="white">
-    <button id="add">+</button><br/>
-    <script type="text/javascript">
+<head>
+  <meta charset="utf-8" />
+  <title>D3 Page Template</title>
+  <script type="text/javascript" src="d3/d3.js"></script>
+</head>
+<body bgcolor="white">
+
+<p>
+  Now back to our favorite bar chart.  This is randomly generated data and the
+  bars go from red to blue.  If you click on the "+" button, then a new
+  randomly-generated bar will appear on the right of the chart.  This
+  demonstrates how to add data.
+</p>
+
+<hr/>
+
+<button id="add">+</button><br/>
+
+<script type="text/javascript">
+
 function genPoint(bounds) {
   return Math.round(bounds[0] + Math.random() * (bounds[1] - bounds[0]));
 }
@@ -123,6 +135,8 @@ d3.select("button#add").on("click", function() {
      .duration(moveDuration)
      .attr("x", function(d, i) { return barScale(i) + barScale.bandwidth() / 2; });
 });
-    </script>
-  </body>
+
+</script>
+
+</body>
 </html>

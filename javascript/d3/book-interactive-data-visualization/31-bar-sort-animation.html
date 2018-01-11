@@ -66,6 +66,11 @@ rect.compared {
     <input type="radio" name="startstop" id="stop" value="stop" checked>
     <label for="stop">Stop</label>
   </div> <!-- end of div#start-stop-buttons -->
+  <div id="stats">
+    <p><b>Operations:</b> <span id="op-stat"></span></p>
+    <p><b>Swaps:</b> <span id="swap-stat"></span></p>
+    <p><b>Comparisons:</b> <span id="comp-stat"></span></p>
+  </div>
 </div> <!-- end of div#controls -->
 
 <script type="text/javascript">
@@ -141,10 +146,56 @@ function bubbleSort(arr, compfunc, swapfunc) {
   return arr;
 }
 
+function heapSort(arr, compfunc, swapfunc) {
+  function MaxHeap(arr, compfunc, swapfunc) {
+    this.arr = arr;
+    this.compfunc = compfunc;
+    this.swapfunc = swapfunc;
+    this.length = arr.length;
+
+    this.balance_down = function(i) {
+      i = i ? i : 0; // default to index 0
+      var left = 2*i + 1;
+      var right = left + 1;
+      var largest = i;
+      if (left < this.length && this.compfunc(this.arr, largest, left) < 0) {
+        largest = left;
+      }
+      if (right < this.length && this.compfunc(this.arr, largest, right) < 0) {
+        largest = right;
+      }
+      if (largest != i) {
+        swapfunc(this.arr, i, largest);
+        this.balance_down(largest);
+      }
+    }
+
+    this.popToEnd = function() {
+      this.length--;
+      if (this.length > 0) {
+        this.swapfunc(this.arr, 0, this.length);
+      }
+      this.balance_down(0);
+    }
+
+    // Do the initial balancing of the tree
+    for (var i = Math.floor((this.length-1) / 2); i--; ) {
+      this.balance_down(i);
+    }
+  }
+
+  var heap = new MaxHeap(arr, compfunc, swapfunc);
+  while (heap.length > 0) {
+    heap.popToEnd();
+  }
+  return arr;
+}
+
 var sortMap = [
-  { text: 'Selection Sort', key: 'selectionsort', func: selectionSort },
+  { text: 'Heap Sort',      key: 'heapsort',      func: heapSort      },
   { text: 'Insertion Sort', key: 'insertionsort', func: insertionSort },
-  { text: 'Bubble Sort',    key: 'bubblesort',    func: bubbleSort    }
+  { text: 'Bubble Sort',    key: 'bubblesort',    func: bubbleSort    },
+  { text: 'Selection Sort', key: 'selectionsort', func: selectionSort }
 ];
 
 var sortActions = [];
@@ -190,19 +241,26 @@ function mkSortActions() {
   // run the sort algorithm to populate sortActions
   sortActions = [];
   sortIdx = 0;  // reset the sort index
+  var swaps = 0;
+  var comps = 0;
   var sortfunc = getSortFunction();
   var compfunc = function(arr, i, j) {
     sortActions.push(new Comparison(i, j));
+    comps++;
     return arr[i].d - arr[j].d;
   };
   var swapfunc = function(arr, i, j) {
     sortActions.push(new Swap(i, j));
+    swaps++;
     var tmp = arr[i];
     arr[i] = arr[j];
     arr[j] = tmp;
   }
   var copied = dataset.slice();
   sortfunc(copied, compfunc, swapfunc);
+  d3.select('span#op-stat').text(swaps + comps);
+  d3.select('span#swap-stat').text(swaps);
+  d3.select('span#comp-stat').text(comps);
 }
 
 function stopRun() {
