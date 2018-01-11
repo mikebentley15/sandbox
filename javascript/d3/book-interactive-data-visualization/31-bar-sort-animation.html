@@ -38,6 +38,10 @@ input:checked + label:hover {
   background-color: #ddd;
 }
 
+rect.compared {
+  fill: orange;
+}
+
   </style>
 </head>
 <body bgcolor="white">
@@ -65,6 +69,7 @@ input:checked + label:hover {
 </div> <!-- end of div#controls -->
 
 <script type="text/javascript">
+
 // To remove arbitrary elements, there needs to be a way to individually and
 // uniquely distinguish them.
 
@@ -82,22 +87,40 @@ input:checked + label:hover {
 // These sorts then return the sorted array at the end, even though it is
 // sorted in place.
 
+var frameTime = 100; // ms
+var swapDelay = frameTime - 10;//Math.round(frameTime * 0.9);
+var dataset = [];
+var datakey = function(d) { return d.i; };
+
+// Define Comparison and Swap types for capture-playback of sorting
+// These are our actions in the plan of sorting
+function Comparison(i, j) { this.i = i; this.j = j; }
+function Swap(i, j) { this.i = i; this.j = j; }
+Comparison.prototype.toString = function() {
+  return 'Comparison(' + this.i + ', ' + this.j + ')';
+};
+Swap.prototype.toString = function() {
+  return 'Swap(' + this.i + ', ' + this.j + ')';
+};
+
 function selectionSort(arr, compfunc, swapfunc) {
-  for (var i = 0; i < arr.length; i++) {
+  for (var i = 0; i < arr.length-1; i++) {
     var idx_min = i;
-    for (var j = i; j < arr.length; j++) {
-      if (compfunc(arr, idx_min, j) < 0) {
+    for (var j = i + 1; j < arr.length; j++) {
+      if (compfunc(arr, j, idx_min) < 0) {
         idx_min = j;
       }
     }
-    swapfunc(arr, i, idx_min);
+    if (i !== idx_min) {
+      swapfunc(arr, i, idx_min);
+    }
   }
   return arr;
 }
 
 function insertionSort(arr, compfunc, swapfunc) {
   for (var i = 1; i < arr.length; i++) {
-    for (var j = i; compfunc(arr, j, j-1) < 0; j--) {
+    for (var j = i; j > 0 && compfunc(arr, j, j-1) < 0; j--) {
       swapfunc(arr, j, j-1);
     }
   }
@@ -124,6 +147,109 @@ var sortMap = [
   { text: 'Bubble Sort',    key: 'bubblesort',    func: bubbleSort    }
 ];
 
+var sortActions = [];
+var sortIdx = 0;
+function run() {
+  //sortIdx = sortIdx % sortActions.length;
+  if (sortIdx >= sortActions.length) {
+    stopRun();
+    return;
+  }
+  var action = sortActions[sortIdx];
+  console.log('showing sort animation for step ' + sortIdx + ' = ' + action);
+  if (action instanceof Comparison) {
+    svg.select("g#bars")
+       .selectAll("rect")
+       .data(dataset, datakey)
+       .classed("compared", function(d, i) {
+         return i === action.i || i === action.j;
+       });
+  } else if (action instanceof Swap) {
+    var tmp = dataset[action.i];
+    dataset[action.i] = dataset[action.j];
+    dataset[action.j] = tmp;
+    updateSvg();
+  } else {
+    console.warn('Warning: unknown type of sort action: ' + (typeof action));
+    stopRun();
+  }
+  sortIdx++;
+}
+
+function getSortFunction() {
+  var sortkey = d3.select('input[name="sorts"]:checked').property('value');
+  for (var i = 0; i < sortMap.length; i++) {
+    if (sortMap[i].key === sortkey) {
+      return sortMap[i].func;
+    }
+  }
+  return null;
+}
+
+function mkSortActions() {
+  // run the sort algorithm to populate sortActions
+  sortActions = [];
+  sortIdx = 0;  // reset the sort index
+  var sortfunc = getSortFunction();
+  var compfunc = function(arr, i, j) {
+    sortActions.push(new Comparison(i, j));
+    return arr[i].d - arr[j].d;
+  };
+  var swapfunc = function(arr, i, j) {
+    sortActions.push(new Swap(i, j));
+    var tmp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = tmp;
+  }
+  var copied = dataset.slice();
+  sortfunc(copied, compfunc, swapfunc);
+}
+
+function stopRun() {
+  if (runTimer != null) {
+    console.log('toggleRun - stop');
+    clearInterval(runTimer);
+    runTimer = null;
+  }
+  svg.select("g#bars")
+     .selectAll("rect")
+     .data(dataset, datakey)
+     .classed("compared", false);
+  d3.select('div#start-stop-buttons')
+    .selectAll('input')
+    .property('checked', function() { return this.id === 'stop'; });
+}
+
+function startRun() {
+  if (runTimer !== null) {
+    stopRun();
+  }
+  console.log('toggleRun - start');
+  mkSortActions();
+  console.log('sort actions:');
+  console.log(sortActions);
+  runTimer = setInterval(run, frameTime);
+  d3.select('div#start-stop-buttons')
+    .selectAll('input')
+    .property('checked', function() { return this.id === 'start'; });
+}
+
+var runTimer = null;
+function toggleRun() {
+  if (runTimer) {
+    startRun();
+  } else {
+    stopRun();
+  }
+}
+d3.selectAll('input[name="startstop"]').on('change', function() {
+  if (d3.select(this).property('value') === 'start') {
+    startRun();
+  } else {
+    stopRun();
+  }
+});
+
 // create the sort buttons
 d3.select('div#sort-buttons')
   .selectAll('input')
@@ -138,24 +264,18 @@ d3.select('div#sort-buttons')
   .on('change', function() {
     var val = d3.select('input[name="sorts"]:checked').property("value");
     console.log('sort type changed to "' + val + '"');
-    // TODO: finish this function
+    stopRun();
   })
-  .append('label')
-  .attr('for', function(d) { return 'sort-' + d.key; })
-  .text(function(d) { return d.text });
+  .each(function() {
+    var d = d3.select(this).data()[0];
+    var label = document.createElement('label');
+    this.parentNode.insertBefore(label, this.nextSibling);
+    d3.select(label)
+      .attr('for', 'sort-' + d.key)
+      .text(d.text);
+  });
 
 var ptidx = 0;
-var datakey = function(d) { return d.i; };
-var step_delay = 100; // ms
-var swap_duration = 200; // ms
-var animation_time = 0; // ms of when to do the next animation
-var dataset = [];
-
-// Define Comparison and Swap types for capture-playback of sorting
-// These are our actions in the plan of sorting
-function Comparison(i, j) { this.i = i; this.j = j; }
-function Swap(i, j) { this.i = i; this.j = j; }
-
 function genPoint(bounds) {
   ptidx += 1;
   return {
@@ -225,8 +345,8 @@ svg.append("g")
    .attr("text-anchor", "middle");
 
 function updateSvg() {
-  var removeDuration = 500; // ms
-  var moveDuration = 500; // ms
+  var removeDuration = swapDelay; //500; // ms
+  var moveDuration = swapDelay; //500; // ms
   var bars = svg.select("g#bars")
                 .selectAll("rect")
                 .data(dataset, datakey);
@@ -294,6 +414,7 @@ function updateSvg() {
 }
 
 d3.select("button#add").on("click", function() {
+  stopRun();
   dataset.push(genPoint([minVal, maxVal]));
   updateSvg();
 });
@@ -303,28 +424,7 @@ function remove(idx) {
   updateSvg();
 }
 
-function compare_animate(compare_func, a, b) {
-  var i_a = dataset.indexOf(a);
-  var i_b = dataset.indexOf(b);
+</script>
 
-  // Set a future event to occur
-  setTimeout(
-    function() {
-      svg.select("g#bars")
-         .selectAll("rect")
-         .classed("compare", function(d) { return a === d || b === d; });
-    },
-    animation_time + step_delay
-  );
-
-  // return the actual comparison
-  return compare_func(a, b);
-}
-
-function swap_animate(swap_func, arr, a, b) {
-  
-  return swap_func(arr, a, b);
-}
-    </script>
-  </body>
+</body>
 </html>
