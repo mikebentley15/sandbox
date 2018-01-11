@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>D3 Page Template</title>
-    <script type="text/javascript" src="d3/d3.js"></script>
-    <style type="text/css">
+<head>
+  <meta charset="utf-8" />
+  <title>D3 Page Template</title>
+  <script type="text/javascript" src="d3/d3.js"></script>
+  <style type="text/css">
 rect.compare {
   fill: purple;
 }
@@ -38,34 +38,111 @@ input:checked + label:hover {
   background-color: #ddd;
 }
 
-    </style>
-  </head>
-  <body bgcolor="white">
-    <div id="controls">
-      <button id="add">+</button>
-      <div id="sort-buttons">
-        Sorting Algorithm: 
-        <input type="radio" name="sorts" id="sort-selectionsort"
-               value="selection" checked />
-        <label for="sort-selectionsort">Selection Sort</label>
-        <input type="radio" name="sorts" id="sort-insertionsort" value="insertion" />
-        <label for="sort-insertionsort" class="btn">Insertion Sort</label>
-        <input type="radio" name="sorts" id="sort-bubblesort" value="bubble" />
-        <label for="sort-bubblesort" class="btn">Bubble Sort</label>
-      </div>
-      <div id="start-stop-buttons">
-        <input type="radio" name="startstop" id="start" value="start">
-        <label for="start">Start</label>
-        <input type="radio" name="startstop" id="stop" value="stop" checked>
-        <label for="stop">Stop</label>
-      </div>
-    </div>
-    <script type="text/javascript">
+  </style>
+</head>
+<body bgcolor="white">
+
+<div id="controls">
+  <button id="add">+</button>
+  <div id="sort-buttons">
+    Sorting Algorithm:
+    <!--
+    <input type="radio" name="sorts" id="sort-selectionsort"
+           value="selection" checked />
+    <label for="sort-selectionsort">Selection Sort</label>
+    <input type="radio" name="sorts" id="sort-insertionsort" value="insertion" />
+    <label for="sort-insertionsort" class="btn">Insertion Sort</label>
+    <input type="radio" name="sorts" id="sort-bubblesort" value="bubble" />
+    <label for="sort-bubblesort" class="btn">Bubble Sort</label>
+    -->
+  </div> <!-- end of div#sort-buttons -->
+  <div id="start-stop-buttons">
+    <input type="radio" name="startstop" id="start" value="start">
+    <label for="start">Start</label>
+    <input type="radio" name="startstop" id="stop" value="stop" checked>
+    <label for="stop">Stop</label>
+  </div> <!-- end of div#start-stop-buttons -->
+</div> <!-- end of div#controls -->
+
+<script type="text/javascript">
 // To remove arbitrary elements, there needs to be a way to individually and
 // uniquely distinguish them.
 
 // TODO: make a map of sort-name -> function pointer
 // TODO: use that map to auto-generate the sorting algorithm radio buttons
+
+// Sort function arguments:
+//
+// @param arr - the array to sort
+// @param compfunc - takes parameters (arr, i, j).
+//        Returns a negative value if arr[i] < arr[j].
+// @param swapfunc - takes parameters (arr, i, j)
+//        Swaps values of elements arr[i] and arr[j]
+//
+// These sorts then return the sorted array at the end, even though it is
+// sorted in place.
+
+function selectionSort(arr, compfunc, swapfunc) {
+  for (var i = 0; i < arr.length; i++) {
+    var idx_min = i;
+    for (var j = i; j < arr.length; j++) {
+      if (compfunc(arr, idx_min, j) < 0) {
+        idx_min = j;
+      }
+    }
+    swapfunc(arr, i, idx_min);
+  }
+  return arr;
+}
+
+function insertionSort(arr, compfunc, swapfunc) {
+  for (var i = 1; i < arr.length; i++) {
+    for (var j = i; compfunc(arr, j, j-1) < 0; j--) {
+      swapfunc(arr, j, j-1);
+    }
+  }
+  return arr;
+}
+
+function bubbleSort(arr, compfunc, swapfunc) {
+  var swaps = 1;
+  while (swaps != 0) {
+    swaps = 0;
+    for (i = 1; i < arr.length; i++) {
+      if (compfunc(arr, i, i-1) < 0) {
+        swapfunc(arr, i, i-1);
+        swaps++;
+      }
+    }
+  }
+  return arr;
+}
+
+var sortMap = [
+  { text: 'Selection Sort', key: 'selectionsort', func: selectionSort },
+  { text: 'Insertion Sort', key: 'insertionsort', func: insertionSort },
+  { text: 'Bubble Sort',    key: 'bubblesort',    func: bubbleSort    }
+];
+
+// create the sort buttons
+d3.select('div#sort-buttons')
+  .selectAll('input')
+  .data(sortMap)
+  .enter()
+  .append('input')
+  .attr('type', 'radio')
+  .attr('name', 'sorts')
+  .attr('id', function(d) { return 'sort-' + d.key; })
+  .attr('value', function(d) { return d.key; })
+  .property('checked', function(d, i) { return i === 0; })
+  .on('change', function() {
+    var val = d3.select('input[name="sorts"]:checked').property("value");
+    console.log('sort type changed to "' + val + '"');
+    // TODO: finish this function
+  })
+  .append('label')
+  .attr('for', function(d) { return 'sort-' + d.key; })
+  .text(function(d) { return d.text });
 
 var ptidx = 0;
 var datakey = function(d) { return d.i; };
