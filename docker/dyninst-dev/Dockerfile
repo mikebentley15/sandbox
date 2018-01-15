@@ -44,8 +44,7 @@ RUN apt-get update && \
       gdb \
       bsdmainutils \
       && \
-    rm -rf /var/lib/apt/lists/* && \
-
+    rm -rf /var/lib/apt/lists/*
 
 USER dynuser
 WORKDIR /home/dynuser
