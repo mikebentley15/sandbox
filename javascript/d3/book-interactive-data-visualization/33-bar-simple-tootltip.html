@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>D3 Bars - Simple Tooltip</title>
+  <script type="text/javascript" src="d3/d3.js"></script>
+  <style type="text/css">
+/* This is a cool effect, but has another symptom.  It makes D3 transitions
+ * slower.  For example, the text will move faster than the rect when
+ * disappearing.
+ */
+g#bars rect:hover {
+  fill: orange;
+  transition: all 0.2s;
+  /* browser-specific options:
+   * -moz-transition: all 0.1s;
+   * -o-transition: all 0.1s;
+   * -webkit-transition: all 0.1s;
+   */
+}
+  </style>
+</head>
+<body bgcolor="white">
+
+<script type="text/javascript">
+
+var n = 25;
+var minVal = 3;
+var maxVal = 25;
+var w = 700;
+var h = 400;
+var pad = { left: 0, right: 0, top: 0, bottom: 0 };
+
+// function to generate points with auto-incrementing keys
+var genPoint = (function() {
+  var currentKey = 0;
+  return function(bounds) {
+    currentKey += 1;
+    return {
+      key: currentKey,
+      val: Math.round(bounds[0] + Math.random() * (bounds[1] - bounds[0]))
+    };
+  };
+})();
+
+// function to generate a lot of data points
+function genData(n, bounds) {
+  dataset = [];
+  for (var i = 0; i < n; i++) {
+    dataset.push(genPoint(bounds));
+  }
+  return dataset;
+}
+
+var dataset = genData(n, [minVal, maxVal]);
+
+var svg = d3.select("body")
+    .append("svg")
+    .attr("width", w)
+    .attr("height", h);
+
+svg.append("g").attr("id", "bars");
+
+var updateSvg = (function() {
+  var barScale = d3.scaleBand()
+      .domain(d3.range(dataset.length))
+      .rangeRound([pad.left, w - pad.right])
+      .paddingInner(0.08)
+      .paddingOuter(0);
+  var yScale = d3.scaleLinear()
+      .domain([0, maxVal])
+      .rangeRound([h - pad.bottom, pad.top]);
+  var heightScale = d3.scaleLinear()
+      .domain([0, maxVal])
+      .rangeRound([0, h - pad.bottom - pad.top]);
+  var colorScale = d3.scaleLinear()
+      .domain([0, maxVal])
+      .range(["blue", "red"])
+  var datakey = function(d) { return d.key; };
+
+  return function() {
+    var bars = d3.select("g#bars")
+        .selectAll("rect")
+        .data(dataset, datakey);
+    bars.enter()
+        .append("rect")
+      .merge(bars)
+        .attr("x", function(d, i) { return barScale(i); })
+        .attr("y", function(d) { return yScale(d.val); })
+        .attr("height", function(d) { return heightScale(d.val); })
+        .attr("width", barScale.bandwidth())
+        .attr("fill", function(d) { return colorScale(d.val); });
+    bars.exit()
+        .remove();
+  };
+})();
+
+updateSvg();
+
+</script>
+
+</body>
+</html>
