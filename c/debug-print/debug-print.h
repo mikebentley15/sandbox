@@ -4,6 +4,14 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+#ifndef mdebug
+# ifdef DEBUG
+#  define mdebug(...) printf(__VA_ARGS__)
+# else // ndef DEBUG
+#  define mdebug(...)
+# endif // ndef DEBUG
+#endif // def mdebug
+
 static inline
 void debug(const char* format, ...) {
 #ifdef DEBUG
