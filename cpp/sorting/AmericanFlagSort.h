@@ -14,7 +14,7 @@ void american_flag_sort_rec(int* arr, size_t n, int pass) {
   if (pass < 0) {
     return;
   }
-  static_assert(false, "Not yet implemented");
+  //static_assert(false, "Not yet implemented");
 
   constexpr int tot_passes = 8 * sizeof(int) / bits;
   constexpr size_t bins = (1 << bits);

@@ -34,6 +34,7 @@ void merge(int* dest, int* arr1, size_t n1, int* arr2, size_t n2) {
   }
 }
 
+// Requires that when called, arr and buffer have identical contents
 void merge_sort_rec(int* arr, int* buffer, size_t n) {
   // Base cases
   if (n <= 1) {
@@ -41,22 +42,22 @@ void merge_sort_rec(int* arr, int* buffer, size_t n) {
   }
 
   // Recursively sort the left and right halves
-  size_t left_size = n / 2;
-  size_t right_size = n - left_size;
-  merge_sort_rec(arr, buffer, left_size);
-  merge_sort_rec(arr + left_size, buffer + left_size, right_size);
+  const size_t left_size = n / 2;
+  const size_t right_size = n - left_size;
+  // Note: we swap buffer and arr here
+  // Sort the buffer array halves instead of arr, since buffer has the same
+  // content.
+  merge_sort_rec(buffer, arr, left_size);
+  merge_sort_rec(buffer + left_size, arr + left_size, right_size);
 
-  // Merge the two sorted halves
-  merge(buffer, arr, left_size, arr + left_size, right_size);
-
-  // Copy over from the buffer
-  // TODO: instead of copying over, invert arr and buffer
-  memcpy(arr, buffer, n * sizeof(int));
+  // Merge the two sorted halves into arr
+  merge(arr, buffer, left_size, buffer + left_size, right_size);
 }
 
 } // end of unnamed namespace
 
 void merge_sort(int* arr, size_t n) {
   std::unique_ptr<int[]> buffer (new int[n]);
+  memcpy(buffer.get(), arr, n * sizeof(int));
   merge_sort_rec(arr, buffer.get(), n);
 }

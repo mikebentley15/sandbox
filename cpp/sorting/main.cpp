@@ -36,14 +36,14 @@ int main() {
     {"std::sort", [](int* arr, size_t n) { return std::sort(arr, arr+n); }},
   };
 
-  experiment(sort_map, 20);
+  //experiment(sort_map, 20);
 
-  //std::vector<size_t> sizes;
-  //for (int i = 0; i < 22; i++) {
-  //  sizes.push_back(1 << i);
-  //}
+  std::vector<size_t> sizes;
+  for (int i = 0; i < 25; i++) {
+    sizes.push_back(1 << i);
+  }
 
-  //timesort_csv(sort_map, sizes);
+  timesort_csv(sort_map, sizes);
 
   return 0;
 }
@@ -74,12 +74,16 @@ void experiment(const std::map<std::string, SortFunction<int>> &sort_map, size_t
   populate_dataset(data_orig.get(), n);
 
   // Check that they all sort properly
+  std::unique_ptr<int[]> data_sorted (new int[n]);
+  memcpy(data_sorted.get(), data_orig.get(), sizeof(int)*n);
+  std::sort(data_sorted.get(), data_sorted.get()+n);
   for (auto &kv : sort_map) {
     auto &k = kv.first;
     auto &v = kv.second;
     memcpy(data_copy.get(), data_orig.get(), sizeof(int)*n);
     v(data_copy.get(), n);
-    if (!is_sorted(data_copy.get(), n)) {
+    //if (!is_sorted(data_copy.get(), n)) {
+    if (0 != memcmp(data_copy.get(), data_sorted.get(), sizeof(int)*n)) {
       std::cout << "ERROR: " << k << " did not sort correctly\n";
       for (int i = 0; i < n; i++) {
         std::cout << "  " << data_copy[i] << std::endl;
