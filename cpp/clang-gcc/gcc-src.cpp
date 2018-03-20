@@ -1,0 +1,1 @@
+void gcc_func();
