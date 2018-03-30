@@ -14,6 +14,7 @@ else
     --mac-address=00:23:ae:b3:33:48 \
     -it \
     -v /opt/intel:/opt/intel \
+    --cap-add=SYS_PTRACE \
     --name $CONTAINER_NAME \
     arch-flit
 fi
