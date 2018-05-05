@@ -1,5 +1,6 @@
 CXX        := g++ -std=c++14 -O3
 SOURCES    := $(wildcard *.cpp)
+HEADERS    := $(wildcard *.h)
 OBJ        := $(SOURCES:%.cpp=%.o)
 TARGET     := example
 DOC_CMD    := pandoc --standalone --mathjax
@@ -17,7 +18,7 @@ clean:
 $(TARGET) : $(OBJ)
 	$(CXX) -o $@ $(OBJ)
 
-%.o : %.cpp Makefile
+%.o : %.cpp $(HEADERS) Makefile
 	$(CXX) -c -o $@ $<
 
 %.html : %.md
