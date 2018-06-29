@@ -1,10 +1,10 @@
-FROM nvidia/cuda:9.2-devel-ubuntu18.04
+FROM nvidia/cuda:9.1-devel-ubuntu16.04
 
 # setup dependencies
 RUN apt-get update && \
     apt-get install -y \
       cmake \
-      cuda-samples-9-2 \
+      cuda-samples-9-1 \
       g++ \
       git \
       make \
@@ -62,7 +62,7 @@ ENV CUDA_HOME /usr/local/cuda
 ENV CUDA_DIR  /usr/local/cuda
 ENV MFEM_DIR  /home/labuser/mfem
 ENV RAJA_DIR  /home/labuser/raja_install/usr/local
-ENV MPI_HOME  /usr/lib/x86_64-linux-gnu/openmpi
+ENV MPI_HOME  /usr/lib/openmpi
 RUN cd Laghos && \
     git checkout raja-dev && \
     make raja
