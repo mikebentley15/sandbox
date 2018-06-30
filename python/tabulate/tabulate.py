@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import itertools
-import os
 import subprocess as subp
 import sys
 
@@ -39,9 +38,7 @@ def tabulate_cols(iterable, ncols, padding=2):
     >>> print('\\n'.join(tabulate_cols([1,2,3], 4)))
     1  2  3
     '''
-    words = [str(x) for x in iterable]
-    height = len(words) // ncols + (1 if len(words) % ncols > 0 else 0)
-    columns = [take(words, height) for _ in range(ncols)]
+    columns = columnate(map(str, iterable), ncols)
     widths = [max([0] + [len(y) for y in x]) for x in columns]
     table = []
     pad = ' ' * padding
@@ -50,6 +47,20 @@ def tabulate_cols(iterable, ncols, padding=2):
                               for word, width in zip(row, widths))
                         .strip())
     return table
+
+def columnate(iterable, ncols):
+    '''
+    Takes an iterable and returns a list of columns from it.
+
+    >>> words = ['a', 'b', 'cccccccc', 'dd', 'e', 'fffffff', 'gg', 'h', 'i', 'j']
+    >>> import pprint
+    >>> columnate(words, 3)
+    [['a', 'b', 'cccccccc', 'dd'], ['e', 'fffffff', 'gg', 'h'], ['i', 'j']]
+    '''
+    words = list(iterable)
+    height = len(words) // ncols + (1 if len(words) % ncols > 0 else 0)
+    columns = [take(words, height) for _ in range(ncols)]
+    return columns
 
 def take(element_list, n):
     '''
