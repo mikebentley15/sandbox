@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import itertools
 import subprocess as subp
 import sys
 
@@ -38,45 +37,44 @@ def tabulate_cols(iterable, ncols, padding=2):
     >>> print('\\n'.join(tabulate_cols([1,2,3], 4)))
     1  2  3
     '''
-    columns = columnate(map(str, iterable), ncols)
+    words = [str(x) for x in iterable]
+    columns = columnate(words, ncols)
+    rows = rowate(words, ncols)
+    
     widths = [max([0] + [len(y) for y in x]) for x in columns]
     table = []
     pad = ' ' * padding
-    for row in itertools.zip_longest(*columns, fillvalue=''):
+    for row in rows:
         table.append(pad.join(word.ljust(width)
-                              for word, width in zip(row, widths))
+                              for word, width in zip(row, widths)) 
                         .strip())
     return table
 
-def columnate(iterable, ncols):
+def columnate(elements, ncols):
     '''
     Takes an iterable and returns a list of columns from it.
 
     >>> words = ['a', 'b', 'cccccccc', 'dd', 'e', 'fffffff', 'gg', 'h', 'i', 'j']
-    >>> import pprint
     >>> columnate(words, 3)
     [['a', 'b', 'cccccccc', 'dd'], ['e', 'fffffff', 'gg', 'h'], ['i', 'j']]
     '''
-    words = list(iterable)
-    height = len(words) // ncols + (1 if len(words) % ncols > 0 else 0)
-    columns = [take(words, height) for _ in range(ncols)]
+    height = len(elements) // ncols + (1 if len(elements) % ncols > 0 else 0)
+    columns = [elements[i:i+height] for i in range(0, len(elements), height)]
     return columns
 
-def take(element_list, n):
+def rowate(iterable, ncols):
     '''
-    Takes the first n elements from the iterable and returns it as a list.
+    Takes an iterable and returns a list of rows that puts it in the columns
+    correctly.
 
-    >>> it = list(range(10))
-    >>> take(it, 5)
-    [0, 1, 2, 3, 4]
-    >>> take(it, 3)
-    [5, 6, 7]
-    >>> take(it, 6)
-    [8, 9]
+    >>> words = ['a', 'b', 'cccccccc', 'dd', 'e', 'fffffff', 'gg', 'h', 'i', 'j']
+    >>> rowate(words, 3)
+    [['a', 'e', 'i'], ['b', 'fffffff', 'j'], ['cccccccc', 'gg'], ['dd', 'h']]
     '''
-    taken = element_list[:n]
-    element_list[:] = element_list[n:]
-    return taken
+    words = list(iterable)
+    height = len(words) // ncols + (1 if len(words) % ncols > 0 else 0)
+    rows = [words[i::height] for i in range(height)]
+    return rows
 
 def terminal_width():
     '''
