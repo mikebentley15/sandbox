@@ -1,0 +1,6 @@
+<root>
+  <child>child 1</child>
+  <kid name="Bob" />
+  <kid name="Harry" />
+  <child>child 2</child>
+</root>
