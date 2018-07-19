@@ -128,9 +128,16 @@ def dd(content, test):
     '''
     memoizer = {}
     def test_wrapped(inside_content):
-        if isinstance(inside_content, list):
-            inside_content = ''.join(inside_content)
-        index = (len(inside_content), hash(inside_content))
+        if isinstance(inside_content, str):
+            as_string = inside_content
+        elif isinstance(inside_content, list):
+            if inside_content and isinstance(inside_content[0], ET.Element):
+                as_string = '\n'.join(ET.tostring(x).decode('utf-8') for x in inside_content)
+            else:
+                as_string = '\n'.join(str(x) for x in inside_content)
+        else:
+            as_string = str(inside_content)
+        index = (len(as_string), hash(as_string))
         if index in memoizer:
             return memoizer[index]
         result = test(inside_content)
@@ -144,6 +151,9 @@ def _dd_rec(content, test, n=2):
     The delta-debugging algorithm recursive implementation
     '''
     assert test(content) is False
+
+    if len(content) == 1:
+        return content
 
     # try a complement of a subset
     delta_size = len(content) // n
