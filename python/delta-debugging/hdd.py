@@ -40,6 +40,10 @@ import copy
 
 import dd
 
+XML_CHILD = 1
+XML_ATTR = 2
+XML_TEXT = 3
+
 def xml_prune(root, level, to_keep):
     '''
     Prunes from an ElementTree.Element object (root) at the given level, to
@@ -47,8 +51,8 @@ def xml_prune(root, level, to_keep):
     the pruned root as a copy.
 
     >>> root = ET.fromstring('<doc><a><b/></a><a/></doc>')
-    >>> root_0 = prune(root, 1, [root[0]])
-    >>> root_1 = prune(root, 1, [root[1]])
+    >>> root_0 = xml_prune(root, 1, [root[0]])
+    >>> root_1 = xml_prune(root, 1, [root[1]])
     >>> ET.tostring(root)
     b'<doc><a><b /></a><a /></doc>'
     >>> ET.tostring(root_0)
@@ -78,7 +82,7 @@ def xml_extract_level(root, level):
     @param level: int, specifying the level to pull.  Level 0 is the root node.
 
     >>> root = ET.fromstring('<doc><a><b/></a><a/></doc>')
-    >>> L = extract_level(root, 1)
+    >>> L = xml_extract_level(root, 1)
     >>> [ET.tostring(x) for x in L]
     [b'<a><b /></a>', b'<a />']
     '''
@@ -89,6 +93,97 @@ def xml_extract_level(root, level):
         for node in old_nodes:
             nodes.extend(node[:])
     return nodes
+
+def xml_prune_2(root, level, to_keep):
+    '''
+    Prunes from an ElementTree.Element object (root) at the given level, to
+    throw away everything not found in the to_keep list (or tuple).  Returns
+    the pruned root as a copy.
+
+    >>> root = ET.fromstring('<doc name="michael">hello<a><b/></a><a/></doc>')
+    >>> ET.tostring(root)
+    b'<doc name="michael">hello<a><b /></a><a /></doc>'
+
+    >>> root_0 = xml_prune_2(root, 1, [(root, XML_CHILD, root[0])])
+    >>> ET.tostring(root_0)
+    b'<doc><a><b /></a></doc>'
+
+    >>> root_1 = xml_prune_2(root, 1, [(root, XML_CHILD, root[1])])
+    >>> ET.tostring(root_1)
+    b'<doc><a /></doc>'
+
+    >>> root_2 = xml_prune_2(root, 1, [(root, XML_ATTR, 'name')])
+    >>> ET.tostring(root_2)
+    b'<doc name="michael" />'
+
+    >>> root_3 = xml_prune_2(root, 1, [(root, XML_TEXT, None)])
+    >>> ET.tostring(root_3)
+    b'<doc>hello</doc>'
+
+    >>> root_4 = xml_prune_2(root, 1, [(root, XML_ATTR, 'name'),
+    ...                                (root, XML_CHILD, root[1])])
+    >>> ET.tostring(root_4)
+    b'<doc name="michael"><a /></doc>'
+    '''
+    if level < 1:
+        raise IndexError('Cannot prune higher than level 1')
+    root_copy = copy.deepcopy(root)
+    nodes = xml_extract_level_2(root, level)
+    nodes_copy = xml_extract_level_2(root_copy, level)
+    to_delete = [i for i, node in enumerate(nodes) if node not in to_keep]
+    for i in to_delete:
+        parent, node_type, idx = nodes_copy[i]
+        if node_type == XML_CHILD:
+            parent.remove(idx)
+        elif node_type == XML_ATTR:
+            del parent.attrib[idx]
+        elif node_type == XML_TEXT:
+            parent.text = ''
+        else:
+            raise RuntimeError('Unsupported node_type detected: {}'.format(node_type))
+    return root_copy
+
+def xml_extract_level_2(root, level):
+    '''
+    Returns a list of nodes, attributes, and text at the level of the tree from
+    the root.
+
+    - Node: (parent, XML_CHILD, child)
+    - Attribute: (parent, XML_ATTR, name)
+    - Text: (parent, XML_TEXT, None)
+
+    @param root: an ElementTree.Element object
+    @param level: int, specifying the level to pull.  Level 0 is the root node.
+
+    >>> root = ET.fromstring('<doc name="michael">hello<a><b/></a><a/></doc>')
+    >>> L = xml_extract_level_2(root, 1)
+
+    >>> [ET.tostring(x[2]) for x in L if x[1] == XML_CHILD]
+    [b'<a><b /></a>', b'<a />']
+
+    >>> [(x[2], x[0].attrib[x[2]]) for x in L if x[1] == XML_ATTR]
+    [('name', 'michael')]
+
+    >>> [x[0].text for x in L if x[1] == XML_TEXT]
+    ['hello']
+    '''
+    if level < 0:
+        raise IndexError('Layer must be greater than or equal to zero')
+    if level == 0:
+        return [(None, XML_CHILD, root)]
+    nodes = [root]
+    for _ in range(level - 1):
+        parents = nodes
+        nodes = []
+        for node in parents:
+            nodes.extend(node[:])
+    parents = nodes
+    extracted = []
+    for node in parents:
+        extracted.extend([(node, XML_CHILD, child) for child in node])
+        extracted.extend([(node, XML_ATTR, name) for name in node.attrib])
+        extracted.append((node, XML_TEXT, None))
+    return extracted
 
 def test_inkscape(content):
     '''
@@ -158,7 +253,7 @@ def hdd(root, test, prune, extract_level):
     nodes = extract_level(root, level)
     while nodes:
         print('  Level:', level)
-        level_test = lambda nodes: test(prune(root, level, nodes))
+        level_test = lambda to_test: test(prune(root, level, to_test))
         to_keep = dd.dd(nodes, level_test)
         root = prune(root, level, to_keep)
         level += 1
@@ -171,7 +266,8 @@ def main(arguments):
     #content = open(arguments[0], 'r').readlines()
     content = ET.parse(arguments[0]).getroot()
     #print('Test Result:', test_inkscape(content))
-    min_content = hdd(content, test_inkscape, xml_prune, xml_extract_level)
+    #min_content = hdd(content, test_inkscape, xml_prune, xml_extract_level)
+    min_content = hdd(content, test_inkscape, xml_prune_2, xml_extract_level_2)
     #print()
     print('minimal svg file:')
     print(ET.tostring(min_content))
