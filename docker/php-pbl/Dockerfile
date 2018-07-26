@@ -21,3 +21,9 @@ RUN echo "log_errors = On" >> /usr/local/etc/php/php.ini && \
       && \
     mkdir -p /var/www/html/python/images && \
     chown -R www-data:www-data /var/www/html
+
+RUN sed -i -e 's/^Listen 80$/Listen 8000/g' /etc/apache2/ports.conf && \
+    sed -i -e 's/^<VirtualHost \*: 80>$/<VirtualHost *: 8000>/g' \
+       /etc/apache2/sites-enabled/000-default.conf
+
+EXPOSE 8000
