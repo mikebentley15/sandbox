@@ -23,7 +23,8 @@ cd "$BUILD"
 
 "$SRC"/configure \
   --prefix="$INSTALL" \
-  --disable-multilib
+  --disable-multilib \
+  --enable-languages=c,c++
 make
 make install
 
