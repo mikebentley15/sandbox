@@ -1,0 +1,32 @@
+
+
+if [ "${SHELL}" = "zsh" ]
+then
+   SCRIPT_DIR="$( cd "$( dirname "${0}" )" && pwd )"
+else
+   SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+fi
+
+
+
+
+if [ ! -z ${LLVM_VERSION} ]
+then
+  source ${SCRIPT_DIR}/deactivate-llvm
+fi
+
+
+
+
+export LLVM_VERSION=%VERSION%
+
+LLVM_DIR=${SCRIPT_DIR}/llvm-versions/llvm-${LLVM_VERSION}/llvm-${LLVM_VERSION}.install
+LLVM_BIN=${LLVM_DIR}/bin
+LLVM_LIB=${LLVM_DIR}/lib
+LLVM_INC=${LLVM_DIR}/include
+
+export PATH=${LLVM_BIN}:${PATH}
+export C_INCLUDE_PATH=${LLVM_INC}:${C_INCLUDE_PATH}
+export CPLUS_INCLUDE_PATH=${LLVM_INC}:${CPLUS_INCLUDE_PATH}
+export LIBRARY_PATH=${LLVM_LIB}:${LIBRARY_PATH}
+export LD_LIBRARY_PATH=${LLVM_LIB}:${LD_LIBRARY_PATH}
