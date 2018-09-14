@@ -130,7 +130,8 @@ class Clan:
               war.collectionEndTime if war.state == 'collectionDay'
               else war.warEndTime)
         below_collection = [x for x in war.participants
-                            if x.collectionDayBattlesPlayed < 3]
+                            if x.collectionDayBattlesPlayed < 3
+                            and x.collectionDayBattlesPlayed != 0]
         below_collection.sort(key=lambda x: x.collectionDayBattlesPlayed)
         print('  Not finished collection battles:')
         for member in below_collection:
@@ -159,9 +160,12 @@ class Clan:
         bad_battles = Counter()
         bad_any = Counter()
         no_participation = Counter()
+        #with open('warlog.json', 'w') as outfile:
+        #    json.dump([x.data for x in warlog.wars], outfile, indent=2)
         for war in warlog.wars:
             below_collection_names = [x.name for x in war.participants
-                                      if x.collectionDayBattlesPlayed < 3]
+                                      if x.collectionDayBattlesPlayed < 3
+                                      and x.collectionDayBattlesPlayed != 0]
             # Note: cannot determine when 2 war-day battles are available, but
             #       only one was played.
             below_battles_names = [x.name for x in war.participants
