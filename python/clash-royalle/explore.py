@@ -140,12 +140,15 @@ class Clan:
         not_participating = [x for x in self.memberList
                              if x.name not in participant_names]
         not_participating.sort(key=lambda x: x.name)
+        if war.state == 'warDay':
+            no_battle_names = [x.name for x in war.participants
+                               if x.battlesPlayed == 0]
+            print('  Not done with war day battle (cannot see when 2 are available):')
+            for name in sorted(no_battle_names):
+                print('    {}'.format(name))
         print('  Not participating:')
         for member in not_participating:
             print('    {}'.format(member.name))
-        
-        # TODO: find how it looks on war day
-        pass
 
     def check_war_log(self):
         'Checks those with bad participation in the war log and prints'
@@ -175,6 +178,7 @@ class Clan:
                 bad_any[name] += 1
             for name in not_participating_names:
                 no_participation[name] += 1
+
         def print_counter(counter, headers=None):
             key_len = max(len(str(x)) for x in counter)
             val_len = 1
@@ -189,6 +193,7 @@ class Clan:
             for name, val in counter.most_common():
                 print(format_str.format(name, val,
                                         keywidth=key_len, valwidth=val_len))
+
         print('  Those missing collection battles:')
         print_counter(bad_collections, ('NAME', '# MISSING'))
         print('  Those missing war day battles: (cannot determine 1/2 case)')
