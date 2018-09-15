@@ -5,14 +5,17 @@ MAINTAINER mikebentley15@gmail.com
 RUN apt-get update && \
     apt-get install -y \
       bash \
+      cmake \
       curl \
-      g++-4.4 \
+      g++-4.7 \
       gzip \
       libgmp-dev \
       libisl-dev \
       libmpc-dev \
       libmpfr-dev \
       make \
+      python \
+      python3 \
       tar \
       zip \
       && \
@@ -25,25 +28,26 @@ RUN echo "%sudo ALL=(ALL) ALL" > /etc/sudoers.d/sudo-group && \
 
 USER user
 WORKDIR /home/user
-COPY compile-gcc.sh compile-gcc.sh
-COPY compile-llvm.sh compile-llvm.sh
-ENV CC=gcc-4.4
-ENV CXX=g++-4.4
+COPY install_compiler.py install_compiler.py
+ENV CC="gcc-4.7"
+ENV CXX="g++-4.7"
+ENV MAKEFLAGS="-j20"
 
-RUN MAKEFLAGS="-j20" bash compile-gcc.sh 4.8.5
-RUN MAKEFLAGS="-j20" bash compile-gcc.sh 5.5.0
-RUN MAKEFLAGS="-j20" bash compile-gcc.sh 6.4.0
-RUN MAKEFLAGS="-j20" bash compile-gcc.sh 7.2.0
-RUN MAKEFLAGS="-j20" bash compile-gcc.sh 7.3.0
-RUN MAKEFLAGS="-j20" bash compile-gcc.sh 8.1.0
-RUN MAKEFLAGS="-j20" bash compile-gcc.sh 8.2.0
-RUN MAKEFLAGS="-j20" bash compile-llvm.sh 3.6.1
-RUN MAKEFLAGS="-j20" bash compile-llvm.sh 3.7.1
-RUN MAKEFLAGS="-j20" bash compile-llvm.sh 3.8.1
-RUN MAKEFLAGS="-j20" bash compile-llvm.sh 3.9.1
-RUN MAKEFLAGS="-j20" bash compile-llvm.sh 4.0.1
-RUN MAKEFLAGS="-j20" bash compile-llvm.sh 5.0.2
-RUN MAKEFLAGS="-j20" bash compile-llvm.sh 6.0.1
+RUN python3 install_compiler.py gcc 4.8.5
+RUN python3 install_compiler.py gcc 5.5.0
+RUN python3 install_compiler.py gcc 6.4.0
+RUN python3 install_compiler.py gcc 7.2.0
+RUN python3 install_compiler.py gcc 7.3.0
+RUN python3 install_compiler.py gcc 8.1.0
+RUN python3 install_compiler.py gcc 8.2.0
+
+#RUN python3 install_compiler.py llvm 3.6.1
+RUN python3 install_compiler.py llvm 3.7.1
+#RUN python3 install_compiler.py llvm 3.8.1
+#RUN python3 install_compiler.py llvm 3.9.1
+#RUN python3 install_compiler.py llvm 4.0.1
+#RUN python3 install_compiler.py llvm 5.0.2
+#RUN python3 install_compiler.py llvm 6.0.1
 
 # Make a copy of the Dockerfile
 COPY Dockerfile Dockerfile-compilers
