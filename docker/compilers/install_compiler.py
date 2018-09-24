@@ -66,11 +66,13 @@ def tempdir(*args, **kwargs):
     ...     shutil.rmtree(new_dir)
     '''
     new_dir = tempfile.mkdtemp(*args, **kwargs)
-    yield new_dir
     try:
-        shutil.rmtree(new_dir)
-    except FileNotFoundError:
-        pass
+        yield new_dir
+    finally:
+        try:
+            shutil.rmtree(new_dir)
+        except FileNotFoundError:
+            pass
 
 def extract_tar_url(url, compression='*'):
     '''
@@ -114,6 +116,7 @@ def install_gcc(version, prefix='/usr/local'):
         url = 'https://bigsearcher.com/mirrors/gcc/releases/' \
               'gcc-{version}/gcc-{version}.tar.gz'.format(version=version)
         os.chdir(src)
+        print('Downloading gcc {} from bigsearcher.com'.format(version))
         extract_tar_url(url, compression='gz')
         os.chdir(build)
         subp.check_call([
