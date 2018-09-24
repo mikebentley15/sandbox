@@ -11,6 +11,7 @@ import json
 import requests
 import sys
 import urllib
+import xml.etree.cElementTree as ET
 
 # TODO: support /players/<tag>/upcomingchests
 # TODO: support /players/<tag>/battlelog
@@ -290,6 +291,55 @@ def parse_datetime_str(clash_datetime):
       YYYYmmddTHHMMSS.sssZ
     '''
     return datetime.strptime(clash_datetime[:-1] + '000', '%Y%m%dT%H%M%S.%f')
+
+def create_html_table(rows, header=None, htmlclass=None, htmlid=None):
+    '''
+    Output an HTML table from the rows.
+
+    The table will have classes for odd and even rows called "odd" and "even"
+    to be styled with CSS.
+
+    @param rows: (list(list(str))) The table rows.  Each internal list
+        must be of the same length.
+    @param header: (list(str)) The header row.  Must be of the same length as
+        each row in rows.  If None, then there will be no header row.
+    @param htmlclass: (str) The value for the class attribute in the html
+        table.
+    @param htmlid: (str) The value for the id attribute in the html table.
+
+    >>> create_html_table([['a', 'b', 'c']])
+    '<table><tbody><tr class="odd"><td>a</td><td>b</td><td>c</td></tr></tbody></table>'
+    '''
+    assert all(len(rows[0]) == len(row) for row in rows)
+    assert header is None or len(header) == len(rows[0])
+
+    root = ET.Element('table')
+    if htmlclass is not None:
+        root.set('class', htmlclass)
+    if htmlid is not None:
+        root.set('id', htmlid)
+
+    if header is not None:
+        head = ET.SubElement(root, 'thead')
+        tr = ET.SubElement(head, 'tr')
+        tr.set('class', 'head')
+        for head_item in header:
+            th = ET.SubElement(tr, 'th')
+            th.text = head_item
+
+    body = ET.SubElement(root, 'tbody')
+    for i, row in enumerate(rows):
+        i += 1
+        tr = ET.SubElement(body, 'tr')
+        if i % 2 == 0:
+            tr.set('class', 'even')
+        else:
+            tr.set('class', 'odd')
+        for elem in row:
+            td = ET.SubElement(tr, 'td')
+            td.text = elem
+
+    return ET.tostring(root, encoding='unicode')
 
 def main(arguments):
     'Main logic here.  Call with --help for info'
