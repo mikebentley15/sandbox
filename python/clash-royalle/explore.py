@@ -113,7 +113,64 @@ class Clan:
         self.data.update(other.data)
         other.data = self.data
         self.__dict__.update(other.__dict__)
+
+    def donation_table(self):
+        'Returns the table for donations as (header_row, rows)'
+        header_row = ('Name', 'Donations')
+        rows = [(x.name, x.donations) for x in self.memberList]
+        rows.sort(key=lambda x: x[1])
+        rows = [(x[0], str(x[1])) for x in rows]
+        return header_row, rows
+
+    def warlog_participation_table(self):
+        '''
+        Returns the participation table for the warlog as (header_row, rows)
         
+        Each column represents a past war.  The possible values are:
+        - '': Blank means you did not participate in the battle
+        - 'o': You fully participated, fulfilling 3 collection battles
+          and 1 war battle
+        - 'X': You participated, but missed one of your battles
+        - '?': You participated, but it is unknown if you fully participated.
+          This happens sometimes when the clash api reports bad numbers
+        '''
+        warlog = Warlog.get_warlog(self)
+        header_row = ['Name'] + ['W' + str(i+1) for i in range(len(warlog.wars))]
+        tracker = {x.name : ['']*len(warlog.wars) for x in self.memberList}
+        for i, war in enumerate(warlog.wars):
+            for member in war.participants:
+                if member.name not in tracker:
+                    continue
+                fully_participated = \
+                    member.collectionDayBattlesPlayed == 3 and \
+                    member.battlesPlayed > 0
+                unknown_participation = \
+                    member.collectionDayBattlesPlayed == 0 and \
+                    member.battlesPlayed > 0
+                if fully_participated:
+                    status = 'o'
+                elif unknown_participation:
+                    status = '?'
+                else:
+                    status = 'X'
+                tracker[member.name][i] = status
+        rows = [[key] + val for key, val in tracker.items()]
+        rows.sort(key=lambda x: -x.count('o')*len(warlog.wars)*2 - x.count('?')) 
+        return header_row, rows
+
+#    def warlog_activity_table(self):
+#        '''
+#        Returns the activity table for the warlog (i.e. missing battles) as
+#        (header_row, rows)
+#        '''
+#        warlog = Warlog.get_warlog(self)
+#        header_row = ['Name', 'Full Collections', 'Full War', 'Missing #']
+#        full_collections = Counter()
+#        full_war = Counter()
+#        missing_any = Counter()
+#        for war in warlog.wars:
+#            
+
     def check_donations(self, threshold):
         'Prints the members below the donation threshold'
         below = [x for x in self.memberList if x.donations < threshold]
@@ -224,16 +281,22 @@ class WarlogEntry:
             self.createdDate = parse_datetime_str(self.createdDate)
 
 class Warlog:
+    _CACHED_WARLOGS = {}
+
     def __init__(self, entries):
         self.wars = entries
 
     @staticmethod
     def get_warlog(clan):
         "Returns the clan's warlog"
+        if clan.tag in Warlog._CACHED_WARLOGS:
+            return CACHED_WARLOGS[clan.tag]
         tag = urllib.parse.quote_plus(clan.tag)
         code, reply = request_clash(clan.token, '/clans/' + tag + '/warlog')
         assert code == 200
-        return Warlog([WarlogEntry(clan.token, x) for x in reply['items']])
+        warlog = Warlog([WarlogEntry(clan.token, x) for x in reply['items']])
+        Warlog._CACHED_WARLOGS[clan.tag] = warlog
+        return warlog
 
 class CurrentWar:
     def __init__(self, token, data):
@@ -345,11 +408,21 @@ def main(arguments):
     'Main logic here.  Call with --help for info'
     args = parse_args(arguments)
     myclan = Clan.get_clan(args.token, MYCLAN_TAG)
-    #from pprint import pprint
+    from pprint import pprint
     #pprint(myclan.data)
-    myclan.check_donations(100)
-    myclan.check_current_war()
-    myclan.check_war_log()
+    #myclan.check_donations(100)
+    #myclan.check_current_war()
+    #myclan.check_war_log()
+    print('<html><head></head><body>')
+    hdr, rows = myclan.donation_table()
+    #pprint(hdr)
+    #pprint(rows)
+    print(create_html_table(rows, header=hdr))
+    hdr, rows = myclan.warlog_participation_table()
+    #pprint(hdr)
+    #pprint(rows)
+    print(create_html_table(rows, header=hdr))
+    print('</body></html>')
 
 if __name__ == '__main__':
     main(sys.argv[1:])
