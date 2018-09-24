@@ -259,8 +259,8 @@ class CurrentWar:
 def parse_args(arguments):
     'Parse arguments with argparse'
     parser = argparse.ArgumentParser()
-    parser.add_argument('-t', '--token', metavar='tokenfile', dest='tokenfile',
-                        help='File containing token')
+    parser.add_argument('-t', '--token', metavar='tokenfile', required=True,
+                        dest='tokenfile', help='File containing token')
     args = parser.parse_args(arguments)
     with open(args.tokenfile, 'r') as fin:
         args.token = fin.read().strip()
