@@ -9,7 +9,9 @@ import argparse
 import copy
 import json
 import requests
+import subprocess as subp
 import sys
+import tempfile
 import urllib
 import xml.etree.cElementTree as ET
 
@@ -325,6 +327,7 @@ def parse_args(arguments):
     parser = argparse.ArgumentParser()
     parser.add_argument('-t', '--token', metavar='tokenfile', required=True,
                         dest='tokenfile', help='File containing token')
+    parser.add_argument('-o', '--output', help='Output file')
     args = parser.parse_args(arguments)
     with open(args.tokenfile, 'r') as fin:
         args.token = fin.read().strip()
@@ -404,25 +407,47 @@ def create_html_table(rows, header=None, htmlclass=None, htmlid=None):
 
     return ET.tostring(root, encoding='unicode')
 
+def text_output(token, outfilepath=None):
+    'Output in text format'
+    myclan = Clan.get_clan(token, MYCLAN_TAG)
+    from pprint import pprint
+    #pprint(myclan.data)
+    try:
+        origstdout = sys.stdout
+        if outfilepath is not None:
+            sys.stdout = open(outfilepath, 'w')
+        myclan.check_donations(100)
+        myclan.check_current_war()
+        myclan.check_war_log()
+    finally:
+        if outfilepath is not None:
+            sys.stdout.close()
+        sys.stdout = origstdout
+
+def html_output(token, outfilepath=None):
+    'Output in HTML format'
+    myclan = Clan.get_clan(token, MYCLAN_TAG)
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.html') as html_orig:
+        print('<html><head></head><body>', file=html_orig)
+        hdr, rows = myclan.donation_table()
+        print(create_html_table(rows, header=hdr), file=html_orig)
+        hdr, rows = myclan.warlog_participation_table()
+        print(create_html_table(rows, header=hdr), file=html_orig)
+        print('</body></html>', file=html_orig)
+        html_orig.flush()
+        output = subp.check_output(['xmllint', '--format', html_orig.name])
+        output = output.decode('utf-8')
+    if outfilepath is not None:
+        with open(outfilepath, 'w') as outfile:
+            print(output, file=outfile)
+    else:
+        print(output)
+
 def main(arguments):
     'Main logic here.  Call with --help for info'
     args = parse_args(arguments)
-    myclan = Clan.get_clan(args.token, MYCLAN_TAG)
-    from pprint import pprint
-    #pprint(myclan.data)
-    #myclan.check_donations(100)
-    #myclan.check_current_war()
-    #myclan.check_war_log()
-    print('<html><head></head><body>')
-    hdr, rows = myclan.donation_table()
-    #pprint(hdr)
-    #pprint(rows)
-    print(create_html_table(rows, header=hdr))
-    hdr, rows = myclan.warlog_participation_table()
-    #pprint(hdr)
-    #pprint(rows)
-    print(create_html_table(rows, header=hdr))
-    print('</body></html>')
+    #text_output(args.token, args.output)
+    html_output(args.token, args.output)
 
 if __name__ == '__main__':
     main(sys.argv[1:])
