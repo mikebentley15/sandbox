@@ -150,14 +150,16 @@ class Clan:
                     member.collectionDayBattlesPlayed == 0 and \
                     member.battlesPlayed > 0
                 if fully_participated:
-                    status = 'o'
+                    status = '\u2713'
                 elif unknown_participation:
                     status = '?'
                 else:
-                    status = 'X'
+                    status = '\u2717'
                 tracker[member.name][i] = status
         rows = [[key] + val for key, val in tracker.items()]
-        rows.sort(key=lambda x: -x.count('o')*len(warlog.wars)*2 - x.count('?')) 
+        rows.sort(key=lambda x: \
+                  (-x.count('\u2713')*len(warlog.wars)*2 - x.count('?'),
+                      x[::-1][:-1]))
         return header_row, rows
 
 #    def warlog_activity_table(self):
@@ -424,15 +426,39 @@ def text_output(token, outfilepath=None):
             sys.stdout.close()
         sys.stdout = origstdout
 
+STYLE = '''
+div {
+  float: left;
+  border: 1px solid black;
+  margin-left: 50px;
+  padding: 30px;
+}
+td {
+  text-align: center;
+}
+div h2 {
+  text-align: center;
+  margin: 0;
+  padding: 0;
+  margin-bottom: 15px;
+}
+'''
+
 def html_output(token, outfilepath=None):
     'Output in HTML format'
     myclan = Clan.get_clan(token, MYCLAN_TAG)
     with tempfile.NamedTemporaryFile(mode='w', suffix='.html') as html_orig:
-        print('<html><head></head><body>', file=html_orig)
+        print('<html><head><style type="text/css">{}</style></head><body>' \
+              .format(STYLE), file=html_orig)
+        print('<div id="donation-div">', file=html_orig)
+        print('<h2>Donations</h2>', file=html_orig)
         hdr, rows = myclan.donation_table()
-        print(create_html_table(rows, header=hdr), file=html_orig)
+        print(create_html_table(rows, header=hdr, htmlid='donation'), file=html_orig)
+        print('</div><div id="warlog-div">', file=html_orig)
+        print('<h2>Warlog</h2>', file=html_orig)
         hdr, rows = myclan.warlog_participation_table()
-        print(create_html_table(rows, header=hdr), file=html_orig)
+        print(create_html_table(rows, header=hdr, htmlid='warlog'), file=html_orig)
+        print('</div>', file=html_orig)
         print('</body></html>', file=html_orig)
         html_orig.flush()
         output = subp.check_output(['xmllint', '--format', html_orig.name])
