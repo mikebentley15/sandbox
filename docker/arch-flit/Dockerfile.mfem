@@ -1,0 +1,82 @@
+FROM arch-flit:latest
+MAINTAINER mikebentley15@gmail.com
+
+
+# Install dependencies
+USER root
+RUN pacman -Syy --noconfirm && \
+    pacman -Syyu --noconfirm && \
+    pacman-db-upgrade && \
+    pacman -Sy --noconfirm \
+      wget \
+      curl \
+      openmpi \
+      && \
+    pacman -Scc --noconfirm
+USER flituser
+
+# Build hypre but make it look like 2.10.0b
+ENV HYPRE_VERSION=2.11.2
+RUN echo "export HYPRE_VERSION=${HYPRE_VERSION}" >> .bashrc && \
+    wget https://computation.llnl.gov/projects/hypre-scalable-linear-solvers-multigrid-methods/download/hypre-${HYPRE_VERSION}.tar.gz && \
+    tar -xzf hypre-${HYPRE_VERSION}.tar.gz && \
+    cd hypre-${HYPRE_VERSION}/src && \
+    ./configure --disable-fortran && \
+    make -j4 && \
+    cd ../.. && \
+    ln -s hypre-${HYPRE_VERSION} hypre-2.10.0b && \
+    rm hypre-${HYPRE_VERSION}.tar.gz
+
+# Build metis 4.0
+ENV METIS_VERSION=4.0.3
+RUN echo "export METIS_VERSION=${METIS_VERSION}" >> .bashrc && \
+    wget http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/OLD/metis-${METIS_VERSION}.tar.gz && \
+    tar -xzf metis-${METIS_VERSION}.tar.gz && \
+    make -j4 --directory metis-${METIS_VERSION} && \
+    ln -s metis-${METIS_VERSION} metis-4.0 && \
+    rm metis-${METIS_VERSION}.tar.gz
+
+# Build MFEM 3.4
+ENV MFEM_VERSION=3.4
+ENV MFEM_HOME=/home/flituser/mfem
+RUN echo "export MFEM_VERSION=${MFEM_VERSION}" >> .bashrc && \
+    echo "export MFEM_HOME=/home/flituser/mfem" >> .bashrc && \
+    git clone https://github.com/mfem/mfem.git ${MFEM_HOME} && \
+    cd ${MFEM_HOME} && \
+    git checkout -b my-v${MFEM_VERSION} v${MFEM_VERSION} && \
+    make config MFEM_USE_MPI=YES && \
+    make -j4
+
+
+# Setup flit tests
+COPY flit_mfem /opt/flit_mfem
+RUN echo "export PATH=\$PATH:/opt/intel/bin" >> .bashrc && \
+    mkdir -p mfem/flit_tests/examples && \
+    cd mfem/flit_tests && \
+    cp -r /opt/flit_mfem/flit_tests/examples/ex* examples/ && \
+    cp -r /opt/flit_mfem/flit_tests/flit_files/* ./ && \
+    cp -r /opt/flit_mfem/flit_tests/tests/ex*_Test.cpp tests/ && \
+    flit update && \
+    make gt dev -j10
+
+# Install development packages
+USER root
+RUN pacman -Syy --noconfirm && \
+    pacman -Syyu --noconfirm && \
+    pacman-db-upgrade && \
+    pacman -Sy --noconfirm \
+      vim \
+      tmux \
+      && \
+    pacman -Scc --noconfirm && \
+    cd /etc/ssh && \
+    ssh-keygen -A
+USER flituser
+
+EXPOSE 22
+
+# Make a copy of the Dockerfile
+COPY Dockerfile.mfem Dockerfile-arch-flit-mfem
+
+USER root
+CMD ["/usr/sbin/sshd", "-D"]

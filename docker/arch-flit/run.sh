@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CONTAINER_NAME=archflit-container
+CONTAINER_NAME=archflit-mfem-container
 
 if docker ps | grep -w $CONTAINER_NAME &>/dev/null; then
   echo "Arch FLiT is already running in another shell..."
@@ -12,10 +12,11 @@ else
   echo "Creating Arch FLiT container and running using the current shell"
   docker run \
     --mac-address=00:23:ae:b3:33:48 \
-    -it \
+    -d \
+    -p 8022:22 \
     -v /opt/intel:/opt/intel \
     --cap-add=SYS_PTRACE \
     --name $CONTAINER_NAME \
-    arch-flit
+    arch-flit-mfem
 fi
 
