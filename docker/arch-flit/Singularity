@@ -5,12 +5,12 @@ From: base/archlinux
   Contains the FLiT architecture along with compilers and mfem code
 
 %setup
-  #mkdir -p ${SINGULARITY_ROOTFS}/opt
-  #cp -a /opt/intel-19 ${SINGULARITY_ROOTFS}/opt/intel-19
+  mkdir -p ${SINGULARITY_ROOTFS}/opt
+  cp -a /opt/intel-19 ${SINGULARITY_ROOTFS}/opt/intel-19
   echo ${SINGULARITY_ROOTFS}
 
 %files
-  /opt/intel-19 /opt/intel-19
+  #/opt/intel-19 /opt/intel-19
   Singularity Singularityfile
   flit_mfem /usr/share/
   #clean_arch_dbdups.py /opt
