@@ -1,0 +1,107 @@
+Bootstrap: docker
+From: base/archlinux
+
+%help
+  Contains the FLiT architecture along with compilers and mfem code
+
+%setup
+  #mkdir -p ${SINGULARITY_ROOTFS}/opt
+  #cp -a /opt/intel-19 ${SINGULARITY_ROOTFS}/opt/intel-19
+  echo ${SINGULARITY_ROOTFS}
+
+%files
+  #/opt/intel-19 /opt/intel-19
+  Singularity Singularityfile
+  flit_mfem /usr/share/
+
+%post
+  # environment variables just for the %post section
+  export MAKEFLAGS=-j$(nproc --all)
+  export HYPRE_VERSION=2.11.2
+  export METIS_VERSION=4.0.3
+  export MFEM_VERSION=3.4
+
+  # Link for the intel compiler
+  ln -s intel-19 /opt/intel
+
+  # Update our cache for the package manager
+  #rm -rf /var/lib/pacman/local/*
+  ls /var/lib/pacman/local
+  pacman-db-upgrade
+  ls /var/lib/pacman/local
+  pacman -Scc --noconfirm
+  ls /var/lib/pacman/local
+  pacman -Syy --noconfirm
+  ls /var/lib/pacman/local
+  pacman -Syyu --noconfirm
+  ls /var/lib/pacman/local
+  pacman-db-upgrade
+  ls /var/lib/pacman/local
+
+  # Install build and runtime dependencies
+  pacman -Sy --noconfirm \
+    clang \
+    curl \
+    gcc \
+    git \
+    make \
+    openmpi \
+    python \
+    python-pip \
+    sudo \
+    wget
+  pip install toml
+
+  # Install FLiT
+  git clone --branch devel https://github.com/PRUNERS/FLiT.git /opt/flit
+  make --directory /opt/flit
+  ln -s /opt/flit/scripts/flitcli/flit.py /usr/bin/flit
+
+  # Build hypre
+  cd /opt
+  wget https://computation.llnl.gov/projects/hypre-scalable-linear-solvers-multigrid-methods/download/hypre-${HYPRE_VERSION}.tar.gz
+  tar -xzf hypre-${HYPRE_VERSION}.tar.gz
+  cd hypre-${HYPRE_VERSION}/src
+  ./configure --disable-fortran
+  make
+  cd ../..
+  ln -s hypre-${HYPRE_VERSION} hypre-2.10.0b
+  rm hypre-${HYPRE_VERSION}.tar.gz
+
+  # Build metis
+  wget http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/OLD/metis-${METIS_VERSION}.tar.gz
+  tar -xzf metis-${METIS_VERSION}.tar.gz
+  make --directory metis-${METIS_VERSION}
+  ln -s metis-${METIS_VERSION} metis-4.0
+  rm metis-${METIS_VERSION}.tar.gz
+
+  # Build mfem
+  git clone https://github.com/mfem/mfem.git
+  cd mfem
+  git checkout -b my-v${MFEM_VERSION} v${MFEM_VERSOIN}
+  make config MFEM_USE_MPI=YES
+  make
+  cd ..
+
+  # Setup flit tests
+  mkdir -p mfem/flit_tests/examples
+  cd mfem/flit_tests
+  cp -r /usr/share/flit_mfem/flit_tests/examples/ex* examples/
+  cp -r /usr/share/flit_mfem/flit_tests/flit_files/* ./
+  cp -r /usr/share/flit_mfem/flit_tests/tests/ex*_Test.cpp tests/
+  flit update
+  make gt dev
+  cd ../..
+
+  # Development environment packages
+  pacman -Sy --noconfirm \
+    vim \
+    tmux
+
+%environment
+  export PATH="$PATH:/opt/intel/bin"
+  export MFEM_HOME=/opt/mfem
+
+%labels
+  Maintainer Michael Bentley
+
