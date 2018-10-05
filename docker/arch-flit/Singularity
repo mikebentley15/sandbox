@@ -10,9 +10,11 @@ From: base/archlinux
   echo ${SINGULARITY_ROOTFS}
 
 %files
-  #/opt/intel-19 /opt/intel-19
+  /opt/intel-19 /opt/intel-19
   Singularity Singularityfile
   flit_mfem /usr/share/
+  #clean_arch_dbdups.py /opt
+  clean_arch_dbdups.sh /opt
 
 %post
   # environment variables just for the %post section
@@ -24,19 +26,18 @@ From: base/archlinux
   # Link for the intel compiler
   ln -s intel-19 /opt/intel
 
+  # Since Singularity has a hard time with deleted files in Docker layers, we
+  # need to make sure the pacman database is clean
+  ls -l /var/lib/pacman/local
+  #python /opt/clean_arch_dbdups.py
+  bash /opt/clean_arch_dbdups.sh
+
   # Update our cache for the package manager
-  #rm -rf /var/lib/pacman/local/*
-  ls /var/lib/pacman/local
   pacman-db-upgrade
-  ls /var/lib/pacman/local
   pacman -Scc --noconfirm
-  ls /var/lib/pacman/local
   pacman -Syy --noconfirm
-  ls /var/lib/pacman/local
   pacman -Syyu --noconfirm
-  ls /var/lib/pacman/local
   pacman-db-upgrade
-  ls /var/lib/pacman/local
 
   # Install build and runtime dependencies
   pacman -Sy --noconfirm \
@@ -78,7 +79,7 @@ From: base/archlinux
   # Build mfem
   git clone https://github.com/mfem/mfem.git
   cd mfem
-  git checkout -b my-v${MFEM_VERSION} v${MFEM_VERSOIN}
+  git checkout -b my-v${MFEM_VERSION} v${MFEM_VERSION}
   make config MFEM_USE_MPI=YES
   make
   cd ..
@@ -89,8 +90,6 @@ From: base/archlinux
   cp -r /usr/share/flit_mfem/flit_tests/examples/ex* examples/
   cp -r /usr/share/flit_mfem/flit_tests/flit_files/* ./
   cp -r /usr/share/flit_mfem/flit_tests/tests/ex*_Test.cpp tests/
-  flit update
-  make gt dev
   cd ../..
 
   # Development environment packages
