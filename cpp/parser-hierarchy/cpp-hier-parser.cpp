@@ -453,7 +453,7 @@ private:
       _out << std::endl;
       return true;
     } else if (_typedef()) {
-      // nothing to do
+      return true;
     } else if (_tok.type == TokType::LPAREN ||
                _tok.type == TokType::LITERAL ||
                _tok.type == TokType::IDENTIFIER ||
