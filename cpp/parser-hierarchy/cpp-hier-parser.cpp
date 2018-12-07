@@ -432,7 +432,16 @@ private:
         error("Expected class, struct, block, or semicolon after template");
       }
       return true;
-    } else if (_class()) {
+    } else if (_tok.content == "class" ||
+               _tok.content == "struct" ||
+               _tok.content == "union")
+    {
+      _out << _indent;
+      if (_class()) {
+        // nothing to do
+      } else {
+        error("Expected valid class, struct, or union");
+      }
       return true;
     } else if (_tok.content == "enum") {
       _out << _indent;
@@ -440,14 +449,6 @@ private:
         // nothing to do
       } else {
         error("Expected valid enum");
-      }
-      return true;
-    } else if (_tok.content == "union") {
-      _out << _indent;
-      if (_union()) {
-        // nothing to do
-      } else {
-        error("Expected valid union");
       }
       return true;
     } else if (_tok.type == TokType::LCURLY) {
@@ -496,9 +497,11 @@ private:
 
   bool _class() {
     if (_tok.type == TokType::IDENTIFIER &&
-        (_tok.content == "class" || _tok.content == "struct"))
+        (_tok.content == "class" ||
+         _tok.content == "struct" ||
+         _tok.content == "union"))
     {
-      _out << _indent << _tok.content;
+      _out << _tok.content;
       next_tok();
       while (piece()) {}
       if (!semiblock()) {
@@ -541,7 +544,7 @@ private:
       next_tok();
       if (_enum()) {
         // nothing to do
-      } else if (_union()) {
+      } else if (_class()) {
         // nothing to do
       } else if (statement_inner()) {
         if (_tok.type == TokType::SEMICOLON) {
