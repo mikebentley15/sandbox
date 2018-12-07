@@ -1,5 +1,6 @@
 #include <cstdio>
 
+extern "C++" {
 #ifndef __MAC__
 #define max(x, y) \
   (x > y ? \
@@ -40,3 +41,5 @@ main(
   // success!
   return 0;
 }
+
+} // end of extern "C++"

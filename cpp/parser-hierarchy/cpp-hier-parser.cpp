@@ -675,7 +675,10 @@ private:
 
   bool block() {
     if (_tok.type == TokType::LCURLY) {
-      if (_prevtype == TokType::RPAREN || _prevtype == TokType::IDENTIFIER) {
+      if (_prevtype == TokType::RPAREN ||
+          _prevtype == TokType::IDENTIFIER ||
+          _prevtype == TokType::LITERAL)
+      {
         _out << " ";
       }
       _out << "{";
