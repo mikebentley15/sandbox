@@ -11,13 +11,17 @@ all: $(TARGET)
 clean:
 	rm -f $(TARGET)
 	rm -f *_actual.cpp
-test: $(TEST_TARGETS)
+
+# After testing particular inputs, test that parsing the source works
+test: $(TARGET) $(TEST_TARGETS)
+	./$(TARGET) $(SOURCE) $(SOURCE)_parsed_actual.cpp
+	@rm -f $(SOURCE)_parsed_actual.cpp
 
 $(TARGET): $(SOURCE) Makefile
 	$(CXX) $(CXXFLAGS) -o $(TARGET) $(SOURCE) $(LDFLAGS)
 
 .PHONY: $(TEST_TARGETS)
-$(TEST_TARGETS):
+$(TEST_TARGETS): $(TARGET)
 	./$(TARGET) $(subst test__,,$@) $(subst in,out,$(subst test__,,$@))_actual.cpp
 	diff -Nuir $(subst in,out,$(subst test__,,$@))_actual.cpp $(subst in,out,$(subst test__,,$@))
-	@rm $(subst in,out,$(subst test__,,$@))_actual.cpp
+	@rm -f $(subst in,out,$(subst test__,,$@))_actual.cpp

@@ -137,6 +137,7 @@ statementblock  := "template" {(pstatement | piece)
                      (("class" | "struct") {piece} semiblock |
                       ";" | block) |
                    ("class" | "struct") {piece} semiblock |
+                   "enum" {piece} enumblock |
                    statement_inner (";" | block) |
                    block.
 statement_inner := (pstatement | piece) {pstatement | piece}.
@@ -144,5 +145,7 @@ pstatement      := "(" {statement_inner | ";"} ")".
 piece           := (literal | identifier | operator).
 semiblock       := block [identifier {"," identifier}] ";"
 block           := "{" {element} "}".
+enumblock       := braceinit [identifier {"," identifier}] ";".
+braceinit       := "{" [statement_inner] "}"
 ```
 

@@ -436,7 +436,7 @@ private:
       }
       return true;
     } else if (_tok.type == TokType::IDENTIFIER &&
-             (_tok.content == "class" || _tok.content == "struct"))
+               (_tok.content == "class" || _tok.content == "struct"))
     {
       _out << _indent << _tok.content;
       next_tok();
@@ -444,6 +444,15 @@ private:
       _out << " ";
       if (!semiblock()) {
         error("Expected a semiblock after class or struct");
+      }
+      return true;
+    } else if (_tok.type == TokType::IDENTIFIER && _tok.content == "enum") {
+      _out << _indent << _tok.content;
+      next_tok();
+      while (piece()) {}
+      _out << " ";
+      if (!enumblock()) {
+        error("Expected an enumblock after enum");
       }
       return true;
     } else if (_tok.type == TokType::LPAREN ||
@@ -580,6 +589,50 @@ private:
         next_tok();
       } else {
         error("Missing ending curly brace");
+      }
+      return true;
+    }
+    return false;
+  }
+
+  bool enumblock() {
+    if (braceinit()) {
+      if (_tok.type == TokType::IDENTIFIER) {
+        _out << _tok.content;
+        next_tok();
+        while (_tok.content == ",") {
+          _out << ", ";
+          next_tok();
+          if (_tok.type == TokType::IDENTIFIER) {
+            _out << _tok.content;
+            next_tok();
+          } else {
+            error("Expected identifier after comma");
+          }
+        }
+      }
+      if (_tok.type == TokType::SEMICOLON) {
+        _out << ";";
+        next_tok();
+        _out << std::endl;
+      } else {
+        error("Expected enumblock to end in a semicolon");
+      }
+      return true;
+    }
+    return false;
+  }
+
+  bool braceinit() {
+    if (_tok.type == TokType::LCURLY) {
+      _out << " { ";
+      next_tok();
+      if (statement_inner()) {}
+      if (_tok.type == TokType::RCURLY) {
+        _out << " }";
+        next_tok();
+      } else {
+        error("Expected right curly brace for brace initializer");
       }
       return true;
     }
