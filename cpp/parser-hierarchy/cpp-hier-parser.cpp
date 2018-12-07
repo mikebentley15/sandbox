@@ -627,12 +627,26 @@ private:
 
   bool semiblock() {
     if (block()) {
+      if (_tok.type == TokType::OPERATOR) {
+        _out << " ";
+        while (_tok.type == TokType::OPERATOR) {
+          _out << _tok.content;
+          next_tok();
+        }
+      }
       if (_tok.type == TokType::IDENTIFIER) {
         _out << " " << _tok.content;
         next_tok();
         while (_tok.type == TokType::OPERATOR && _tok.content == ",") {
           _out << ", ";
           next_tok();
+          if (_tok.type == TokType::OPERATOR) {
+            while (_tok.type == TokType::OPERATOR) {
+              _out << _tok.content;
+              next_tok();
+            }
+            _out << " ";
+          }
           if (_tok.type == TokType::IDENTIFIER) {
             _out << _tok.content;
             next_tok();
