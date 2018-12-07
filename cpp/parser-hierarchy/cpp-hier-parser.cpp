@@ -503,9 +503,19 @@ private:
     {
       _out << _tok.content;
       next_tok();
-      while (piece()) {}
-      if (!semiblock()) {
-        error("Expected a semiblock after class or struct");
+      if (statement_inner()) {
+        // nothing to do
+      } else {
+        error("Expected statement_inner after 'class', 'struct', or 'union'");
+      }
+      if (semiblock()) {
+        // nothing to do
+      } else if (_tok.type == TokType::SEMICOLON) {
+        _out << ";";
+        next_tok();
+        _out << std::endl;
+      } else {
+        error("Expected a semiblock after class, struct, or union");
       }
       return true;
     }
@@ -516,22 +526,19 @@ private:
     if (_tok.type == TokType::IDENTIFIER && _tok.content == "enum") {
       _out << _tok.content;
       next_tok();
-      while (piece()) {}
-      if (!enumblock()) {
-        error("Expected an enumblock after enum");
+      if (statement_inner()) {
+        // nothing to do
+      } else {
+        error("Expected statement_inner after 'enum'");
       }
-      return true;
-    }
-    return false;
-  }
-
-  bool _union() {
-    if (_tok.type == TokType::IDENTIFIER && _tok.content == "union") {
-      _out << _tok.content;
-      next_tok();
-      while (piece()) {}
-      if (!semiblock()) {
-        error("Expected a semiblock after union");
+      if (enumblock()) {
+        // nothing to do
+      } else if (_tok.type == TokType::SEMICOLON) {
+        _out << ";";
+        next_tok();
+        _out << std::endl;
+      } else {
+        error("Expected an enumblock or semicolon after enum");
       }
       return true;
     }
