@@ -358,6 +358,7 @@ private:
   }
 
   bool element() {
+    // indentation is handled individually in each of the following subgroups
     return label() || macro() || statementblock();
   }
 
@@ -366,7 +367,7 @@ private:
     if (_tok.type == TokType::IDENTIFIER &&
         std::find(names.begin(), names.end(), _tok.content) != names.end())
     {
-      _out << _tok.content;
+      _out << _indent << _tok.content;
       next_tok();
       if (_tok.type == TokType::OPERATOR && _tok.content == ":") {
         _out << ":" << std::endl;
@@ -393,13 +394,21 @@ private:
     if (_tok.type == TokType::IDENTIFIER &&
         (_tok.content == "class" || _tok.content == "struct"))
     {
-      _out << _tok.content << " ";
+      _out << _indent << _tok.content << " ";
       while (piece()) {}
       if (!semiblock()) {
         error("Expected a semiblock after class or struct");
       }
       return true;
-    } else if (statement_inner()) {
+    } else if (_tok.type == TokType::LPAREN ||
+               _tok.type == TokType::LITERAL ||
+               _tok.type == TokType::IDENTIFIER ||
+               _tok.type == TokType::OPERATOR)
+    {
+      _out << _indent;
+      if (!statement_inner()) {
+        error("Expected statement_inner in statement_block");
+      }
       if (_tok.type == TokType::SEMICOLON) {
         _out << ";" << std::endl;
         next_tok();
@@ -410,7 +419,11 @@ private:
               _tok.content);
       }
       return true;
-    } else if (block()) {
+    } else if (_tok.type == TokType::LCURLY) {
+      _out << _indent;
+      if (!block()) {
+        error("Expected block after left curly brace in statementblock");
+      }
       return true;
     }
     return false;
@@ -489,14 +502,14 @@ private:
 
   bool block() {
     if (_tok.type == TokType::LCURLY) {
-      _out << "{\n";
+      _out << "{" << std::endl;
       next_tok();
       _indent.push_back(' ');
       while (element()) {}
       if (_tok.type == TokType::RCURLY) {
-        _out << "}\n";
-        next_tok();
         _indent.pop_back();
+        _out << _indent << "}" << std::endl;
+        next_tok();
       } else {
         error("Missing ending curly brace");
       }

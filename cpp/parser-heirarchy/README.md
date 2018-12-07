@@ -29,6 +29,7 @@ Here is an example input file:
 #define max(x, y) \
   (x > y ? \
    x : y)
+#endif // end of #ifndef __MAC__
 
 // main function
 int
@@ -55,14 +56,16 @@ And here would be the output after parsing:
 
 ```c++
 #include <cstdio>
+#ifndef __MAC__
 #define max(x, y) (x > y ? x : y)
-int main(int argc, char** argv) {
- bool extranewline = true;
- for (int i = 0; i < 3; i++) {
-  printf("Hello world! ; ");
+#endif
+int main ( int argc ,char **argv ) {
+ bool extranewline =true;
+ for ( int i = 0 ; i < 3 ; i++ ) {
+  printf ( "Hello world! ; " ) ;
  }
- if (extranewline) printf("\n");
- return 0;
+ if ( extranewline ) printf ( "\n" ) ;
+ return 0 ;
 }
 ```
 
@@ -123,11 +126,13 @@ Only the tokens are returned.  The `eaten` category is not given to the parser.
 
 ### Parser Grammar
 
+TODO: how do we handle template functions, classes, and structs?
+
 ```
 file            := {element}.
 element         := (label | macro | statementblock).
 label           := ("public" | "protected" | "private") ":"
-statementblock  := ("class" | "struct") {piece} semiblock |
+statementblock  := ["template" "<" {piece} ">"] ("class" | "struct") {piece} semiblock |
                    statement_inner (";" | block) |
                    block.
 statement_inner := (pstatement | piece) {pstatement | piece}.

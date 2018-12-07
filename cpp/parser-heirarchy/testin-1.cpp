@@ -4,6 +4,7 @@
 #define max(x, y) \
   (x > y ? \
    x : y)
+#endif // end of #ifndef __MAC__
 
 // main function
 int
