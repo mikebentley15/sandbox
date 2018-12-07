@@ -334,7 +334,8 @@ public:
     try {
       while (good() && element()) {}
     } catch (const FinishedException &ex) {
-      // we're done.  Do nothing
+      // we're done.  End with a newline
+      _out << std::endl;
     }
 
     // it's bad if we exited because something did not parse as an element
@@ -385,8 +386,9 @@ private:
       _out << _indent << _tok.content;
       next_tok();
       if (_tok.type == TokType::OPERATOR && _tok.content == ":") {
-        _out << ":" << std::endl;
+        _out << ":";
         next_tok();
+        _out << std::endl;
       } else {
         error("Expected colon after label name, got " + _tok.content);
       }
@@ -400,8 +402,10 @@ private:
   bool macro() {
     if (_tok.type == TokType::MACRO) {
       // do not indent macros
-      _out << _tok.content << std::endl;
+      _out << _tok.content;
       next_tok();
+      // The macro content already ends in a newline
+      //_out << std::endl;
       return true;
     }
     return false;
@@ -422,8 +426,9 @@ private:
           error("Expected semiblock after class or struct");
         }
       } else if (_tok.type == TokType::SEMICOLON) {
-        _out << ";" << std::endl;
+        _out << ";";
         next_tok();
+        _out << std::endl;
       } else if (block()) {
         _out << std::endl;
       } else {
@@ -451,8 +456,9 @@ private:
         error("Expected statement_inner in statement_block");
       }
       if (_tok.type == TokType::SEMICOLON) {
-        _out << ";" << std::endl;
+        _out << ";";
         next_tok();
+        _out << std::endl;
       } else if (block()) {
         _out << std::endl;
       } else {
@@ -547,8 +553,9 @@ private:
         }
       }
       if (_tok.type == TokType::SEMICOLON) {
-        _out << ";" << std::endl;
+        _out << ";";
         next_tok();
+        _out << std::endl;
       } else {
         error("Expected semicolon at the end of the semiblock");
       }
@@ -562,8 +569,9 @@ private:
       if (_prevtype == TokType::RPAREN) {
         _out << " ";
       }
-      _out << "{" << std::endl;
+      _out << "{";
       next_tok();
+      _out << std::endl;
       _indent.push_back(' ');
       while (element()) {}
       if (_tok.type == TokType::RCURLY) {
