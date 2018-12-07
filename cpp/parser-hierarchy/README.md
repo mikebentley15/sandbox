@@ -135,11 +135,12 @@ label           := ("public" | "protected" | "private") ":"
 statementblock  := "template"
                      {(pstatement | piece) that is not "class" or "struct"}
                      (class | ";" | block) |
-                   class | enum | block | typedef |
+                   class | enum | union | block | typedef |
                    statement_inner (";" | block)
 class           := ("class" | "struct") {piece} semiblock.
 enum            := "enum" {piece} enumblock.
-typedef         := "typedef" (enum | statement_inner (";" | block))
+union           := "union" {piece} semiblock.
+typedef         := "typedef" (enum | union | statement_inner (";" | block))
 statement_inner := (pstatement | piece) {pstatement | piece}.
 pstatement      := "(" {statement_inner | ";"} ")".
 piece           := (literal | identifier | operator).

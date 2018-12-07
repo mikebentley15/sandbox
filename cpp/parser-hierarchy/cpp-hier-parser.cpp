@@ -442,6 +442,14 @@ private:
         error("Expected valid enum");
       }
       return true;
+    } else if (_tok.content == "union") {
+      _out << _indent;
+      if (_union()) {
+        // nothing to do
+      } else {
+        error("Expected valid union");
+      }
+      return true;
     } else if (_tok.type == TokType::LCURLY) {
       _out << _indent;
       if (block()) {
@@ -514,11 +522,26 @@ private:
     return false;
   }
 
+  bool _union() {
+    if (_tok.type == TokType::IDENTIFIER && _tok.content == "union") {
+      _out << _tok.content;
+      next_tok();
+      while (piece()) {}
+      if (!semiblock()) {
+        error("Expected a semiblock after union");
+      }
+      return true;
+    }
+    return false;
+  }
+
   bool _typedef() {
     if (_tok.type == TokType::IDENTIFIER && _tok.content == "typedef") {
       _out << _indent << _tok.content << " ";
       next_tok();
       if (_enum()) {
+        // nothing to do
+      } else if (_union()) {
         // nothing to do
       } else if (statement_inner()) {
         if (_tok.type == TokType::SEMICOLON) {
