@@ -198,7 +198,7 @@ private:
     }
     return false;
   }
-  
+
   bool identifier() {
     if (_ch == '_' || std::isalpha(_ch)) {
       while (getchar() && (_ch == '_' || std::isalnum(_ch))) {}
@@ -206,7 +206,7 @@ private:
     }
     return false;
   }
-  
+
   bool literal() {
     return number() || string() || character();
   }
@@ -390,6 +390,8 @@ private:
       } else {
         error("Expected colon after label name, got " + _tok.content);
       }
+      // pretend it was a statement rather than a label, for spacing reasons.
+      _prevtype = TokType::SEMICOLON;
       return true;
     }
     return false;
@@ -406,14 +408,35 @@ private:
   }
 
   bool statementblock() {
-    if (_tok.type == TokType::IDENTIFIER &&
-        (_tok.content == "class" || _tok.content == "struct"))
+    if (_tok.type == TokType::IDENTIFIER && _tok.content == "template") {
+      _out << _indent;
+      while (_tok.content != "class" && _tok.content != "struct") {
+        if (!pstatement() && !piece()) {
+          break;
+        }
+      }
+      if (_tok.content == "class" || _tok.content == "struct") {
+        while (piece()) {}
+        _out << " ";
+        if (!semiblock()) {
+          error("Expected semiblock after class or struct");
+        }
+      } else if (_tok.type == TokType::SEMICOLON) {
+        _out << ";" << std::endl;
+        next_tok();
+      } else if (block()) {
+        _out << std::endl;
+      } else {
+        error("Expected class, struct, block, or semicolon after template");
+      }
+      return true;
+    } else if (_tok.type == TokType::IDENTIFIER &&
+             (_tok.content == "class" || _tok.content == "struct"))
     {
       _out << _indent << _tok.content;
-      if (_prevtype == TokType::IDENTIFIER || _prevtype == TokType::LITERAL) {
-        _out << " ";
-      }
+      next_tok();
       while (piece()) {}
+      _out << " ";
       if (!semiblock()) {
         error("Expected a semiblock after class or struct");
       }
@@ -431,7 +454,7 @@ private:
         _out << ";" << std::endl;
         next_tok();
       } else if (block()) {
-        // already handled
+        _out << std::endl;
       } else {
         error("Expected semicolon or block after statement_inner, got " +
               _tok.content);
@@ -439,7 +462,9 @@ private:
       return true;
     } else if (_tok.type == TokType::LCURLY) {
       _out << _indent;
-      if (!block()) {
+      if (block()) {
+        _out << std::endl;
+      } else {
         error("Expected block after left curly brace in statementblock");
       }
       return true;
@@ -508,7 +533,7 @@ private:
   bool semiblock() {
     if (block()) {
       if (_tok.type == TokType::IDENTIFIER) {
-        _out << _tok.content;
+        _out << " " << _tok.content;
         next_tok();
         while (_tok.type == TokType::OPERATOR && _tok.content == ",") {
           _out << ", ";
@@ -543,7 +568,7 @@ private:
       while (element()) {}
       if (_tok.type == TokType::RCURLY) {
         _indent.pop_back();
-        _out << _indent << "}" << std::endl;
+        _out << _indent << "}";
         next_tok();
       } else {
         error("Missing ending curly brace");

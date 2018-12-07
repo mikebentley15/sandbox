@@ -132,7 +132,11 @@ TODO: how do we handle template functions, classes, and structs?
 file            := {element}.
 element         := (label | macro | statementblock).
 label           := ("public" | "protected" | "private") ":"
-statementblock  := ["template" "<" {piece} ">"] ("class" | "struct") {piece} semiblock |
+statementblock  := "template" {(pstatement | piece)
+                               that is not "class" or "struct"}
+                     (("class" | "struct") {piece} semiblock |
+                      ";" | block) |
+                   ("class" | "struct") {piece} semiblock |
                    statement_inner (";" | block) |
                    block.
 statement_inner := (pstatement | piece) {pstatement | piece}.
