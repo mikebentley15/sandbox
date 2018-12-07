@@ -505,8 +505,6 @@ private:
       next_tok();
       if (statement_inner()) {
         // nothing to do
-      } else {
-        error("Expected statement_inner after 'class', 'struct', or 'union'");
       }
       if (semiblock()) {
         // nothing to do
@@ -528,8 +526,6 @@ private:
       next_tok();
       if (statement_inner()) {
         // nothing to do
-      } else {
-        error("Expected statement_inner after 'enum'");
       }
       if (enumblock()) {
         // nothing to do

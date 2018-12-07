@@ -137,9 +137,9 @@ statementblock  := "template"
                      (class | ";" | block) |
                    class | enum | union | block | typedef |
                    statement_inner (";" | block)
-class           := ("class" | "struct" | "union") statement_inner
+class           := ("class" | "struct" | "union") [statement_inner]
                    (semiblock | ";").
-enum            := "enum" statement_inner (enumblock | ";").
+enum            := "enum" [statement_inner] (enumblock | ";").
 typedef         := "typedef" (enum | union | class |
                               statement_inner (";" | block))
 statement_inner := (pstatement | piece) {pstatement | piece}.
