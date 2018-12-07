@@ -125,11 +125,15 @@ Only the tokens are returned.  The `eaten` category is not given to the parser.
 
 ```
 file            := {element}.
-element         := (macro | statement | block).
-statement       := statement_inner ";".
-statement_inner := {pstatement | piece}.
+element         := (label | macro | statementblock).
+label           := ("public" | "protected" | "private") ":"
+statementblock  := ("class" | "struct") {piece} semiblock |
+                   statement_inner (";" | block) |
+                   block.
+statement_inner := (pstatement | piece) {pstatement | piece}.
 pstatement      := "(" {statement_inner | ";"} ")".
 piece           := (literal | identifier | operator).
-block           := [statement_inner] "{" {element} "}".
+semiblock       := block [identifier {"," identifier}] ";"
+block           := "{" {element} "}".
 ```
 

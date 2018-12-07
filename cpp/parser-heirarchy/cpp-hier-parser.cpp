@@ -45,22 +45,21 @@ struct Token {
 
 class Lexer {
 public:
-  using Error = std::domain_error;
+  class Error : public std::domain_error {
+    using std::domain_error::domain_error;
+  };
 
   Lexer(std::istream &in)
-    : _in(in)
-    , _ch('\0')
-    , _prev('\0')
-    , _tok()
-    , _line(1)
-    , _column(0)
-    , _prevcolumn(0)
+    : _in(in), _ch('\0'), _prev('\0'), _tok(), _line(1), _column(0),
+      _prevcolumn(0)
   {
     getchar();
     cleartok();
   }
 
   const Token& tok() { return _tok; }
+  int line() { return _line; }
+  int column() { return _column; }
 
   void next_tok() {
     while (eaten()) {}
@@ -299,15 +298,218 @@ private:
 
 class Parser {
 public:
-  Parser(std::istream &in, std::ostream &out) : _scanner(in), _out(out) {}
+  class Error : public std::domain_error {
+    using std::domain_error::domain_error;
+  };
+
+  class FinishedException : public std::runtime_error {
+    using std::runtime_error::runtime_error;
+  };
+
+  Parser(std::istream &in, std::ostream &out)
+    : _scanner(in), _out(out), _tok(_scanner.tok()), _indent("") {}
 
   void parse() {
-    _out << "\n";
+    // initialize the scanner
+    next_tok();
+
+    // parse
+    // each subfunction, if accepting the token, handles it (by outputting to
+    // _out), optionally handles more tokens, then calls _scanner.next_tok(),
+    // followed by returning true to say that the token was handled.
+    try {
+      while (good() && element()) {}
+    } catch (const FinishedException &ex) {
+      // we're done.  Do nothing
+    }
+
+    // it's bad if we exited because something did not parse as an element
+    // rather than reaching the end of the file.
+    if (good()) {
+      error("Expected element");
+    }
+  }
+
+private:
+  void error(std::string msg) {
+    std::ostringstream accumulator;
+    accumulator << "Parser error on line " << _scanner.line()
+                << " and column " << _scanner.column() << ": " << msg;
+    throw Error(accumulator.str());
+  }
+
+  bool eof() {
+    return _tok.type == TokType::END_OF_FILE;
+  }
+
+  // means there is a valid token.  When false, done parsing
+  bool good() {
+    return _tok.type != TokType::ERROR && !eof();
+  }
+
+  void next_tok() {
+    _scanner.next_tok();
+    if (eof()) {
+      throw FinishedException("We're done with tokens");
+    }
+    if (!good()) {
+      error("Received an ERROR token from the scanner");
+    }
+  }
+
+  bool element() {
+    return label() || macro() || statementblock();
+  }
+
+  bool label() {
+    std::vector<std::string> names {"public", "protected", "private"};
+    if (_tok.type == TokType::IDENTIFIER &&
+        std::find(names.begin(), names.end(), _tok.content) != names.end())
+    {
+      _out << _tok.content;
+      next_tok();
+      if (_tok.type == TokType::OPERATOR && _tok.content == ":") {
+        _out << ":" << std::endl;
+        next_tok();
+      } else {
+        error("Expected colon after label name, got " + _tok.content);
+      }
+      return true;
+    }
+    return false;
+  }
+
+  bool macro() {
+    if (_tok.type == TokType::MACRO) {
+      // do not indent macros
+      _out << _tok.content << std::endl;
+      next_tok();
+      return true;
+    }
+    return false;
+  }
+
+  bool statementblock() {
+    if (_tok.type == TokType::IDENTIFIER &&
+        (_tok.content == "class" || _tok.content == "struct"))
+    {
+      _out << _tok.content << " ";
+      while (piece()) {}
+      if (!semiblock()) {
+        error("Expected a semiblock after class or struct");
+      }
+      return true;
+    } else if (statement_inner()) {
+      if (_tok.type == TokType::SEMICOLON) {
+        _out << ";" << std::endl;
+        next_tok();
+      } else if (block()) {
+        // already handled
+      } else {
+        error("Expected semicolon or block after statement_inner, got " +
+              _tok.content);
+      }
+      return true;
+    } else if (block()) {
+      return true;
+    }
+    return false;
+  }
+
+  bool statement_inner() {
+    if (pstatement() || piece()) {
+      while (pstatement() || piece()) {}
+      return true;
+    }
+    return false;
+  }
+
+  bool pstatement() {
+    if (_tok.type == TokType::LPAREN) {
+      _out << _tok.content;
+      next_tok();
+      while (statement_inner() || _tok.type == TokType::SEMICOLON) {
+        if (_tok.type == TokType::SEMICOLON) {
+          _out << _tok.content << " ";
+          next_tok();
+        }
+      }
+      if (_tok.type == TokType::RPAREN) {
+        _out << _tok.content << " ";
+        next_tok();
+      } else {
+        error("Expected right parenthesis");
+      }
+      return true;
+    }
+    return false;
+  }
+
+  bool piece() {
+    if (_tok.type == TokType::LITERAL ||
+        _tok.type == TokType::IDENTIFIER ||
+        _tok.type == TokType::OPERATOR)
+    {
+      _out << _tok.content;
+      if (_tok.type != TokType::OPERATOR) {
+        _out << " ";
+      }
+      next_tok();
+      return true;
+    }
+    return false;
+  }
+
+  bool semiblock() {
+    if (block()) {
+      if (_tok.type == TokType::IDENTIFIER) {
+        _out << _tok.content;
+        next_tok();
+        while (_tok.type == TokType::OPERATOR && _tok.content == ",") {
+          _out << ", ";
+          next_tok();
+          if (_tok.type == TokType::IDENTIFIER) {
+            _out << _tok.content;
+            next_tok();
+          } else {
+            error("Expected identifier after comma");
+          }
+        }
+      }
+      if (_tok.type == TokType::SEMICOLON) {
+        _out << ";" << std::endl;
+        next_tok();
+      } else {
+        error("Expected semicolon at the end of the semiblock");
+      }
+      return true;
+    }
+    return false;
+  }
+
+  bool block() {
+    if (_tok.type == TokType::LCURLY) {
+      _out << "{\n";
+      next_tok();
+      _indent.push_back(' ');
+      while (element()) {}
+      if (_tok.type == TokType::RCURLY) {
+        _out << "}\n";
+        next_tok();
+        _indent.pop_back();
+      } else {
+        error("Missing ending curly brace");
+      }
+      return true;
+    }
+    return false;
   }
 
 private:
   Lexer _scanner;
   std::ostream &_out;
+  const Token &_tok;
+  std::string _indent;
 };
 
 void usage() {
@@ -400,8 +602,10 @@ int main(int argCount, char* argList[]) {
         lex.next_tok();
       }
     } else {
+      Parser p(in, out);
+      p.parse();
       // TODO: run the parser
-      throw std::runtime_error("Parser is not yet implemented");
+      //throw std::runtime_error("Parser is not yet implemented");
     }
   } catch (const std::exception &ex) {
     std::cerr << "Error: " << ex.what() << std::endl;
