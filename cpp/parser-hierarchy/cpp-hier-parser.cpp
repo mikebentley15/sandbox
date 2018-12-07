@@ -250,15 +250,16 @@ private:
         error("Empty character literal");
       }
 
-      if (_ch == '\\') {
-        // skip one character since we are escaping
+      while (_in && _ch != '\'') {
+        if (_ch == '\\') {
+          // skip one character since we are escaping
+          getchar();
+        }
         getchar();
       }
 
-      getchar();  // eat the character
-
       if (!_in) {
-        error("End of file reached while parsing character literal");
+        error("End of file reached while scanning character literal");
       } else if (_ch != '\'') {
         error("Expected character literal to end with \"'\"");
       }
@@ -604,9 +605,14 @@ private:
         _tok.type == TokType::IDENTIFIER ||
         _tok.type == TokType::OPERATOR)
     {
-      if (_tok.type == TokType::LITERAL || _tok.type == TokType::IDENTIFIER) {
-        if (_prevtype == TokType::LITERAL ||
-            _prevtype == TokType::IDENTIFIER ||
+      if (_tok.type == TokType::LITERAL) {
+        if (_prevtype == TokType::OPERATOR || _prevtype == TokType::RPAREN) {
+          _out << " ";
+        } else if (_tok.content[0] != '\'' && _tok.content[0] != '"') {
+          _out << " ";
+        }
+      } else if (_tok.type == TokType::IDENTIFIER) {
+        if (_prevtype == TokType::IDENTIFIER ||
             _prevtype == TokType::OPERATOR ||
             _prevtype == TokType::RPAREN)
         {

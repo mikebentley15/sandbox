@@ -21,6 +21,18 @@ main(
         printf("Hello world! ; ");
     }
 
+  // test that our parser can handle some weird characters
+  char ch1 = '\x7f';
+  char ch2=
+    L'\x7f'
+    ;
+  char ch3 = '\'';
+
+  // test that our parser can handle some weird strings
+  char* s1 = "";
+  char* s2 = "\"";
+  char* s3 = "\\\"\"\"\\";
+
   // end in a newline
   if (extranewline)
     printf("\n");
