@@ -639,7 +639,7 @@ private:
         _out << _indent << "}";
         next_tok();
       } else {
-        error("Missing ending curly brace");
+        error("Missing ending curly brace, got " + _tok.content);
       }
       return true;
     }
