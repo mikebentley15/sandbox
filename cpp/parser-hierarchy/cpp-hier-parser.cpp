@@ -523,7 +523,9 @@ private:
         // nothing to do
       } else if (statement_inner()) {
         if (_tok.type == TokType::SEMICOLON) {
-          _out << ";" << std::endl;
+          _out << ";";
+          next_tok();
+          _out << std::endl;
         } else if (block()) {
           _out << std::endl;
         } else {
@@ -625,7 +627,7 @@ private:
 
   bool block() {
     if (_tok.type == TokType::LCURLY) {
-      if (_prevtype == TokType::RPAREN) {
+      if (_prevtype == TokType::RPAREN || _prevtype == TokType::IDENTIFIER) {
         _out << " ";
       }
       _out << "{";
