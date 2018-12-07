@@ -12,3 +12,4 @@ template < typename T, int I = 3 > class A : public B {
  private:
  std :: string _in;
 };
+typedef enum MyEnum_t { hello, } MyEnum;

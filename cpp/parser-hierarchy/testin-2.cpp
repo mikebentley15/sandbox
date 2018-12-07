@@ -15,3 +15,7 @@ A : public B
   private:
     std::string _in;
 };
+
+typedef enum MyEnum_t {
+  hello,
+} MyEnum;

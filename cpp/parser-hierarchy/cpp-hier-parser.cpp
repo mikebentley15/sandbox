@@ -419,12 +419,9 @@ private:
           break;
         }
       }
-      if (_tok.content == "class" || _tok.content == "struct") {
-        while (piece()) {}
-        _out << " ";
-        if (!semiblock()) {
-          error("Expected semiblock after class or struct");
-        }
+      _out << " ";
+      if (_class()) {
+        // nothing to do
       } else if (_tok.type == TokType::SEMICOLON) {
         _out << ";";
         next_tok();
@@ -435,26 +432,28 @@ private:
         error("Expected class, struct, block, or semicolon after template");
       }
       return true;
-    } else if (_tok.type == TokType::IDENTIFIER &&
-               (_tok.content == "class" || _tok.content == "struct"))
-    {
-      _out << _indent << _tok.content;
-      next_tok();
-      while (piece()) {}
-      _out << " ";
-      if (!semiblock()) {
-        error("Expected a semiblock after class or struct");
+    } else if (_class()) {
+      return true;
+    } else if (_tok.content == "enum") {
+      _out << _indent;
+      if (_enum()) {
+        // nothing to do
+      } else {
+        error("Expected valid enum");
       }
       return true;
-    } else if (_tok.type == TokType::IDENTIFIER && _tok.content == "enum") {
-      _out << _indent << _tok.content;
-      next_tok();
-      while (piece()) {}
-      _out << " ";
-      if (!enumblock()) {
-        error("Expected an enumblock after enum");
+    } else if (_tok.type == TokType::LCURLY) {
+      _out << _indent;
+      if (block()) {
+        _out << std::endl;
+      } else {
+        error("Expected block after left curly brace in statementblock");
       }
       return true;
+      _out << std::endl;
+      return true;
+    } else if (_typedef()) {
+      // nothing to do
     } else if (_tok.type == TokType::LPAREN ||
                _tok.type == TokType::LITERAL ||
                _tok.type == TokType::IDENTIFIER ||
@@ -481,6 +480,57 @@ private:
         _out << std::endl;
       } else {
         error("Expected block after left curly brace in statementblock");
+      }
+      return true;
+    }
+    return false;
+  }
+
+  bool _class() {
+    if (_tok.type == TokType::IDENTIFIER &&
+        (_tok.content == "class" || _tok.content == "struct"))
+    {
+      _out << _indent << _tok.content;
+      next_tok();
+      while (piece()) {}
+      _out << " ";
+      if (!semiblock()) {
+        error("Expected a semiblock after class or struct");
+      }
+      return true;
+    }
+    return false;
+  }
+
+  bool _enum() {
+    if (_tok.type == TokType::IDENTIFIER && _tok.content == "enum") {
+      _out << _tok.content;
+      next_tok();
+      while (piece()) {}
+      if (!enumblock()) {
+        error("Expected an enumblock after enum");
+      }
+      return true;
+    }
+    return false;
+  }
+
+  bool _typedef() {
+    if (_tok.type == TokType::IDENTIFIER && _tok.content == "typedef") {
+      _out << _indent << _tok.content << " ";
+      next_tok();
+      if (_enum()) {
+        // nothing to do
+      } else if (statement_inner()) {
+        if (_tok.type == TokType::SEMICOLON) {
+          _out << ";" << std::endl;
+        } else if (block()) {
+          _out << std::endl;
+        } else {
+          error("Expected typedef statement to end in a semicolon or a block");
+        }
+      } else {
+        error("Expected enum or statement after typedef");
       }
       return true;
     }
@@ -598,7 +648,7 @@ private:
   bool enumblock() {
     if (braceinit()) {
       if (_tok.type == TokType::IDENTIFIER) {
-        _out << _tok.content;
+        _out << " " << _tok.content;
         next_tok();
         while (_tok.content == ",") {
           _out << ", ";
