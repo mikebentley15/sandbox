@@ -6,11 +6,12 @@ TARGET       := $(SOURCE:%.cpp=%)
 TESTIN       := $(wildcard testin-*.cpp)
 TEST_TARGETS := $(TESTIN:%=test__%)
 
-.PHONY: all clean test $(TEST_TARGETS)
+.PHONY: all clean test check $(TEST_TARGETS)
 all: $(TARGET)
 clean:
 	rm -f $(TARGET)
 	rm -f *_actual.cpp
+check: test
 
 # After testing particular inputs, test that parsing the source works
 test: $(TARGET) $(TEST_TARGETS)
