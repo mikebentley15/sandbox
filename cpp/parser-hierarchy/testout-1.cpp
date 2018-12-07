@@ -5,7 +5,7 @@
 int main(int argc, char ** argv) {
  bool extranewline = true;
  for(int i = 0; i < 3; i ++) {
-  printf("Hello world! ; ");
+  if(i % 2 == 0) printf("Hello world! ; ");
  }
  if(extranewline) printf("\n");
  return 0;

@@ -17,7 +17,8 @@ main(
   // print three hello worlds in one line
   for (int i = 0; i < 3; i++)
     {
-      printf("Hello world! ; ");
+      if (i % 2 == 0)
+        printf("Hello world! ; ");
     }
 
   // end in a newline

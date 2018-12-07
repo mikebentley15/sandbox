@@ -191,7 +191,7 @@ private:
   }
 
   bool _operator() {
-    const std::string ops = "+=/?<>~!@$^&*,|[].:-";
+    const std::string ops = "+=/?<>~!@$%^&*,|[].:-";
     if (ops.find(_ch) != std::string::npos) {
       getchar();
       return true;
