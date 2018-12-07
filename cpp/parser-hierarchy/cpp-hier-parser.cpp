@@ -493,7 +493,6 @@ private:
       _out << _indent << _tok.content;
       next_tok();
       while (piece()) {}
-      _out << " ";
       if (!semiblock()) {
         error("Expected a semiblock after class or struct");
       }
