@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+std::string parse_string(const std::string);
+
 enum class TokType {
   ERROR = 0,         // value that should never happen
   END_OF_FILE,
@@ -61,7 +63,7 @@ public:
   int line() { return _line; }
   int column() { return _column; }
 
-  void next_tok() {
+  bool next_tok() {
     while (eaten()) {}
 
     cleartok();
@@ -94,6 +96,7 @@ public:
     } else {
       error(std::string("Unrecognized character: '") + _ch + "'");
     }
+    return _tok.type != TokType::ERROR && _tok.type != TokType::END_OF_FILE;
   }
 
 private:
@@ -270,7 +273,6 @@ private:
   bool macro() {
     if (_ch == '#') {
       while (_in) {
-        // TODO: collapse whitespace
         while (_in && _ch != '\n') { getchar(); }
         if (_prev != '\\') {
           break;
@@ -281,6 +283,16 @@ private:
           _tok.content.pop_back();
         }
       }
+      // collapse whitespace and remove comments
+      std::string content(_tok.content.begin() + 1, _tok.content.end());
+      _tok.content = "#" + parse_string(content);
+      //std::string new_content = "#";
+      //const Token &subtok = lex.tok();
+      //while (lex.next_tok()) {
+      //  new_content += subtok.content + " ";
+      //}
+      //new_content.pop_back(); // remove trailing space
+      //_tok.content = new_content;
       return true;
     }
     return false;
@@ -307,7 +319,9 @@ public:
   };
 
   Parser(std::istream &in, std::ostream &out)
-    : _scanner(in), _out(out), _tok(_scanner.tok()), _indent("") {}
+    : _scanner(in), _out(out), _tok(_scanner.tok())
+    , _prevtype(TokType::ERROR), _indent("")
+  {}
 
   void parse() {
     // initialize the scanner
@@ -348,6 +362,7 @@ private:
   }
 
   void next_tok() {
+    _prevtype = _tok.type;
     _scanner.next_tok();
     if (eof()) {
       throw FinishedException("We're done with tokens");
@@ -394,7 +409,10 @@ private:
     if (_tok.type == TokType::IDENTIFIER &&
         (_tok.content == "class" || _tok.content == "struct"))
     {
-      _out << _indent << _tok.content << " ";
+      _out << _indent << _tok.content;
+      if (_prevtype == TokType::IDENTIFIER || _prevtype == TokType::LITERAL) {
+        _out << " ";
+      }
       while (piece()) {}
       if (!semiblock()) {
         error("Expected a semiblock after class or struct");
@@ -439,6 +457,9 @@ private:
 
   bool pstatement() {
     if (_tok.type == TokType::LPAREN) {
+      if (_prevtype != TokType::SEMICOLON && _prevtype != TokType::IDENTIFIER) {
+        _out << " ";
+      }
       _out << _tok.content;
       next_tok();
       while (statement_inner() || _tok.type == TokType::SEMICOLON) {
@@ -448,7 +469,7 @@ private:
         }
       }
       if (_tok.type == TokType::RPAREN) {
-        _out << _tok.content << " ";
+        _out << _tok.content;
         next_tok();
       } else {
         error("Expected right parenthesis");
@@ -463,10 +484,21 @@ private:
         _tok.type == TokType::IDENTIFIER ||
         _tok.type == TokType::OPERATOR)
     {
-      _out << _tok.content;
-      if (_tok.type != TokType::OPERATOR) {
-        _out << " ";
+      if (_tok.type == TokType::LITERAL || _tok.type == TokType::IDENTIFIER) {
+        if (_prevtype == TokType::LITERAL ||
+            _prevtype == TokType::IDENTIFIER ||
+            _prevtype == TokType::OPERATOR ||
+            _prevtype == TokType::RPAREN)
+        {
+          _out << " ";
+        }
+      } else if (_tok.type == TokType::OPERATOR) {
+        if (_prevtype != TokType::OPERATOR && _tok.content != ",") {
+          _out << " ";
+        }
       }
+
+      _out << _tok.content;
       next_tok();
       return true;
     }
@@ -502,6 +534,9 @@ private:
 
   bool block() {
     if (_tok.type == TokType::LCURLY) {
+      if (_prevtype == TokType::RPAREN) {
+        _out << " ";
+      }
       _out << "{" << std::endl;
       next_tok();
       _indent.push_back(' ');
@@ -522,8 +557,18 @@ private:
   Lexer _scanner;
   std::ostream &_out;
   const Token &_tok;
+  TokType _prevtype;
   std::string _indent;
 };
+
+// Runs the parser on a given string
+std::string parse_string(const std::string in) {
+  std::istringstream instream(in);
+  std::ostringstream outstream;
+  Parser parser(instream, outstream);
+  parser.parse();
+  return outstream.str();
+}
 
 void usage() {
   std::cout <<
@@ -608,17 +653,13 @@ int main(int argCount, char* argList[]) {
     if (lexer_only) {
       Lexer lex(in);
       const Token &tok = lex.tok();
-      lex.next_tok();
-      while (tok.type != TokType::ERROR && tok.type != TokType::END_OF_FILE) {
+      while (lex.next_tok()) {
         out << "(" << toktype_tostring(tok.type)
             << ", \"" << tok.content << "\")\n";
-        lex.next_tok();
       }
     } else {
       Parser p(in, out);
       p.parse();
-      // TODO: run the parser
-      //throw std::runtime_error("Parser is not yet implemented");
     }
   } catch (const std::exception &ex) {
     std::cerr << "Error: " << ex.what() << std::endl;
