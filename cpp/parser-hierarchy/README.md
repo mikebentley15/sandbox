@@ -145,8 +145,7 @@ typedef         := "typedef" (enum | union | class |
 statement_inner := (pstatement | piece) {pstatement | piece}.
 pstatement      := "(" {statement_inner | ";"} ")".
 piece           := (literal | identifier | operator).
-semiblock       := basic_block
-                   [{operator} identifier {"," {operator} identifier}] ";"
+semiblock       := basic_block [statement_inner] ";"
 block           := basic_block [";"]
 basic_block     := "{" {element} "}".
 enumblock       := braceinit [identifier {"," identifier}] ";".
