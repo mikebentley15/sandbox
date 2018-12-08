@@ -3,7 +3,7 @@ CXXFLAGS     := -g -O0 -std=c++11 -Wall -Wextra -Werror
 LDFLAGS      :=
 SOURCE       := cpp-hier-parser.cpp
 TARGET       := $(SOURCE:%.cpp=%)
-TESTIN       := $(wildcard testin-*.cpp)
+TESTIN       := $(wildcard tests/testin-*.cpp)
 TEST_TARGETS := $(TESTIN:%=test__%)
 
 .PHONY: all clean test check $(TEST_TARGETS)
@@ -11,6 +11,7 @@ all: $(TARGET)
 clean:
 	rm -f $(TARGET)
 	rm -f *_actual.cpp
+	rm -f tests/*_actual.cpp
 check: test
 
 # After testing particular inputs, test that parsing the source works
