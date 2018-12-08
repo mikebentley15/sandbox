@@ -113,7 +113,7 @@ line_comment    := "//" (^"\n") "\n".
 multi_comment   := "/*" (^"*/") "*/".
 token           := (operator | identifier | literal | macro |
                     "(" | ")" | "{" | "}" | ";" ).
-operator        := (+=/?<>~!@$^&*,|[].:-).
+operator        := (+=/?<>~!@$%^&*,|[].:-).
 identifier      := (a-zA-Z_) {(a-zA-Z0-9_)}.
 literal         := (number | string | character).
 number          := (0-9) {(a-zA-Z0-9.)}.
@@ -130,11 +130,11 @@ TODO: how do we handle template functions, classes, and structs?
 
 ```
 file            := {element}.
-element         := (label | macro | statementblock).
+element         := (label | macro | statementblock | ";").
 label           := ("public" | "protected" | "private") ":"
 statementblock  := "template"
                      {(pstatement | piece) that is not "class" or "struct"}
-                     (class | ";" | block) |
+                     ">" (class | ";" | block) |
                    class | enum | union | block | typedef |
                    statement_inner [";" | block]
 class           := ("class" | "struct" | "union") [statement_inner]

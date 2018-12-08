@@ -376,8 +376,16 @@ private:
   }
 
   bool element() {
-    // indentation is handled individually in each of the following subgroups
-    return label() || macro() || statementblock();
+    if (label() || macro() || statementblock()) {
+      // indentation is handled individually in each of the following subgroups
+      return true;
+    } else if (_tok.type == TokType::SEMICOLON) {
+      _out << _indent << ";";
+      next_tok();
+      _out << std::endl;
+      return true;
+    }
+    return false;
   }
 
   bool label() {

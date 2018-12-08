@@ -4,6 +4,7 @@ extern"C++" {
 #define max(x, y) (x > y ? x : y)
 #endif
  int main(int argc, char ** argv) {
+  ;
   bool extranewline = true;
   for(int i = 0; i < 3; i ++) {
    if(i % 2 == 0) printf("Hello world! ; ");
