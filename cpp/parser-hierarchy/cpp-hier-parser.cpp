@@ -633,7 +633,7 @@ private:
 
   bool semiblock() {
     if (basic_block()) {
-      if (_tok.type == TokType::IDENTIFIER) {
+      if (_tok.type != TokType::SEMICOLON) {
         _out << " ";
         if (statement_inner()) {
           // do nothing
