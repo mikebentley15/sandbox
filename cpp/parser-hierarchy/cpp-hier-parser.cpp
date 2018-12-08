@@ -365,6 +365,7 @@ private:
 
   void next_tok() {
     _prevtype = _tok.type;
+    _prevcontent = _tok.content;
     _scanner.next_tok();
     if (eof()) {
       throw FinishedException("We're done with tokens");
@@ -415,7 +416,9 @@ private:
   bool statementblock() {
     if (_tok.type == TokType::IDENTIFIER && _tok.content == "template") {
       _out << _indent;
-      while (_tok.content != "class" && _tok.content != "struct") {
+      while (!(_prevcontent == ">" &&
+               (_tok.content == "class" || _tok.content == "struct")))
+      {
         if (!pstatement() && !piece()) {
           break;
         }
@@ -736,6 +739,7 @@ private:
   std::ostream &_out;
   const Token &_tok;
   TokType _prevtype;
+  std::string _prevcontent;
   std::string _indent;
 };
 
