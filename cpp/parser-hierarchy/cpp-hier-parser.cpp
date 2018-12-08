@@ -409,6 +409,11 @@ private:
     return false;
   }
 
+  // TODO: instead of having macro() be in the grammar, we could just output it
+  // TODO- whenever we see one, by hijacking the next_tok() function.  This
+  // TODO- becomes tricky because we don't know if we have output a newline
+  // TODO- just before it.  If we have, then just output the macro.  If not, we
+  // TODO- have to output a newline, then the macro, then indent.
   bool macro() {
     if (_tok.type == TokType::MACRO) {
       // do not indent macros
