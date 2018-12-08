@@ -589,12 +589,17 @@ private:
 
   bool pstatement() {
     if (_tok.type == TokType::LPAREN) {
-      if (_prevtype != TokType::SEMICOLON && _prevtype != TokType::IDENTIFIER) {
+      if (_prevtype != TokType::SEMICOLON &&
+          _prevtype != TokType::IDENTIFIER &&
+          _prevtype != TokType::LPAREN)
+      {
         _out << " ";
       }
       _out << _tok.content;
       next_tok();
-      while (statement_inner() || _tok.type == TokType::SEMICOLON) {
+      while (braceinit() || statement_inner() ||
+             _tok.type == TokType::SEMICOLON)
+      {
         if (_tok.type == TokType::SEMICOLON) {
           _out << _tok.content << " ";
           next_tok();
@@ -604,7 +609,7 @@ private:
         _out << _tok.content;
         next_tok();
       } else {
-        error("Expected right parenthesis");
+        error("Expected right parenthesis, got " + _tok.content);
       }
       return true;
     }

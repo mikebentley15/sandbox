@@ -143,7 +143,7 @@ enum            := "enum" [statement_inner] (enumblock | ";").
 typedef         := "typedef" (enum | union | class |
                               statement_inner (";" | block))
 statement_inner := (pstatement | piece) {pstatement | piece}.
-pstatement      := "(" {statement_inner | ";"} ")".
+pstatement      := "(" {statement_inner | braceinit | ";"} ")".
 piece           := (literal | identifier | operator).
 semiblock       := basic_block [statement_inner] ";"
 block           := basic_block [";"]
