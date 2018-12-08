@@ -136,7 +136,7 @@ statementblock  := "template"
                      {(pstatement | piece) that is not "class" or "struct"}
                      (class | ";" | block) |
                    class | enum | union | block | typedef |
-                   statement_inner (";" | block)
+                   statement_inner [";" | block]
 class           := ("class" | "struct" | "union") [statement_inner]
                    (semiblock | ";").
 enum            := "enum" [statement_inner] (enumblock | ";").
@@ -145,9 +145,10 @@ typedef         := "typedef" (enum | union | class |
 statement_inner := (pstatement | piece) {pstatement | piece}.
 pstatement      := "(" {statement_inner | ";"} ")".
 piece           := (literal | identifier | operator).
-semiblock       := block
+semiblock       := basic_block
                    [{operator} identifier {"," {operator} identifier}] ";"
-block           := "{" {element} "}".
+block           := basic_block [";"]
+basic_block     := "{" {element} "}".
 enumblock       := braceinit [identifier {"," identifier}] ";".
 braceinit       := "{" [statement_inner] "}"
 ```

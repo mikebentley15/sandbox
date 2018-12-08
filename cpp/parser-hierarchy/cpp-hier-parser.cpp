@@ -480,8 +480,8 @@ private:
       } else if (block()) {
         _out << std::endl;
       } else {
-        error("Expected semicolon or block after statement_inner, got " +
-              _tok.content);
+        //error("Expected semicolon or block after statement_inner, got " +
+        //      _tok.content);
       }
       return true;
     } else if (_tok.type == TokType::LCURLY) {
@@ -632,7 +632,7 @@ private:
   }
 
   bool semiblock() {
-    if (block()) {
+    if (basic_block()) {
       if (_tok.type == TokType::OPERATOR) {
         _out << " ";
         while (_tok.type == TokType::OPERATOR) {
@@ -674,6 +674,17 @@ private:
   }
 
   bool block() {
+    if (basic_block()) {
+      if (_tok.type == TokType::SEMICOLON) {
+        _out << ";";
+        next_tok();
+      }
+      return true;
+    }
+    return false;
+  }
+
+  bool basic_block() {
     if (_tok.type == TokType::LCURLY) {
       if (_prevtype == TokType::RPAREN ||
           _prevtype == TokType::IDENTIFIER ||
