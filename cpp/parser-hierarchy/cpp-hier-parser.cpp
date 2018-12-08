@@ -429,24 +429,35 @@ private:
   bool statementblock() {
     if (_tok.type == TokType::IDENTIFIER && _tok.content == "template") {
       _out << _indent;
-      while (!(_prevcontent == ">" &&
-               (_tok.content == "class" || _tok.content == "struct")))
-      {
-        if (!pstatement() && !piece()) {
-          break;
-        }
-      }
-      _out << " ";
-      if (_class()) {
+      _out << _tok.content;
+      next_tok();
+      if (template_params()) {
         // nothing to do
-      } else if (_tok.type == TokType::SEMICOLON) {
-        _out << ";";
-        next_tok();
-        _out << std::endl;
-      } else if (block()) {
-        _out << std::endl;
       } else {
-        error("Expected class, struct, block, or semicolon after template");
+        error("Expected template block '<...>' after template keyword, got "
+              + _tok.content);
+      }
+      if (_tok.content == "class" ||
+          _tok.content == "struct" ||
+          _tok.content == "union")
+      {
+        _out << " ";
+        if (!_class()) {
+          error("Expected valid class");
+        }
+        // nothing to do
+      } else if (statement_inner()) {
+        if (_tok.type == TokType::SEMICOLON) {
+          _out << ";";
+          next_tok();
+          _out << std::endl;
+        } else if (block()) {
+          _out << std::endl;
+        } else {
+          error("Expected block or statement after template");
+        }
+      } else {
+        error("Expected class, struct, block, or statement after template");
       }
       return true;
     } else if (_tok.content == "class" ||
@@ -506,6 +517,24 @@ private:
         _out << std::endl;
       } else {
         error("Expected block after left curly brace in statementblock");
+      }
+      return true;
+    }
+    return false;
+  }
+
+  bool template_params() {
+    if (_tok.content == "<") {
+      _out << " <";
+      next_tok();
+      while (_tok.content != ">" &&
+             (template_params() || pstatement() || piece()))
+      {}
+      if (_tok.content == ">") {
+        _out << " >";
+        next_tok();
+      } else {
+        error("Expected ending '>' for template_params, got " + _tok.content);
       }
       return true;
     }

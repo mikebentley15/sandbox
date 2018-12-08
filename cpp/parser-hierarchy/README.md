@@ -80,28 +80,6 @@ space per indentation level, so it's easy.
 Below are the grammar rules that are implemented in this lexer and parser.  The
 parser is implemented as a recursive descent parser.
 
-```
-file            := {element | eaten}.
-eaten           := (whitespace | comment).
-whitespace      := {" " | "\t" | "\n"}.
-comment         := line_comment | multi_comment.
-line_comment    := "//" {anything} "\n".
-multi_comment   := "/*" (^"*/") "*/".
-element         := (macro | statement | block).
-macro           := "#" {piece "\\\n"} "\n".
-statement       := statement_inner ";".
-statement_inner := {pstatement | piece}.
-pstatement      := "(" {statement_inner | ";"} ")".
-piece           := (literal | identifier | operator).
-literal         := (number | string | character).
-block           := [statement_inner] "{" {element} "}".
-number          := (0-9) {(a-zA-Z0-9.)}.
-string          := '"' {(^'\"')} '"'.
-character       := "'" {(^"\'")} "'".
-identifier      := (a-zA-Z_) {(a-zA-Z0-9_)}.
-operator        := (+=/?<>~!@#$^&*,|[].:-).
-```
-
 ### Scanner Grammar
 
 ```
@@ -132,11 +110,11 @@ TODO: how do we handle template functions, classes, and structs?
 file            := {element}.
 element         := (label | macro | statementblock | ";").
 label           := ("public" | "protected" | "private") ":"
-statementblock  := "template"
-                     {(pstatement | piece) that is not "class" or "struct"}
-                     ">" (class | ";" | block) |
+statementblock  := "template" template_params
+                     (class | (statement_inner (";" | block)) |
                    class | enum | union | block | typedef |
                    statement_inner [";" | block]
+template_params := "<" {template_params | pstatement | piece} ">".
 class           := ("class" | "struct" | "union") [statement_inner]
                    (semiblock | ";").
 enum            := "enum" [statement_inner] (enumblock | ";").
