@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 This is the primary file for the assignment, and is the ONLY file you should
 need to edit to complete it. Each homework problem has its own function in the 
@@ -664,7 +665,7 @@ if __name__ == '__main__':
         trajectory = lbr4_traj_opt.compute_trajectory_2(gamma, beta)
         lbr4_traj_opt.render_obstacle = True
     else:
-        print "Unknown homework problem: {}".format(args.problem)
+        print("Unknown homework problem: {}".format(args.problem))
         sys.exit(1)
 
     lbr4_traj_opt.execute_trajectory(trajectory)

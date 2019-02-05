@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 This is a test script to ensure basic communication with the V-REP simulation
 is working. Running the script should case the robot arm to move through a

@@ -124,8 +124,8 @@ class LBR4Kinematics:
 if __name__ == '__main__':
     # Testing
     lbr4 = LBR4Kinematics()
-    print "1.16", lbr4.forward_kinematics(np.ones(7) * 1.16)[:3, 3]
-    print "0.67", lbr4.forward_kinematics(np.ones(7) * 0.6709)[:3, 3]
-    print "0.0", lbr4.forward_kinematics(np.ones(7) * 0.0)[:3, 3]
-    print "1.57", lbr4.forward_kinematics(np.ones(7) * 1.57)[:3, 3]
-    #print lbr4.forward_kinematics([0, 1.57, 0, 0, 0, 0, 0])
+    print("1.16", lbr4.forward_kinematics(np.ones(7) * 1.16)[:3, 3])
+    print("0.67", lbr4.forward_kinematics(np.ones(7) * 0.6709)[:3, 3])
+    print("0.0", lbr4.forward_kinematics(np.ones(7) * 0.0)[:3, 3])
+    print("1.57", lbr4.forward_kinematics(np.ones(7) * 1.57)[:3, 3])
+    #print(lbr4.forward_kinematics([0, 1.57, 0, 0, 0, 0, 0]))
