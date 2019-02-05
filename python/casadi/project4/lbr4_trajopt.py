@@ -87,8 +87,9 @@ class LBR4TrajectoryOptimization:
             """
 
             # YOUR CODE HERE (make sure you change the return value)
-
-            return None 
+            fk = self.lbr4.forward_kinematics(theta)
+            x = fk[0:3,3]
+            return norm_2(x - x_goal)
         #                                                                    #
         # END cost function definition                                       #
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
