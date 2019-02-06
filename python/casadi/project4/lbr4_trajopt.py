@@ -37,7 +37,7 @@ except ImportError:
     print("Import of numpy failed. Make sure it's installed on your system.")
     sys.exit(1)
 try:
-    from casadi import SX, MX, Function, nlpsol, vertcat, norm_2
+    from casadi import SX, MX, Function, nlpsol, vertcat, norm_2, sumsqr, sqrt
 except ImportError:
     print("Import of casadi failed. Make sure it's installed on your system.")
     sys.exit(1)
@@ -89,7 +89,7 @@ class LBR4TrajectoryOptimization:
             # YOUR CODE HERE (make sure you change the return value)
             fk = self.lbr4.forward_kinematics(theta)
             x = fk[0:3,3]
-            return norm_2(x - x_goal)
+            return sumsqr(x - x_goal)
         #                                                                    #
         # END cost function definition                                       #
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -185,8 +185,9 @@ class LBR4TrajectoryOptimization:
             """
 
             # COPY your cost function from 1.1
-
-            return None 
+            fk = self.lbr4.forward_kinematics(theta)
+            x = fk[0:3,3]
+            return sumsqr(x - x_goal)
         #                                                                    #
         # END cost function definition                                       #
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -242,8 +243,10 @@ class LBR4TrajectoryOptimization:
             #-----------------------------------------------------------------#
             #                                                                 #
 
-                # YOUR CODE HERE
-
+            self.g += [theta_k - theta_prev]
+            self.lbg += [-gamma for _ in range(_NUM_DOF)]
+            self.ubg += [ gamma for _ in range(_NUM_DOF)]
+            
             #                                                                 #
             # END add inequlaity constaint                                    #
             #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -272,8 +275,10 @@ class LBR4TrajectoryOptimization:
         # inequality constraints to be equal.)                                #
         #---------------------------------------------------------------------#
         #                                                                     #
-        
-            # YOUR CODE HERE
+
+        self.g += [cost_function(self.goal_position, theta_N)]
+        self.lbg += [0]
+        self.ubg += [0]
 
         #                                                                     #
         # END add equality constraint                                         #
@@ -284,8 +289,10 @@ class LBR4TrajectoryOptimization:
         # TODO: Add an equality constraint that forces the joint velocity at  #
         # the final timestep to be zero.                                      #
         #                                                                     #
-        
-            # YOUR CODE HERE
+
+        self.g += [sumsqr(theta_N - theta_prev)]
+        self.lbg += [0]
+        self.ubg += [0]
 
         #                                                                     #
         # END add equality constraint                                         #
@@ -334,7 +341,9 @@ class LBR4TrajectoryOptimization:
  
             # YOUR CODE HERE (make sure you change the return value)
 
-            return None 
+            fk = self.lbr4.forward_kinematics(theta)
+            x = fk[0:3,3]
+            return sumsqr(x - x_goal) + alpha * sumsqr(theta - theta_prev)
         #                                                                    #
         # END cost function definition                                       #
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -390,15 +399,19 @@ class LBR4TrajectoryOptimization:
         self.lb_theta += self.lbr4.lower_joint_lims
         self.ub_theta += self.lbr4.upper_joint_lims
         self.theta_guess += [0 for _ in range(_NUM_DOF)]
-        cost_N = F(theta=theta_N, x_goal=self.goal_position)
+        cost_N = F(theta=theta_N, theta_prev=theta_prev,
+                   x_goal=self.goal_position)
         self.running_cost += cost_N['cost']
 
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
         # TODO: Add an equality constraint that forces the end-effector       #
         # position to coincide with the goal position.                        #
         #                                                                     #
-        
-            # YOUR CODE HERE (copy this constraint from the previous problem)
+
+        self.g += [sumsqr(self.lbr4.forward_kinematics(theta_N)[0:3,3]
+                          - self.goal_position)]
+        self.lbg += [0]
+        self.ubg += [0]
 
         #                                                                     #
         # END add equality constraint                                         #
@@ -445,9 +458,9 @@ class LBR4TrajectoryOptimization:
                 Symbolic computation of cost according to 2 description
             """
  
-            # YOUR CODE HERE (make sure you change the return value)
-
-            return None 
+            fk = self.lbr4.forward_kinematics(theta)
+            x = fk[0:3,3]
+            return sumsqr(x - x_goal) + beta / sumsqr(x - x_obst)
         #                                                                    #
         # END cost function definition                                       #
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -497,7 +510,9 @@ class LBR4TrajectoryOptimization:
             # instaneous joint velocity.                                      #
             #                                                                 #
             
-                # COPY this constraint from previous problem
+            self.g += [theta_k - theta_prev]
+            self.lbg += [-gamma for _ in range(_NUM_DOF)]
+            self.ubg += [ gamma for _ in range(_NUM_DOF)]
 
             #                                                                 #
             # END add inequlaity constaint                                    #
@@ -519,7 +534,9 @@ class LBR4TrajectoryOptimization:
         # final timestep to be zero.                                          #
         #                                                                     #
 
-            # COPY this constraint from previous problem
+        self.g += [sumsqr(theta_N - theta_prev)]
+        self.lbg += [0]
+        self.ubg += [0]
         
         #                                                                     #
         # END add equality constraint                                         #
@@ -530,7 +547,10 @@ class LBR4TrajectoryOptimization:
         # position to coincide with the goal position.                        #
         #                                                                     #
       
-            # COPY this constraint from previous problem
+        x_N = self.lbr4.forward_kinematics(theta_N)[0:3,3]
+        self.g += [sumsqr(x_N - self.goal_position)]
+        self.lbg += [0]
+        self.ubg += [0]
 
         #                                                                     #
         # END add equality constraint                                         #
