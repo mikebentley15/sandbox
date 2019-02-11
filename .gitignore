@@ -36,3 +36,10 @@
 .swo
 .*.swp
 .*.swo
+
+# Python
+.ipynb_checkpoints/
+__pycache__/
+
+# LaTeX
+*.aux
