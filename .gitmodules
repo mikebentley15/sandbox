@@ -1,0 +1,3 @@
+[submodule "docker/arch-flit/flit_mfem"]
+	path = docker/arch-flit/flit_mfem
+	url = git@github.com:pruners/flit_mfem
