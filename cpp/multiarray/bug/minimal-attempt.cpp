@@ -26,6 +26,10 @@ template <class T> void f (T *x, int n) {
   a[0][0][0] = 0;
 }
 
+// If we instantiate the template function beforehand, then the problem also
+// goes away!
+//template void f (float* x, int n); // instantiate it for float
+
 int main() {
   float x[200];
   f(x, 10);
