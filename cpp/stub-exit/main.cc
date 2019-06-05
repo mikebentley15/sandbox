@@ -17,6 +17,8 @@ int main(void) {
     func();
   } catch (double d) {
     printf("Caught a double: %lf\n", d);
+  } catch (int i) {
+    printf("Caught an int: %d\n", i);
   }
   return 0;
 }

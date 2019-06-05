@@ -12,4 +12,10 @@ extern "C" {
 //  throw 3;
 //}
 
+//[[ noreturn ]]
+void exit_stub (int exit_code) {
+  printf("From stubbed exit(%d)\n", exit_code);
+  throw 3;
+}
+
 }
