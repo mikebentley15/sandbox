@@ -5,9 +5,9 @@ From: archlinux/base
   Contains the FLiT architecture along with compilers and mfem code
 
 %setup
-  mkdir -p ${SINGULARITY_ROOTFS}/opt
-  cp -a /opt/intel-19 ${SINGULARITY_ROOTFS}/opt/intel-19
-  echo ${SINGULARITY_ROOTFS}
+  #mkdir -p ${SINGULARITY_ROOTFS}/opt
+  #cp -a /opt/intel-19 ${SINGULARITY_ROOTFS}/opt/intel-19
+  #echo ${SINGULARITY_ROOTFS}
 
 %files
   #/opt/intel-19 /opt/intel-19
@@ -24,7 +24,7 @@ From: archlinux/base
   export MFEM_VERSION=3.4
 
   # Link for the intel compiler
-  ln -s intel-19 /opt/intel
+  #ln -s intel-19 /opt/intel
 
   # Since Singularity has a hard time with deleted files in Docker layers, we
   # need to make sure the pacman database is clean
@@ -99,7 +99,7 @@ From: archlinux/base
     tmux
 
 %environment
-  export PATH="$PATH:/opt/intel/bin"
+  #export PATH="$PATH:/opt/intel/bin"
   export MFEM_HOME=/opt/mfem
 
 %labels
