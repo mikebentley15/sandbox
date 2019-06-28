@@ -3,6 +3,8 @@
 #include <iostream>
 #include <iomanip>
 #include <limits>
+#include <vector>
+#include <list>
 
 #include <cstdint>
 
@@ -178,11 +180,11 @@ public:
 
   inline ~MemoryAllocator() {
     std::cout << "MemoryAllocator::destructor()" << std::endl;
-    if (data != nullptr) {
-      std::cout << "MemoryAllocator::destructor(): calling free" << std::endl;
-      //free(data);
-      data = nullptr;
-    }
+    //if (data != nullptr) {
+    //  std::cout << "MemoryAllocator::destructor(): calling free" << std::endl;
+    //  free(data);
+    //  data = nullptr;
+    //}
   }
 
   inline explicit MemoryAllocator(MemoryAllocator const& other) : data(nullptr) {
@@ -210,6 +212,7 @@ public:
               << ", "
               << std::dec << n
               << ")" << std::endl;
+    //::operator delete(p);
   }
 
 private:
@@ -252,70 +255,6 @@ using UintUnorderedSet = std::unordered_set<uint64_t,
                                               std::equal_to<uint64_t>,
                                               Alloc>;
 
-class SimpleSet {
-public:
-  SimpleSet(int capacity = 10)
-    : _capacity(capacity*2)
-    , _data(_capacity)
-  {}
-
-  void insert(uint64_t elem) {
-    auto idx = p_hash(elem);
-    if (!this->p_contains(idx, elem)) {
-      _data[idx].push_front(elem);
-    }
-
-    bool should_insert_at_end = true;
-    for (auto it = _data[idx].begin(); it != _data[idx].end(); it++) {
-      if (elem == *it) {
-        should_insert_at_end = false;
-        break;
-      } else if (elem < *it) {
-        _data[idx].insert(it, elem);
-      }
-    }
-
-    if (should_insert_at_end) {
-      _data[idx].push_back(elem);
-    }
-  }
-
-  bool contains(uint64_t elem) {
-    auto idx = p_hash(elem);
-
-    for (auto val : _data[idx]) {
-      if (val == elem) {
-        return true;
-      } else if (val < elem) {
-        break;
-      }
-    }
-
-    return false;
-  }
-
-  std::vector<std::list<uint64_t>> data() { return _data; }
-
-private:
-  inline std::size_t p_hash(uint64_t val) {
-    return _capacity % std::hash<uint64_t>(val);
-  }
-
-  bool p_contains(int idx, uint64_t elem) {
-    for (auto val : _data[idx]) {
-      if (val == 
-    }
-    auto& linked_list = _data[idx];
-  }
-
-  bool p_insert(int idx, uint64_t elem) {
-    // Insert
-  }
-
-private:
-  std::vector<std::list<uint64_t>> _data;
-}
-
 int main(int argCount, char* argList[]) {
   UNUSED_ARG(argCount);
   UNUSED_ARG(argList);
@@ -324,8 +263,8 @@ int main(int argCount, char* argList[]) {
 
   //UintUnorderedSet<PassthroughAllocator> passthrough(25000);
   std::cout << "Before set construction" << std::endl << std::endl;
+  //UintUnorderedSet<Allocator<uint64_t>>      memory(25000);
   UintUnorderedSet<MemoryAllocator<uint64_t>>      memory(25000);
-  //UintUnorderedSet<SimpleAllocator>      simple(25000);
 
   std::cout << std::endl
             << "Before inserting 1, 2, 3" << std::endl << std::endl;
