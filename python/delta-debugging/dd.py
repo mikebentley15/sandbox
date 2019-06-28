@@ -155,8 +155,15 @@ def _dd_rec(content, test, n=2):
     if len(content) == 1:
         return content
 
-    # try a complement of a subset
     delta_size = len(content) // n
+
+    # try a subset
+    for i in range(n):
+        delta = content[delta_size*i:delta_size*(i+1)]
+        if test(delta) is False:
+            return _dd_rec(delta, test, 2)
+
+    # try a complement of a subset
     for i in range(n):
         delta = content[:delta_size*i] + content[delta_size*(i+1):]
         if test(delta) is False:
