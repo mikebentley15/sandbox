@@ -1,5 +1,5 @@
 CC            := gcc
-CFLAGS        := -O2
+CFLAGS        := -O2 -g
 SOURCE        := demo.c
 SOURCE        += main.c
 SOURCE        += minireadelf.c
@@ -34,7 +34,7 @@ demo: demo.o main.o
 %: %.o
 	$(CC) $(CFLAGS) $< -o $@
 
-%.o: %.c
+%.o: %.c Makefile
 	$(CC) $(CFLAGS) -c $< -o $@
 
 %.o-readelf.txt: %.o
