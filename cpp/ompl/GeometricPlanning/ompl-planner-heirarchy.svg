@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg8"
+   inkscape:version="0.92.4 5da689c313, 2019-01-14"
+   sodipodi:docname="ompl-planner-heirarchy.svg">
+  <defs
+     id="defs2" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1.4"
+     inkscape:cx="202.72073"
+     inkscape:cy="915.94132"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:object-paths="true"
+     inkscape:window-width="1270"
+     inkscape:window-height="1070"
+     inkscape:window-x="631"
+     inkscape:window-y="0"
+     inkscape:window-maximized="0" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <g
+       id="g978"
+       transform="translate(2.8348214,10.394345)">
+      <rect
+         ry="5.9789782"
+         y="-4.0580373"
+         x="10.01637"
+         height="113.39287"
+         width="95.438988"
+         id="rect945"
+         style="opacity:1;fill:#ff5555;fill-opacity:1;stroke:none;stroke-width:0.07485887;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+      <g
+         transform="translate(12.095238,9.9785653)"
+         id="g943">
+        <rect
+           style="opacity:1;fill:#ff8080;fill-opacity:1;stroke:none;stroke-width:0.07268947;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+           id="rect884"
+           width="82.587799"
+           height="91.470238"
+           x="4.3467264"
+           y="2.5565469"
+           ry="5.3113313" />
+        <rect
+           style="opacity:1;fill:#ffaaaa;fill-opacity:1;stroke:none;stroke-width:0.15176655;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+           id="rect833"
+           width="66.523804"
+           height="51.59375"
+           x="12.473214"
+           y="37.670544"
+           ry="4.6466417" />
+        <text
+           xml:space="preserve"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.4083333px;line-height:1.14999998;font-family:'CMU Sans Serif';-inkscape-font-specification:'CMU Sans Serif';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+           x="45.874313"
+           y="46.51519"
+           id="text839"><tspan
+             sodipodi:role="line"
+             id="tspan837"
+             x="45.874313"
+             y="46.51519"
+             style="stroke-width:0.26458332">Space Information</tspan></text>
+        <text
+           xml:space="preserve"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.4083333px;line-height:1.14999998;font-family:'CMU Sans Serif';-inkscape-font-specification:'CMU Sans Serif';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+           x="45.693619"
+           y="59.630959"
+           id="text850"><tspan
+             sodipodi:role="line"
+             id="tspan848"
+             x="45.693619"
+             y="59.630959"
+             style="stroke-width:0.26458332">stateValidityChecker</tspan></text>
+        <path
+           style="fill:none;stroke:#000000;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+           d="M 12.473215,50.446135 H 78.997017"
+           id="path852"
+           inkscape:connector-curvature="0" />
+        <rect
+           style="opacity:1;fill:#ffd5d5;fill-opacity:1;stroke:none;stroke-width:0.07508694;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+           id="rect815"
+           width="45.26543"
+           height="20.988802"
+           x="23.091309"
+           y="63.758621"
+           ry="3.1190622" />
+        <text
+           xml:space="preserve"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.4083333px;line-height:1.14999998;font-family:'CMU Sans Serif';-inkscape-font-specification:'CMU Sans Serif';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+           x="45.669796"
+           y="71.250298"
+           id="text819"><tspan
+             sodipodi:role="line"
+             id="tspan817"
+             x="45.669796"
+             y="71.250298"
+             style="stroke-width:0.26458332">State Space</tspan></text>
+        <text
+           xml:space="preserve"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.4083333px;line-height:1.14999998;font-family:'CMU Sans Serif';-inkscape-font-specification:'CMU Sans Serif';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+           x="45.508488"
+           y="81.591377"
+           id="text831"><tspan
+             sodipodi:role="line"
+             id="tspan829"
+             x="45.508488"
+             y="81.591377"
+             style="stroke-width:0.26458332">bounds</tspan></text>
+        <path
+           style="fill:none;stroke:#000000;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+           d="M 23.09131,74.031851 H 68.356739"
+           id="path854"
+           inkscape:connector-curvature="0" />
+        <text
+           xml:space="preserve"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.4083333px;line-height:1.14999998;font-family:'CMU Sans Serif';-inkscape-font-specification:'CMU Sans Serif';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+           x="44.412201"
+           y="11.627975"
+           id="text888"><tspan
+             sodipodi:role="line"
+             id="tspan886"
+             x="44.412201"
+             y="11.627975"
+             style="stroke-width:0.26458332">Problem Definition</tspan></text>
+        <path
+           style="fill:none;stroke:#000000;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+           d="M 4.3467263,15.407738 H 86.934523"
+           id="path909"
+           inkscape:connector-curvature="0" />
+        <text
+           xml:space="preserve"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.4083333px;line-height:1.14999998;font-family:'CMU Sans Serif';-inkscape-font-specification:'CMU Sans Serif';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+           x="44.470539"
+           y="23.345238"
+           id="text913"><tspan
+             sodipodi:role="line"
+             x="44.470539"
+             y="23.345238"
+             style="stroke-width:0.26458332"
+             id="tspan915">start</tspan></text>
+        <text
+           xml:space="preserve"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.4083333px;line-height:1.14999998;font-family:'CMU Sans Serif';-inkscape-font-specification:'CMU Sans Serif';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+           x="44.666687"
+           y="31.660713"
+           id="text921"><tspan
+             sodipodi:role="line"
+             id="tspan919"
+             x="44.666687"
+             y="31.660713"
+             style="stroke-width:0.26458332">goal</tspan></text>
+      </g>
+      <text
+         id="text949"
+         y="4.6354165"
+         x="57.442482"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.4083333px;line-height:1.14999998;font-family:'CMU Sans Serif';-inkscape-font-specification:'CMU Sans Serif';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+         xml:space="preserve"><tspan
+           style="stroke-width:0.26458332"
+           y="4.6354165"
+           x="57.442482"
+           id="tspan947"
+           sodipodi:role="line">Planner</tspan></text>
+      <path
+         inkscape:connector-curvature="0"
+         id="path951"
+         d="m 10.01637,7.923809 h 95.43899"
+         style="fill:none;stroke:#000000;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+    </g>
+  </g>
+</svg>
