@@ -144,13 +144,11 @@
     TH_VERIFY_MSG(false, #exp " did not throw " #exception); \
   } catch (exception&) {}
 // Adds the test to map th::tests before main() is called
-#define TH_REGISTER(test_name)             \
-  struct TH_Registered_Test_##test_name {  \
-    TH_Registered_Test_##test_name() {     \
-      th::tests[#test_name] = test_name;   \
-    }                                      \
-  };                                       \
-  TH_Registered_Test_##test_name r_##test_name
+#define TH_REGISTER(func) th::TestRegistrar registrar_##func(#func, func)
+#define TH_DEFINE_TEST(name) \
+  void name(); \
+  TH_REGISTER(name); \
+  void name()
 
 // includes
 
@@ -206,6 +204,11 @@ namespace th {
     }
   };
 
+  struct TestRegistrar {
+    TestRegistrar(const std::string &name, test func) {
+      tests[name] = func;
+    }
+  };
 
 }; // end of namespace th
 
@@ -300,7 +303,6 @@ int main(int argCount, char *argList[]) {
       }
       failed_tests.emplace_back(test_name);
     } catch (...) {
-      auto err = std::current_exception;
       if (!quiet) {
         std::cout << test_name << ": Uncaught throw (not a std::exception)\n";
       }
