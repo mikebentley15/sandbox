@@ -129,22 +129,26 @@
 
 // Assertion definitions
 #define TH_VERIFY_MSG(x, msg) \
-  if (!(x)) { \
-    throw th::AssertionError(__FILE__, __func__, __LINE__, msg);\
-  }
+  do {                                                         \
+    if (!(x)) {                                                \
+      throw th::AssertionError(__FILE__, __func__, __LINE__, msg);\
+    }                                                          \
+  } while (false)
 #define TH_VERIFY(x) TH_VERIFY_MSG(x, "TH_VERIFY("#x")")
 #define TH_EQUAL(a, b) TH_VERIFY_MSG((a) == (b), "TH_EQUAL("#a", "#b")")
 #define TH_NOT_EQUAL(a, b) TH_VERIFY_MSG((a) != (b), "TH_NOT_EQUAL("#a", "#b")")
 #define TH_FAIL(msg) \
   TH_VERIFY_MSG(false, std::string("TH_FAIL(\"") + msg + "\")")
 #define TH_SKIP(msg) throw th::SkipError(__FILE__, __func__, __LINE__, msg)
-#define TH_THROWS(exp, exception)                            \
-  try {                                                      \
-    exp;                                                     \
-    TH_VERIFY_MSG(false, #exp " did not throw " #exception); \
-  } catch (exception&) {}
+#define TH_THROWS(exp, exception)                              \
+  do {                                                         \
+    try {                                                      \
+      exp;                                                     \
+      TH_VERIFY_MSG(false, #exp " did not throw " #exception); \
+    } catch (exception&) {}                                    \
+  } while(false)
 // Adds the test to map th::tests before main() is called
-#define TH_REGISTER(func) th::TestRegistrar registrar_##func(#func, func)
+#define TH_REGISTER(func) static th::TestRegistrar registrar_##func(#func, func)
 #define TH_TEST(name) \
   void name(); \
   TH_REGISTER(name); \
