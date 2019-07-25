@@ -1,0 +1,65 @@
+\documentclass{article}
+
+\usepackage[latin1]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{textcomp}
+\usepackage{mathptmx}
+\usepackage[scaled=.92]{helvet}
+\usepackage{courier}
+\renewcommand*{\familydefault}{phv}
+\usepackage[margin=1in]{geometry}
+\usepackage{fancyhdr}
+\lhead{ABC, Inc.}\rhead{XYZ Dept.}
+\pagestyle{fancy}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage[
+  pdftex,
+  colorlinks=true,
+  pdftitle={Key form},
+  pdfsubject={Key},
+  pdfauthor={ich},
+  pdfpagemode=UseNone,
+  pdfstartview=FitH,
+  pagebackref,
+  pdfhighlight={/N}
+]{hyperref}
+
+\begin{document}
+\section*{Request for a key}
+\begin{Form}
+  \begin{tabular}{|rl|}
+    \hline
+    & \\*[-0.9em]
+    \multicolumn{2}{|c|}{\textbf{Employee}} \\
+
+    First name:   & \TextField[name=vorname, width=20em]{} \\
+    Name:         & \TextField[name=name, width=20em]{} \\
+    Department:   & \ChoiceMenu[name=abt, width=20em, combo=true]{}{%
+                      Sales=v,
+                      Production=f,
+                      Services=s} \\
+    Picture:      & \TextField[name=pic, width=20em, fileselect=true]{} \\
+
+    \hline
+    & \\*[-0.9em]
+    \multicolumn{2}{|c|}{\textbf{Time}} \\
+
+    Time:         & \ChoiceMenu[name=zeit, width=20em, combo=true]{}{%
+                      limited=b,
+                      unlimited=u} \\
+    From:         & \TextField[name=from, width=10em]{} \\
+    Until:        & \TextField[name=until, width=10em]{} \\
+
+    \hline
+    & \\*[-0.9em]
+    \multicolumn{2}{|c|}{\textbf{Doors}} \\
+
+    Front door:   & \CheckBox[name=ht, width=1.2em]{} \\
+    Ground floor: & \CheckBox[name=e1, width=1.2em]{} \\
+    First floor:  & \CheckBox[name=e2, width=1.2em]{} \\
+
+    \hline
+  \end{tabular}
+\end{Form}
+\end{document}

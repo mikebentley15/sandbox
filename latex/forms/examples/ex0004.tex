@@ -1,0 +1,80 @@
+\documentclass{article}
+
+\usepackage[latin1]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{textcomp}
+\usepackage{mathptmx}
+\usepackage[scaled=.92]{helvet}
+\usepackage{courier}
+\renewcommand*{\familydefault}{phv}
+\usepackage[margin=1in]{geometry}
+\usepackage{fancyhdr}
+\lhead{ABC, Inc.}\rhead{XYZ Dept.}
+\pagestyle{fancy}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage[
+  pdftex,
+  colorlinks=true,
+  pdftitle={Key form},
+  pdfsubject={Key},
+  pdfauthor={ich},
+  pdfpagemode=UseNone,
+  pdfstartview=FitH,
+  pagebackref,
+  pdfhighlight={/N}
+]{hyperref}
+
+\newcommand{\textforlabel}[2]{%
+  \TextField[name={#1},value={#2},width=7em, align=2, bordercolor={1 1 1},
+             readonly=true]{}
+}
+
+\begin{document}
+\section*{Request for a key}
+\begin{Form}
+  \begin{tabular}{|rl|}
+    \hline
+    & \\*[-0.9em]
+    \multicolumn{2}{|c|}{\textbf{Employee}} \\
+
+    \textforlabel{vn}{First name:}
+                  & \TextField[name=vorname, width=20em]{} \\
+    \textforlabel{nn}{Name:}
+                  & \TextField[name=name, width=20em]{} \\
+    \textforlabel{ab}{Department:}
+                  & \ChoiceMenu[name=abt, width=20em, combo=true]{}{%
+                      Sales=v,
+                      Production=f,
+                      Services=s} \\
+    \textforlabel{pp}{Picture:}
+                  & \TextField[name=pic, width=20em, fileselect=true]{} \\
+
+    \hline
+    & \\*[-0.9em]
+    \multicolumn{2}{|c|}{\textbf{Time}} \\
+
+    \textforlabel{z}{Time:}
+                  & \ChoiceMenu[name=zeit, width=20em, combo=true]{}{%
+                      limited=b,
+                      unlimited=u} \\
+    \textforlabel{v}{From:}
+                  & \TextField[name=from, width=10em]{} \\
+    \textforlabel{b}{Until:}
+                  & \TextField[name=until, width=10em]{} \\
+
+    \hline
+    & \\*[-0.9em]
+    \multicolumn{2}{|c|}{\textbf{Doors}} \\
+
+    \textforlabel{th}{Front door:}
+                  & \CheckBox[name=ht, width=1.2em]{} \\
+    \textforlabel{t1}{Ground floor:}
+                  & \CheckBox[name=e1, width=1.2em]{} \\
+    \textforlabel{t2}{First floor:}
+                  & \CheckBox[name=e2, width=1.2em]{} \\
+
+    \hline
+  \end{tabular}
+\end{Form}
+\end{document}

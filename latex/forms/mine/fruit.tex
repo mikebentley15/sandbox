@@ -1,0 +1,66 @@
+\documentclass{article}
+
+\usepackage[margin=1in]{geometry}  % to set margins
+
+% We want to use JavaScript to change fonts, so we load the font setup packages
+\usepackage{mathptmx}
+\usepackage[scaled=.92]{helvet}
+\usepackage{courier}
+
+% Change the font encoding from OT1 (LaTeX default) to T1.
+\usepackage[T1]{fontenc}
+
+% Change the default font to Helvetica because sans-serif fonts are easier to
+% read on screens than serif fonts
+\renewcommand*{\familydefault}{phv}
+
+% Headers and footers
+\usepackage{fancyhdr}
+\lhead{Garden Heights North Ward}
+\chead{}
+\rhead{Reimbursement Form}
+\lfoot{}
+\cfoot{}
+\rfoot{}
+\pagestyle{fancy}
+
+% allows the use of graphics
+\usepackage{graphicx}
+\usepackage{color}
+
+% hyperref allows us to embed forms:
+\usepackage[
+  pdftex, a4paper=false, colorlinks=true,
+  pdftitle={Reimbursement Form},
+  pdfsubject={Reimbursements},
+  pdfauthor={Garden Heights North Ward},
+  pdfpagemode=UseNone,
+  pdfstartview=FitH,
+  pdfhighlight={/N}
+]{hyperref}
+
+\begin{document}
+
+\section*{Fruit Survey}
+
+\begin{Form}
+  % \TextField[Parameter]{Text}
+  %   creates a text field.
+  % \CheckBox[Parameter]{Text}
+  %   creates a check box.
+  % \ChoiceMenu[Parameter]{Text}{Auswahl-Optionen}
+  %   creates a choice list.
+  % \PushButton[Parameter]{Text}
+  %   creates a button.
+  % \Submit[Parameter]{Text}
+  %   creates a Submit button.  Pushing the button sends the form data to the
+  %   URL specified as the action-parameter in the Form environment.
+  % \Reset[Parameter]{Text}
+  %   creates a Reset button.
+  \textbf{First Name:} \TextField[name=firstname]{} \\
+  \textbf{Last Name:}  \TextField[name=name]{} \\
+  \textbf{Favorite Fruit:} \TextField[name=favfruit]{} \\
+  \textbf{Least Favorite Fruit:} \TextField[name=notfavfruit]{} \\
+\end{Form}
+
+\end{document}

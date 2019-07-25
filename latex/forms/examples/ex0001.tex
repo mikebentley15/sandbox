@@ -1,0 +1,53 @@
+\documentclass{article}
+
+\usepackage[latin1]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{textcomp}
+\usepackage{mathptmx}
+\usepackage[scaled=.92]{helvet}
+\usepackage{courier}
+\renewcommand*{\familydefault}{phv}
+\usepackage[margin=1in]{geometry}
+\usepackage{fancyhdr}
+\lhead{ABC, Inc.}\rhead{XYZ Dept.}
+\pagestyle{fancy}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage[
+  pdftex,
+  colorlinks=true,
+  pdftitle={Key form},
+  pdfsubject={Key},
+  pdfauthor={ich},
+  pdfpagemode=UseNone,
+  pdfstartview=FitH,
+  pagebackref,
+  pdfhighlight={/N}
+]{hyperref}
+
+\begin{document}
+\section*{Request for a key}
+\begin{Form}
+
+  \textbf{Employee}\\
+  First name:   \TextField[name=vorname]{} \\
+  Name:         \TextField[name=name]{} \\
+  Department:   \ChoiceMenu[name=abt]{}{%
+    Sales=v,
+    Production=f,
+    Services=s} \\
+
+  \textbf{Time} \\
+  Time:         \ChoiceMenu[name=zeit]{}{%
+    limited=b,
+    unlimited=u} \\
+  From:         \TextField[name=from]{} \\
+  Until:        \TextField[name=until]{} \\
+
+  \textbf{Doors} \\
+  Front door:   \CheckBox[name=ht]{} \\
+  Ground floor: \CheckBox[name=e1]{} \\
+  First floor:  \CheckBox[name=e2]{} \\
+
+\end{Form}
+\end{document}
