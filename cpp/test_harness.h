@@ -145,7 +145,7 @@
   } catch (exception&) {}
 // Adds the test to map th::tests before main() is called
 #define TH_REGISTER(func) th::TestRegistrar registrar_##func(#func, func)
-#define TH_DEFINE_TEST(name) \
+#define TH_TEST(name) \
   void name(); \
   TH_REGISTER(name); \
   void name()
