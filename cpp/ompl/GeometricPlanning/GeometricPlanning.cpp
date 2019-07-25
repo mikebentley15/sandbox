@@ -16,6 +16,23 @@
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
 
+class ValidityChecker : public ob::StateValidityChecker {
+public:
+  ValidityChecker(const ob::SpaceInformationPtr &si) :
+    ob::StateValidityChecker(si) {}
+
+  virtual bool isValid(const ob::State *state) const {
+    const auto *se3state = state->as<ob::SE3StateSpace::StateType>();
+    const auto *pos = se3state->as<ob::RealVectorStateSpace::StateType>(0);
+    const auto &rot = se3state->rotation();
+    UNUSED_VAR(pos);
+    UNUSED_VAR(rot);
+    // TODO: collision detection
+    return true;
+  }
+};
+
+// Could use this instead of the ValidityChecker class
 bool isStateValid(const ob::State *state) {
   const auto *se3state = state->as<ob::SE3StateSpace::StateType>();
   const auto *pos = se3state->as<ob::RealVectorStateSpace::StateType>(0);
@@ -39,7 +56,7 @@ void planWithoutSimpleSetup() {
 
   // create the space information
   auto si(std::make_shared<ob::SpaceInformation>(space));
-  si->setStateValidityChecker(isStateValid);
+  si->setStateValidityChecker(std::make_shared<ValidityChecker>(si));
 
   // random start and goal
   ob::ScopedState<> start(space);
