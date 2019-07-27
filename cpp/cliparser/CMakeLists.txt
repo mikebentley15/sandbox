@@ -3,8 +3,9 @@ project (CliParser VERSION 1.0.0 LANGUAGES CXX)
 
 set(SRC_DIR src)
 
-add_library(CliParser OBJECT ${SRC_DIR}/CliParser.h)
-target_include_directories(CliParser PUBLIC ${SRC_DIR})
+add_library(CliParser OBJECT src/CliParser.h)
+target_include_directories(CliParser PUBLIC src)
+set_target_properties(CliParser PROPERTIES LINKER_LANGUAGE CXX)
 
 #############
 #   tests   #

@@ -2,16 +2,53 @@
 
 #include "CliParser.h"
 
+namespace {
+
 class FunctionalTests : public testing::Test {
 protected:
-  virtual void setUp() {
-    std::cout << "FunctionalTests::setUp()\n";
-  }
-  virtual void tearDown() {
-    std::cout << "FunctionalTests::tearDown()\n";
-  }
+  virtual void setUp() {}
+  virtual void tearDown() {}
 };
 
-TEST_F(FunctionalTests, tst_compiles) {
-  EXPECT_EQ(2 + 2, 5);
+}
+
+TEST_F(FunctionalTests, EmptyArgsMistake) {
+  // the user, trying to use the constructor without any
+  // command-line arguments will get an exception with a
+  // helpful message
+  ASSERT_ANY_THROW(CliParser(std::vector<std::string>{}));
+}
+
+TEST_F(FunctionalTests, NoArguments) {
+  // Fred tries to parse arguments, but only the program name
+  // is given
+  std::vector<std::string> args { "program-name" };
+  CliParser parser(args);
+
+  // Fred sees that the program name is given, that the remaining
+  // arguments are empty, that he can retrieve the arguments he
+  // gave, and that any flag he checks returns false.
+  // Fred is happy.
+  EXPECT_EQ(parser.program_name(), "program-name");
+  EXPECT_EQ(parser.remaining_args(), decltype(args){});
+  EXPECT_EQ(parser.args(), args);
+  EXPECT_FALSE(parser.has_argument("-h"));
+  EXPECT_FALSE(parser.has_argument("--verbose"));
+  EXPECT_FALSE(parser.has_argument("--freds-birthday"));
+}
+
+TEST_F(FunctionalTests, OptionArguments) {
+  // Bob is parsing arguments and there are a few options he wants to find
+  std::vector<std::string> args {
+    "prog-name", "-h", "--verbose", "--not-quiet"
+  };
+  CliParser parser(args);
+  EXPECT_TRUE(parser.has_argument("-h", "--help"));
+  EXPECT_TRUE(parser.has_argument("-v", "--verbose"));
+  EXPECT_TRUE(parser.has_argument("--not-quiet"));
+  EXPECT_FALSE(parser.has_argument("-q", "--quiet"));
+  EXPECT_FALSE(parser.has_argument("-bbday", "--bobs-birthday"));
+  EXPECT_FALSE(parser.has_argument("--get-fridge"));
+  // all arguments have been queried, so no remaining arguments
+  EXPECT_EQ(parser.remaining_args(), decltype(args){});
 }
