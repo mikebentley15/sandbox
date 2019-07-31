@@ -52,3 +52,22 @@ TEST_F(FunctionalTests, OptionArguments) {
   // all arguments have been queried, so no remaining arguments
   EXPECT_EQ(parser.remaining_args(), decltype(args){});
 }
+
+TEST_F(FunctionalTests, RemainingArgumentsNoOptions) {
+  std::vector<std::string> args {
+    "program-name", "-h", "--verbose", "--not-quiet",
+  };
+  std::vector<std::string> expected_remaining(args.begin()+1, args.end());
+  CliParser parser(args);
+  EXPECT_EQ(expected_remaining, parser.remaining_args());
+}
+
+TEST_F(FunctionalTests, RemainingArgumentsSomeOptions) {
+  std::vector<std::string> args {
+    "program-name", "-h", "--verbose", "--not-quiet",
+  };
+  std::vector<std::string> expected_remaining {"-h", "--not-quiet"};
+  CliParser parser(args);
+  EXPECT_TRUE(parser.has_argument("-v", "--verbose"));
+  EXPECT_EQ(expected_remaining, parser.remaining_args());
+}
