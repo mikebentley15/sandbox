@@ -53,18 +53,28 @@ public:
     return count;
   }
 
-  // any number of arguments
+  /// any number of arguments
   template <typename ... Args>
   std::size_t count_argument(const std::string &arg, Args ... args) {
     return count_argument(arg) + count_argument(args ...);
   }
 
-  // any number of arguments
+  /// any number of arguments
   template <typename ... Args>
   bool has_argument(Args ... args) {
     return count_argument(args ...) > 0;
   }
 
+  /// returns the next parameter after this given argument
+  /// only returns the first instance, does not support repeats
+  /// @throws std::invalid_argument if not found
+  std::string get_param(const std::string &arg) {
+    return "";
+  }
+  template <typename ... Args>
+  std::string get_param(const std::string &arg, Args ... args) {
+    return get_param(arg);
+  }
 protected:
   void verify_program_name_exists() {
     if (_args.size() == 0) {

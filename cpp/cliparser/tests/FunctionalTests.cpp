@@ -82,7 +82,13 @@ TEST_F(FunctionalTests, ManyOptionTypesGiven) {
   EXPECT_EQ(expected_remaining, parser.remaining_args());
 }
 
-TEST_F(FunctionalTests, CountOptionOccurrences) {
+TEST_F(FunctionalTests, CountArgumentZeroTimes) {
+  std::vector<std::string> args { "pn", "--help" };
+  CliParser parser(args);
+  EXPECT_EQ(0, parser.count_argument("-v", "--verbose"));
+}
+
+TEST_F(FunctionalTests, CountArgumentOccurrences) {
   std::vector<std::string> args {
     "program-name", "-h", "-verb", "--help", "--verbose", "-v"
   };
@@ -90,4 +96,12 @@ TEST_F(FunctionalTests, CountOptionOccurrences) {
   CliParser parser(args);
   EXPECT_EQ(3, parser.count_argument("-v", "-verb", "--verbose"));
   EXPECT_EQ(expected_remaining, parser.remaining_args());
+}
+
+TEST_F(FunctionalTests, GetParamMissingFlag) {
+
+}
+
+TEST_F(FunctionalTests, GetParamMissingValue) {
+
 }
