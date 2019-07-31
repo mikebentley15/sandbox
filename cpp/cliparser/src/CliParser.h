@@ -39,31 +39,8 @@ public:
     return remaining;
   }
 
-  template <typename ... Args>
-  bool has_argument(Args ... args) {
-    return has_argument_impl(args ...);
-  }
-
-  bool has_argument(const std::string &arg) { return false; }
-  bool has_argument(const std::string &arg1, const std::string &arg2)
-  { return false; }
-
-protected:
-  void verify_program_name_exists() {
-    if (_args.size() == 0) {
-      throw std::invalid_argument(
-            "CliParser expects at least one command-line argument");
-    }
-  }
-
-  template <typename ... Args>
-  bool has_argument_impl(const std::string &arg, Args ... args) {
-    bool has_arg = has_argument_impl(arg);
-    has_arg = has_argument_impl(args ...) || has_arg;
-    return has_arg;
-  }
-
-  bool has_argument_impl(const std::string &arg) {
+  // only one argument
+  bool has_argument(const std::string &arg) {
     // mark the argument(s) as parsed
     bool was_found = false;
     auto iter = std::find(_args.begin(), _args.end(), arg);
@@ -73,6 +50,22 @@ protected:
       iter = std::find(iter+1, _args.end(), arg);
     }
     return was_found;
+  }
+
+  // any number of arguments
+  template <typename ... Args>
+  bool has_argument(const std::string &arg, Args ... args) {
+    bool has_arg = has_argument(arg);
+    has_arg = has_argument(args ...) || has_arg;
+    return has_arg;
+  }
+
+protected:
+  void verify_program_name_exists() {
+    if (_args.size() == 0) {
+      throw std::invalid_argument(
+            "CliParser expects at least one command-line argument");
+    }
   }
 
 protected:
