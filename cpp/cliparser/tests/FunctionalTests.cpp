@@ -78,6 +78,16 @@ TEST_F(FunctionalTests, ManyOptionTypesGiven) {
   };
   std::vector<std::string> expected_remaining {"--verbose"};
   CliParser parser(args);
-  EXPECT_TRUE(parser.has_argument("-h", "--help"));
+  EXPECT_TRUE(parser.has_argument("-h", "-help", "--help"));
+  EXPECT_EQ(expected_remaining, parser.remaining_args());
+}
+
+TEST_F(FunctionalTests, CountOptionOccurrences) {
+  std::vector<std::string> args {
+    "program-name", "-h", "-verb", "--help", "--verbose", "-v"
+  };
+  std::vector<std::string> expected_remaining {"-h", "--help"};
+  CliParser parser(args);
+  EXPECT_EQ(3, parser.count_argument("-v", "-verb", "--verbose"));
   EXPECT_EQ(expected_remaining, parser.remaining_args());
 }
