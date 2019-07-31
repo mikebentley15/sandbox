@@ -59,25 +59,10 @@ public:
     return count_argument(arg) + count_argument(args ...);
   }
 
-  // only one argument
-  bool has_argument(const std::string &arg) {
-    // mark the argument(s) as parsed
-    bool was_found = false;
-    auto iter = std::find(_args.begin(), _args.end(), arg);
-    while (iter != _args.end()) {
-      was_found = true;
-      _is_parsed[std::distance(_args.begin(), iter)] = true;
-      iter = std::find(iter+1, _args.end(), arg);
-    }
-    return was_found;
-  }
-
   // any number of arguments
   template <typename ... Args>
-  bool has_argument(const std::string &arg, Args ... args) {
-    bool has_arg = has_argument(arg);
-    has_arg = has_argument(args ...) || has_arg;
-    return has_arg;
+  bool has_argument(Args ... args) {
+    return count_argument(args ...) > 0;
   }
 
 protected:
