@@ -58,19 +58,19 @@ protected:
 
   template <typename ... Args>
   bool has_argument_impl(const std::string &arg, Args ... args) {
-    // we do the or in this order because we do not want to short circuit parsing for all of the args.
-    // if both "-h" and "--help" are requested and are both given, then we would mark them as parsed
-    // regardless of having both.
-    return has_argument_impl(args ...) || has_argument_impl(arg);
+    bool has_arg = has_argument_impl(arg);
+    has_arg = has_argument_impl(args ...) || has_arg;
+    return has_arg;
   }
 
   bool has_argument_impl(const std::string &arg) {
     // mark the argument(s) as parsed
-    auto iter = std::find(_args.begin(), _args.end(), arg);
     bool was_found = false;
-    if (iter != _args.end()) {
+    auto iter = std::find(_args.begin(), _args.end(), arg);
+    while (iter != _args.end()) {
       was_found = true;
       _is_parsed[std::distance(_args.begin(), iter)] = true;
+      iter = std::find(iter+1, _args.end(), arg);
     }
     return was_found;
   }

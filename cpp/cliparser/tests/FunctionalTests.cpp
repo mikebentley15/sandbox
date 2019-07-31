@@ -71,3 +71,13 @@ TEST_F(FunctionalTests, RemainingArgumentsSomeOptions) {
   EXPECT_TRUE(parser.has_argument("-v", "--verbose"));
   EXPECT_EQ(expected_remaining, parser.remaining_args());
 }
+
+TEST_F(FunctionalTests, ManyOptionTypesGiven) {
+  std::vector<std::string> args {
+    "program-name", "-h", "--help", "--verbose"
+  };
+  std::vector<std::string> expected_remaining {"--verbose"};
+  CliParser parser(args);
+  EXPECT_TRUE(parser.has_argument("-h", "--help"));
+  EXPECT_EQ(expected_remaining, parser.remaining_args());
+}
