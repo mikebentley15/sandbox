@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 /** A simple command-line argument parser
@@ -49,6 +50,7 @@ class CliParser {
 public:
   using string = std::string;
   template <typename T> using vector = std::vector<T>;
+  template <typename T> using set = std::unordered_set<T>;
 
   class ParseError : public std::invalid_argument {
     using std::invalid_argument::invalid_argument; // use the same constructor
@@ -102,7 +104,11 @@ public:
 
   /// next positional argument that is not part of a flag
   void add_positional(string name) {
+    if (_recognized.count(name) > 0) {
+      throw std::invalid_argument("Already registered argument '" + name + "'");
+    }
     _positional.emplace_back(std::make_shared<PositionArg>(name, false));
+    _recognized.emplace(std::move(name));
   }
 
   /// set a flag or positional argument as required (all are optional by default)
@@ -227,19 +233,21 @@ public:
 
     int pos = 0;
     for (auto it = _args.begin() + 1; it != _args.end(); it++) {
-      auto &arg = *it;
-
       // first check known flags
-      auto opit = _optionmap.find(arg);
+      auto opit = _optionmap.find(*it);
       if (opit != _optionmap.end()) {
         OpPtr &op = opit->second;
+        if (op->expects_arg) {
+          // TODO: check for the end of the argument list
+          it++;
+        }
         for (auto &name : op->variants) {
-          _parsed[name] = &arg;
+          _parsed[name] = &(*it);
         }
       }
       // then check positional arguments
       else if (pos < _positional.size()) {
-        _parsed[_positional[pos]->name] = &arg;
+        _parsed[_positional[pos]->name] = &(*it);
         pos++;
       }
     }
@@ -251,6 +259,12 @@ protected:
     variants.emplace_back(std::move(flag));
     OpPtr op = std::make_shared<Option>(std::move(variants), hasarg);
     for (auto &name : op->variants) {
+      if (_recognized.count(name) > 0) {
+        throw std::invalid_argument("Already registered argument '" + name + "'");
+      }
+    }
+    for (auto &name : op->variants) {
+      _recognized.emplace(name);
       _optionmap[name] = op;
     }
   }
@@ -264,6 +278,7 @@ protected:
 protected:
   vector<string> _args;
   vector<PosPtr> _positional;
+  set<string> _recognized;
   OptionMap _optionmap;
   ParseMap _parsed;
   vector<string> _remaining;

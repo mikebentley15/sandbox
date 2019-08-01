@@ -23,6 +23,7 @@ public:
   using CliParser::_positional;
   using CliParser::_optionmap;
   using CliParser::_parsed;
+  using CliParser::_recognized;
   using CliParser::_remaining;
 };
 
@@ -72,6 +73,16 @@ TEST_F(UnitTests, add_flag_adds_to_flags) {
   ASSERT_EQ(parser._optionmap["-v"], parser._optionmap["--verbose"]);
 }
 
+TEST_F(UnitTests, add_flag_adds_to_recognized) {
+  TestParser parser;
+  parser.add_flag("-h");
+  parser.add_flag("-v", "--verbose");
+  ASSERT_EQ(parser._recognized.count("-h"), 1);
+  ASSERT_EQ(parser._recognized.count("-v"), 1);
+  ASSERT_EQ(parser._recognized.count("--verbose"), 1);
+  ASSERT_EQ(parser._recognized.count("--not-there"), 0);
+}
+
 TEST_F(UnitTests, add_argflag_adds_to_optionmap) {
   auto N_option = std::make_shared<TestParser::Option>(
        std::vector<std::string>{"-N"}, true);
@@ -93,6 +104,17 @@ TEST_F(UnitTests, add_argflag_adds_to_optionmap) {
   ASSERT_EQ(parser._optionmap["-k"], parser._optionmap["--biggest"]);
 }
 
+TEST_F(UnitTests, add_argflag_adds_to_recognized) {
+  TestParser parser;
+  parser.add_argflag("-N");
+  parser.add_argflag("-k", "--biggest");
+
+  ASSERT_EQ(parser._recognized.count("-N"), 1);
+  ASSERT_EQ(parser._recognized.count("-k"), 1);
+  ASSERT_EQ(parser._recognized.count("--biggest"), 1);
+  ASSERT_EQ(parser._recognized.count("--not-there"), 0);
+}
+
 TEST_F(UnitTests, add_positional_adds_to_vector) {
   TestParser parser;
   parser.add_positional("hello");
@@ -102,6 +124,23 @@ TEST_F(UnitTests, add_positional_adds_to_vector) {
   ASSERT_EQ(parser._positional.size(), 2);
   compare(parser._positional[0], hello_pos);
   compare(parser._positional[1], mike_pos);
+}
+
+TEST_F(UnitTests, add_positional_adds_to_recognized) {
+  TestParser parser;
+  parser.add_positional("hello");
+  parser.add_positional("mike");
+  ASSERT_EQ(parser._recognized.count("hello"), 1);
+  ASSERT_EQ(parser._recognized.count("mike"), 1);
+  ASSERT_EQ(parser._recognized.count("hi"), 0);
+}
+
+TEST_F(UnitTests, add_argument_duplicate_exception) {
+  TestParser parser;
+  parser.add_flag("one", "two", "three");
+  ASSERT_THROW(parser.add_flag("one"), std::invalid_argument);
+  ASSERT_THROW(parser.add_argflag("other", "two"), std::invalid_argument);
+  ASSERT_THROW(parser.add_positional("three"), std::invalid_argument);
 }
 
 TEST_F(UnitTests, set_required_flag) {
@@ -179,6 +218,22 @@ TEST_F(UnitTests, parse_finds_positional) {
   parser.parse(args);
   ASSERT_TRUE(parser._parsed.find("output") != parser._parsed.end());
   ASSERT_EQ(*parser._parsed["output"], "out.txt");
+}
+
+TEST_F(UnitTests, parse_finds_flags_with_args) {
+  std::vector<std::string> args {
+    "progname", "--output", "out.txt", "-N", "3"
+  };
+  TestParser parser;
+  parser.add_argflag("-N");
+  parser.add_argflag("-o", "--output");
+  parser.parse(args);
+  ASSERT_TRUE(parser._parsed.find("-N") != parser._parsed.end());
+  ASSERT_TRUE(parser._parsed.find("-o") != parser._parsed.end());
+  ASSERT_TRUE(parser._parsed.find("--output") != parser._parsed.end());
+  ASSERT_EQ(parser["-N"], "3");
+  ASSERT_EQ(parser["-o"], "out.txt");
+  ASSERT_EQ(parser["--output"], "out.txt");
 }
 
 TEST_F(UnitTests, has_finds_parsed) {
