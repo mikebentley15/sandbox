@@ -133,20 +133,103 @@ TEST_F(UnitTests, set_required_nonmatching_throws) {
   ASSERT_THROW(parser.set_required("does not exist"), std::invalid_argument);
 }
 
-//TEST_F(UnitTests, args_returns_given_vector_args) {
-//  std::vector<std::string> args { "a", "b", "c" };
-//  CliParser parser(args);
-//  ASSERT_EQ(parser.args(), args);
-//}
+TEST_F(UnitTests, args_returns_given_vector_args) {
+  std::vector<std::string> args { "a", "b", "c" };
+  CliParser parser;
+  parser.parse(args);
+  ASSERT_EQ(parser.args(), args);
+}
 
-//TEST_F(UnitTests, args_returns_given_cstring_args) {
-//  const char* a1 = "mike";
-//  const char* a2 = "bentley";
-//  const char* a3 = "is";
-//  const char* a4 = "great";
-//  int argc = 4;
-//  const char * const argv[] = {a1, a2, a3, a4};
-//  CliParser parser(argc, argv);
-//  std::vector<std::string> expected_args {a1, a2, a3, a4};
-//  ASSERT_EQ(parser.args(), expected_args);
-//}
+TEST_F(UnitTests, args_returns_given_cstring_args) {
+  const char* a1 = "mike";
+  const char* a2 = "bentley";
+  const char* a3 = "is";
+  const char* a4 = "great";
+  int argc = 4;
+  const char * const argv[] = {a1, a2, a3, a4};
+  CliParser parser;
+  parser.parse(argc, argv);
+  std::vector<std::string> expected_args {a1, a2, a3, a4};
+  ASSERT_EQ(parser.args(), expected_args);
+}
+
+TEST_F(UnitTests, parse_finds_flags) {
+  std::vector<std::string> args {
+    "progname", "-h", "-N"
+  };
+  TestParser parser;
+  parser.add_flag("-h", "--help");
+  parser.add_flag("-k");
+  parser.parse(args);
+  ASSERT_TRUE(parser._parsed.find("-h") != parser._parsed.end());
+  ASSERT_TRUE(parser._parsed.find("--help") != parser._parsed.end());
+  ASSERT_TRUE(parser._parsed.find("-k") == parser._parsed.end());
+  ASSERT_EQ(*parser._parsed["-h"], "-h");
+  ASSERT_EQ(*parser._parsed["--help"], "-h");
+}
+
+TEST_F(UnitTests, parse_finds_positional) {
+  std::vector<std::string> args {
+    "progname", "-h", "-N", "out.txt", "extra"
+  };
+  TestParser parser;
+  parser.add_flag("-h", "--help");
+  parser.add_flag("-N");
+  parser.add_positional("output");
+  parser.parse(args);
+  ASSERT_TRUE(parser._parsed.find("output") != parser._parsed.end());
+  ASSERT_EQ(*parser._parsed["output"], "out.txt");
+}
+
+TEST_F(UnitTests, has_finds_parsed) {
+  TestParser parser;
+  parser.add_flag("-h", "--help");
+  parser.add_flag("-N");
+  parser.add_argflag("-k");
+  parser.add_positional("positional");
+  parser._args = {"progname", "-h"};
+  parser._parsed["-h"] = &parser._args[1];
+  parser._parsed["--help"] = &parser._args[1];
+  ASSERT_TRUE(parser.has("-h"));
+  ASSERT_TRUE(parser.has("--help"));
+  ASSERT_FALSE(parser.has("-N"));
+  ASSERT_FALSE(parser.has("-k"));
+  ASSERT_FALSE(parser.has("positional"));
+}
+
+TEST_F(UnitTests, has_throws_for_unrecognized_args) {
+  TestParser parser;
+  parser.add_flag("-h", "--help");
+  ASSERT_THROW(parser.has("anything"), std::invalid_argument);
+}
+
+TEST_F(UnitTests, array_operator_returns_parsed) {
+  std::vector<std::string> args {
+    "a.out", "-N", "-3", "--help", "out.txt"
+  };
+  TestParser parser;
+  // parsed manually
+  parser._parsed["-h"] = &args[3];
+  parser._parsed["-help"] = parser._parsed["-h"];
+  parser._parsed["--help"] = parser._parsed["-h"];
+  parser._parsed["-N"] = &args[2];
+  parser._parsed["positional"] = &args[4];
+  // check it reads from _parsed
+  ASSERT_EQ(parser["-h"], "--help");
+  ASSERT_EQ(parser["-help"], "--help");
+  ASSERT_EQ(parser["--help"], "--help");
+  ASSERT_EQ(parser["-N"], "-3");
+  ASSERT_EQ(parser["positional"], "out.txt");
+}
+
+TEST_F(UnitTests, array_operator_throws_not_parsed) {
+  TestParser parser;
+  parser.add_flag("-f", "--flag");
+  ASSERT_THROW(parser["-f"], std::out_of_range);
+}
+
+TEST_F(UnitTests, array_operator_throws_not_recognized) {
+  TestParser parser;
+  parser.add_flag("-f", "--flag");
+  ASSERT_THROW(parser["-nothing"], std::invalid_argument);
+}

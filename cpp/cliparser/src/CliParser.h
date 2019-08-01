@@ -164,12 +164,48 @@ public:
    * default value when it is missing.
    */
   const string &operator[](const string &name) const {
-    static string tmp;
-    return tmp;
+    auto it = _parsed.find(name);
+    if (it != _parsed.end()) {
+      return *(it->second);
+    }
+
+    // check to see if we recognize name
+    // TODO: error check to see if it is a flag
+    if (_optionmap.find(name) != _optionmap.end()) {
+      throw std::out_of_range("Not found in parsing: '" + name + "'");
+    }
+
+    // check positional args
+    for (auto &p : _positional) {
+      if (p->name == name) {
+        throw std::out_of_range("Not found in parsing: '" + name + "'");
+      }
+    }
+
+    throw std::invalid_argument("Unrecognized argument name: '" + name + "'");
   }
 
   /// returns true if the flag or positional argument was found in parse()
-  bool has(const string &name) const { return false; }
+  bool has(const string &name) const {
+    if (_parsed.find(name) != _parsed.end()) {
+      return true;
+    }
+
+    // TODO: error check to see if it is a flag
+    if (_optionmap.find(name) != _optionmap.end()) {
+      return false;
+    }
+
+    // check positional args
+    for (auto &p : _positional) {
+      if (p->name == name) {
+        return false;
+      }
+    }
+
+    // otherwise, it is unrecognized
+    throw std::invalid_argument("has(): unrecognized argument '" + name + "'");
+  }
 
   /** returns as a specific type the value obtained from operator[]().
    *  an optional default value can be given if the argument was not seen.
@@ -180,9 +216,33 @@ public:
   std::string usage() { return ""; }
 
   /// parse command-line options
-  void parse(int argc, char **argv) { parse(vector<string>(argv, argv+argc)); }
+  void parse(int argc, const char * const * argv) {
+    parse(vector<string>(argv, argv+argc));
+  }
+
   void parse(vector<string> args) {
     _args = std::move(args);
+    _parsed.clear();
+    _remaining.clear();
+
+    int pos = 0;
+    for (auto it = _args.begin() + 1; it != _args.end(); it++) {
+      auto &arg = *it;
+
+      // first check known flags
+      auto opit = _optionmap.find(arg);
+      if (opit != _optionmap.end()) {
+        OpPtr &op = opit->second;
+        for (auto &name : op->variants) {
+          _parsed[name] = &arg;
+        }
+      }
+      // then check positional arguments
+      else if (pos < _positional.size()) {
+        _parsed[_positional[pos]->name] = &arg;
+        pos++;
+      }
+    }
   }
 
 protected:

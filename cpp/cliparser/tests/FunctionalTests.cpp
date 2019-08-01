@@ -39,11 +39,6 @@ TEST_F(FunctionalTests, CommandLineExample) {
   // see that we can get the arguments back unchanged
   EXPECT_EQ(parser.args(), args);
 
-  // see which arguments were not parsed
-  std::vector<std::string> expected_remaining {"extra", "args"};
-  EXPECT_EQ(parser.program_name(), "progname");
-  EXPECT_EQ(parser.remaining(), expected_remaining);
-
   // see that we can check for which arguments were present
   EXPECT_TRUE(parser.has("-h"));
   EXPECT_TRUE(parser.has("-help"));
@@ -61,8 +56,8 @@ TEST_F(FunctionalTests, CommandLineExample) {
   EXPECT_THROW(parser.has("--non-existent"), std::invalid_argument);
 
   // get the values of the arguments
-  EXPECT_EQ(parser["-h"], "-h");
-  EXPECT_EQ(parser["-help"], "-help");
+  EXPECT_EQ(parser["-h"], "--help");
+  EXPECT_EQ(parser["-help"], "--help");
   EXPECT_EQ(parser["--help"], "--help");
   EXPECT_THROW(parser["-v"], std::out_of_range);
   EXPECT_THROW(parser["--verbose"], std::out_of_range);
@@ -82,6 +77,11 @@ TEST_F(FunctionalTests, CommandLineExample) {
   //EXPECT_EQ(parser.get<int>("-k", 5), 5);
   EXPECT_EQ(parser.get<std::string>("--output"), "out.txt");
   EXPECT_EQ(parser.get<std::string>("input"), "in.txt");
+
+  // see which arguments were not parsed
+  std::vector<std::string> expected_remaining {"extra", "args"};
+  EXPECT_EQ(parser.program_name(), "progname");
+  EXPECT_EQ(parser.remaining(), expected_remaining);
 
   EXPECT_EQ(parser.usage(),
       "Usage:\n"
