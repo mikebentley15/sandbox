@@ -106,7 +106,24 @@ public:
   }
 
   /// set a flag or positional argument as required (all are optional by default)
-  void set_required(const string &name) {}
+  void set_required(const string &name) {
+    // check flags
+    if (_optionmap.find(name) != _optionmap.end()) {
+      _optionmap[name]->required = true;
+      return;
+    }
+
+    // check positional
+    auto it = std::find_if(_positional.begin(), _positional.end(),
+                           [&name](PosPtr p) { return p->name == name; });
+    if (it != _positional.end()) {
+      it->get()->required = true;
+      return;
+    }
+
+    // unrecognized type
+    throw std::invalid_argument("set_required(): Unrecognized option '" + name + "'");
+  }
 
   /** return the string representation of the value for the parsed arg
    *

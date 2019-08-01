@@ -32,6 +32,11 @@ void compare(const TestParser::OpPtr &a, const TestParser::OpPtr &b) {
   ASSERT_EQ(a->expects_arg, b->expects_arg);
 }
 
+void compare(const TestParser::PosPtr &a, const TestParser::PosPtr &b) {
+  ASSERT_EQ(a->name, b->name);
+  ASSERT_EQ(a->required, b->required);
+}
+
 } // end of unnamed namespace
 
 TEST_F(UnitTests, program_name_without_parsing) {
@@ -86,6 +91,46 @@ TEST_F(UnitTests, add_argflag_adds_to_optionmap) {
   compare(parser._optionmap["-k"], k_option);
   compare(parser._optionmap["--biggest"], k_option);
   ASSERT_EQ(parser._optionmap["-k"], parser._optionmap["--biggest"]);
+}
+
+TEST_F(UnitTests, add_positional_adds_to_vector) {
+  TestParser parser;
+  parser.add_positional("hello");
+  parser.add_positional("mike");
+  auto hello_pos = std::make_shared<TestParser::PositionArg>("hello", false);
+  auto mike_pos = std::make_shared<TestParser::PositionArg>("mike", false);
+  ASSERT_EQ(parser._positional.size(), 2);
+  compare(parser._positional[0], hello_pos);
+  compare(parser._positional[1], mike_pos);
+}
+
+TEST_F(UnitTests, set_required_flag) {
+  TestParser parser;
+  parser.add_flag("-h", "--help");
+  parser.set_required("--help");
+  ASSERT_TRUE(parser._optionmap["-h"]->required);
+}
+
+TEST_F(UnitTests, set_required_argflag) {
+  TestParser parser;
+  parser.add_argflag("-N", "-number");
+  parser.set_required("-N");
+  ASSERT_TRUE(parser._optionmap["-N"]->required);
+}
+
+TEST_F(UnitTests, set_required_positional) {
+  TestParser parser;
+  parser.add_positional("hello");
+  parser.add_positional("mike");
+  parser.set_required("hello");
+  ASSERT_TRUE(parser._positional[0]->required);
+  ASSERT_FALSE(parser._positional[1]->required);
+}
+
+TEST_F(UnitTests, set_required_nonmatching_throws) {
+  TestParser parser;
+  parser.add_positional("hello");
+  ASSERT_THROW(parser.set_required("does not exist"), std::invalid_argument);
 }
 
 //TEST_F(UnitTests, args_returns_given_vector_args) {
