@@ -2,11 +2,11 @@
 #define CLIPARSER_H
 
 #include <algorithm>
-#include <unordered_map>
-#include <vector>
+#include <memory>
 #include <stdexcept>
 #include <string>
-#include <variant>
+#include <unordered_map>
+#include <vector>
 
 /** A simple command-line argument parser
  *
@@ -73,30 +73,36 @@ protected:
       : name(_name), required(_required) {}
   };
 
-  using OptionMap = std::unordered_map<string, Option*>;
+  using OpPtr = std::shared_ptr<Option>;
+  using PosPtr = std::shared_ptr<PositionArg>;
+  using OptionMap = std::unordered_map<string, OpPtr>;
   using ParseMap = std::unordered_map<string, string*>;
 
 public:
   CliParser() {}
   CliParser(const CliParser& other) = delete;
   CliParser(CliParser &&other) = default;
+  virtual ~CliParser() = default;
 
   const vector<string> &args() const { return _args; }
-  const string program_name() const { return _progname; }
+  const string &program_name() const { return _args.at(0); }
   const vector<string> &remaining() const { return _remaining; }
 
   /// flag is just like "--help" needing no additional argument
   template <typename ... Args> void add_flag(string flag, Args ... flags) {
     vector<string> all;
-    add_flag(all, flag, flags ...);
+    add_flag(all, false, flag, flags ...);
   }
 
   /// argflag is a flag with an argument, e.g., "--outfile out.txt"
-  template <typename ... Args> void add_argflag(Args ... args) {}
+  template <typename ... Args> void add_argflag(string flag, Args ... flags) {
+    vector<string> all;
+    add_flag(all, true, flag, flags ...);
+  }
 
   /// next positional argument that is not part of a flag
   void add_positional(string name) {
-    _positional.emplace_back(name, false);
+    _positional.emplace_back(std::make_shared<PositionArg>(name, false));
   }
 
   /// set a flag or positional argument as required (all are optional by default)
@@ -164,23 +170,24 @@ public:
 
 protected:
 
-  void add_flag(vector<string> &variants, string flag) {
+  void add_flag(vector<string> &variants, bool hasarg, string flag) {
     variants.emplace_back(std::move(flag));
-    _flags.emplace_back(std::move(variants), false);
+    OpPtr op = std::make_shared<Option>(std::move(variants), hasarg);
+    for (auto &name : op->variants) {
+      _optionmap[name] = op;
+    }
   }
 
   template <typename ... Args>
-  void add_flag(vector<string> &variants, string flag, Args ... flags) {
+  void add_flag(vector<string> &variants, bool hasarg, string flag, Args ... flags) {
     variants.emplace_back(std::move(flag));
-    add_flag(variants, flags ...);
+    add_flag(variants, hasarg, flags ...);
   }
 
 protected:
   vector<string> _args;
-  vector<Option> _flags;
-  vector<PositionArg> _positional;
+  vector<PosPtr> _positional;
   OptionMap _optionmap;
-  string _progname;
   ParseMap _parsed;
   vector<string> _remaining;
 };
