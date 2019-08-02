@@ -86,10 +86,10 @@ TEST_F(FunctionalTests, CommandLineExample) {
   EXPECT_EQ(parser.usage(),
             "Usage:\n"
             "  progname\n"
-            "    [-h]\n"
-            "    [-v]\n"
-            "    [-k <val>]\n"
             "    [-N <val>]\n"
+            "    [-h]\n"
+            "    [-k <val>]\n"
+            "    [-v]\n"
             "    -o <val>\n"
             "    <input>\n"
             "\n"
@@ -100,10 +100,10 @@ TEST_F(FunctionalTests, CommandLineExample) {
             "  -o <val>, --output <val>\n"
             "\n"
             "Optional Flags:\n"
-            "  -h, --help\n"
-            "  -v, --verbose\n"
-            "  -k <val>, --biggest <val>\n"
             "  -N <val>\n"
+            "  -h, -help, --help\n"
+            "  -k <val>, --biggest <val>\n"
+            "  -v, --verbose\n"
             "\n");
 }
 

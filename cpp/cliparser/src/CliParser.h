@@ -230,6 +230,8 @@ public:
     std::ostringstream out;
     auto optional_ops = optional_flags();
     auto required_ops = required_flags();
+    auto optional_pos = optional_positional();
+    auto required_pos = required_positional();
 
     // get program name
     std::string progname;
@@ -248,7 +250,32 @@ public:
     for (auto &op : required_ops) {
       print_flag_usage(out, op);
     }
+    for (auto &pos : _positional) {
+      out << "    ";
+      if (!pos->required) { out << "["; }
+      out << "<" << pos->name << ">";
+      if (!pos->required) { out << "]"; }
+      out << "\n";
+    }
     out << "\n";
+
+    // required positional section
+    if (required_pos.size() > 0) {
+      out << "Required Positional Arguments:\n";
+      for (auto &pos : required_pos) {
+        out << "  " << pos->name << "\n";
+      }
+      out << "\n";
+    }
+
+    // optional positional section
+    if (optional_pos.size() > 0) {
+      out << "Optional Positional Arguments:\n";
+      for (auto &pos : optional_pos) {
+        out << "  " << pos->name << "\n";
+      }
+      out << "\n";
+    }
 
     // required flags section
     if (required_ops.size() > 0) {
@@ -281,7 +308,7 @@ public:
     _parsed.clear();
     _remaining.clear();
 
-    int pos = 0;
+    std::size_t pos = 0;
     for (auto it = _args.begin() + 1; it != _args.end(); it++) {
       // first check known flags
       auto opit = _optionmap.find(*it);
@@ -349,6 +376,26 @@ protected:
     return flags;
   }
 
+  vector<PosPtr> optional_positional() const {
+    vector<PosPtr> positional;
+    for (auto &pos : _positional) {
+      if (!pos->required) {
+        positional.emplace_back(pos);
+      }
+    }
+    return positional;
+  }
+
+  vector<PosPtr> required_positional() const {
+    vector<PosPtr> positional;
+    for (auto &pos : _positional) {
+      if (pos->required) {
+        positional.emplace_back(pos);
+      }
+    }
+    return positional;
+  }
+
   static string lstrip_dashes(const std::string &val) {
     return val.substr(val.find_first_not_of('-'));
   }
@@ -358,7 +405,7 @@ protected:
     if (!p->required) { out << "["; }
     out << p->variants[0];
     if (p->expects_arg) {
-      out << " <arg>";
+      out << " <val>";
     }
     if (!p->required) { out << "]"; }
     out << "\n";
@@ -366,7 +413,7 @@ protected:
   }
 
   static std::ostream& print_flag(std::ostream& out, const OpPtr &p) {
-    string suffix (p->expects_arg ? " <arg>" : "");
+    string suffix (p->expects_arg ? " <val>" : "");
     out << "  " << p->variants[0] << suffix;
     for (int i = 1; i < p->variants.size(); i++) {
       out << ", " << p->variants[i] << suffix;

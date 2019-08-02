@@ -391,12 +391,12 @@ TEST_F(UnitTests, usage_argflags) {
   EXPECT_EQ(parser.usage(),
             "Usage:\n"
             "  progname\n"
-            "    [-N <arg>]\n"
-            "    [--out <arg>]\n"
+            "    [-N <val>]\n"
+            "    [--out <val>]\n"
             "\n"
             "Optional Flags:\n"
-            "  -N <arg>, --number <arg>\n"
-            "  --out <arg>, -o <arg>\n"
+            "  -N <val>, --number <val>\n"
+            "  --out <val>, -o <val>\n"
             "\n");
 }
 
@@ -410,12 +410,12 @@ TEST_F(UnitTests, usage_argflags_required) {
   EXPECT_EQ(parser.usage(),
             "Usage:\n"
             "  progname\n"
-            "    --number <arg>\n"
-            "    --out <arg>\n"
+            "    --number <val>\n"
+            "    --out <val>\n"
             "\n"
             "Required Flags:\n"
-            "  --number <arg>, -N <arg>\n"
-            "  --out <arg>, -o <arg>\n"
+            "  --number <val>, -N <val>\n"
+            "  --out <val>, -o <val>\n"
             "\n");
 }
 
@@ -463,29 +463,34 @@ TEST_F(UnitTests, usage_all) {
   parser.add_argflag("-N");
   parser.add_argflag("-o", "--output");
   parser.add_positional("input");
+  parser.add_positional("output");
   parser.set_required("--output");
   parser.set_required("input");
   parser._args = {"progname"};
   EXPECT_EQ(parser.usage(),
             "Usage:\n"
             "  progname\n"
-            "    [-h]\n"
-            "    [-v]\n"
-            "    [-k <val>]\n"
             "    [-N <val>]\n"
+            "    [-h]\n"
+            "    [-k <val>]\n"
+            "    [-v]\n"
             "    -o <val>\n"
             "    <input>\n"
+            "    [<output>]\n"
             "\n"
             "Required Positional Arguments:\n"
             "  input\n"
+            "\n"
+            "Optional Positional Arguments:\n"
+            "  output\n"
             "\n"
             "Required Flags:\n"
             "  -o <val>, --output <val>\n"
             "\n"
             "Optional Flags:\n"
-            "  -h, --help\n"
-            "  -v, --verbose\n"
-            "  -k <val>, --biggest <val>\n"
             "  -N <val>\n"
+            "  -h, -help, --help\n"
+            "  -k <val>, --biggest <val>\n"
+            "  -v, --verbose\n"
             "\n");
 }
