@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
@@ -66,6 +67,12 @@ protected:
       , expects_arg(_expects_arg)
       , required(false)
     {}
+
+    struct Less {
+      bool operator()(std::shared_ptr<Option> a, std::shared_ptr<Option> b) {
+        return lstrip_dashes(a->variants[0]) < lstrip_dashes(b->variants[0]);
+      }
+    };
   };
 
   struct PositionArg {
@@ -217,9 +224,41 @@ public:
    *  an optional default value can be given if the argument was not seen.
    */
   template <typename T> T get(const string &name) const;
-  //template <typename T> T get(const string &name, T defaultval = T()) const;
+  //template <typename T> T get(const string &name, T defaultval) const;
 
-  std::string usage() { return ""; }
+  std::string usage() {
+    std::ostringstream out;
+    auto optional_ops = optional_flags();
+
+    // get program name
+    std::string progname;
+    if (_args.size() > 0) {
+      progname = _args[0];
+    } else {
+      progname = "<program-name>";
+    }
+
+    // brief usage section
+    out << "Usage:\n"
+           "  " << progname << "\n";
+    if (optional_ops.size() > 0) {
+      for (auto &op : optional_ops) {
+        out << "    [" << op->variants[0] << "]\n";
+      }
+    }
+    out << "\n";
+
+    // optional flags section
+    if (optional_ops.size() > 0) {
+      out << "Optional Flags:\n";
+      for (auto &op : optional_ops) {
+        print_flag(out, op);
+      }
+      out << "\n";
+    }
+
+    return out.str();
+  }
 
   /// parse command-line options
   void parse(int argc, const char * const * argv) {
@@ -250,6 +289,10 @@ public:
         _parsed[_positional[pos]->name] = &(*it);
         pos++;
       }
+      // otherwise, it is a remaining argument
+      else {
+        _remaining.emplace_back(*it);
+      }
     }
   }
 
@@ -273,6 +316,48 @@ protected:
   void add_flag(vector<string> &variants, bool hasarg, string flag, Args ... flags) {
     variants.emplace_back(std::move(flag));
     add_flag(variants, hasarg, flags ...);
+  }
+
+  std::set<OpPtr, Option::Less> optional_flags() const {
+    std::set<OpPtr, Option::Less> flags;
+    for (auto &kv : _optionmap) {
+      if (!kv.second->required) {
+        flags.emplace(kv.second);
+      }
+    }
+    return flags;
+  }
+
+  vector<OpPtr> required_flags() const {
+    return {};
+  }
+
+  static string lstrip_dashes(const std::string &val) {
+    return val.substr(val.find_first_not_of('-'));
+  }
+
+  template <typename T> static
+  std::ostream& print_vec(std::ostream& out, const vector<T> &vec) {
+    bool first = true;
+    for (auto &item : vec) {
+      if (!first) {
+        out << ", ";
+      }
+      first = false;
+      out << item;
+    }
+    return out;
+  }
+
+  static std::ostream& print_flag(std::ostream& out, const OpPtr &p) {
+    out << "  ";
+    print_vec(out, p->variants);
+    out << "\n";
+    return out;
+  }
+
+  static std::ostream& print_pos(std::ostream& out, const PosPtr &p) {
+    return out << "  " << p->name << "\n";
   }
 
 protected:

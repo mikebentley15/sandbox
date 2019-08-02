@@ -54,9 +54,9 @@ TEST_F(UnitTests, program_name_returns_first_argument) {
 
 TEST_F(UnitTests, add_flag_adds_to_flags) {
   auto help_option = std::make_shared<TestParser::Option>(
-       std::vector<std::string>{"-h"}, false);
+                       std::vector<std::string>{"-h"}, false);
   auto verbose_option = std::make_shared<TestParser::Option>(
-       std::vector<std::string>{"-v", "--verbose"}, false);
+                          std::vector<std::string>{"-v", "--verbose"}, false);
 
   TestParser parser;
   parser.add_flag("-h");
@@ -65,7 +65,7 @@ TEST_F(UnitTests, add_flag_adds_to_flags) {
   ASSERT_TRUE(parser._optionmap.find("-h") != parser._optionmap.end());
   ASSERT_TRUE(parser._optionmap.find("-v") != parser._optionmap.end());
   ASSERT_TRUE(
-      parser._optionmap.find("--verbose") != parser._optionmap.end());
+        parser._optionmap.find("--verbose") != parser._optionmap.end());
 
   compare(parser._optionmap["-h"], help_option);
   compare(parser._optionmap["-v"], verbose_option);
@@ -85,9 +85,9 @@ TEST_F(UnitTests, add_flag_adds_to_recognized) {
 
 TEST_F(UnitTests, add_argflag_adds_to_optionmap) {
   auto N_option = std::make_shared<TestParser::Option>(
-       std::vector<std::string>{"-N"}, true);
+                    std::vector<std::string>{"-N"}, true);
   auto k_option = std::make_shared<TestParser::Option>(
-       std::vector<std::string>{"-k", "--biggest"}, true);
+                    std::vector<std::string>{"-k", "--biggest"}, true);
 
   TestParser parser;
   parser.add_argflag("-N");
@@ -96,7 +96,7 @@ TEST_F(UnitTests, add_argflag_adds_to_optionmap) {
   ASSERT_TRUE(parser._optionmap.find("-N") != parser._optionmap.end());
   ASSERT_TRUE(parser._optionmap.find("-k") != parser._optionmap.end());
   ASSERT_TRUE(
-      parser._optionmap.find("--biggest") != parser._optionmap.end());
+        parser._optionmap.find("--biggest") != parser._optionmap.end());
 
   compare(parser._optionmap["-N"], N_option);
   compare(parser._optionmap["-k"], k_option);
@@ -236,6 +236,46 @@ TEST_F(UnitTests, parse_finds_flags_with_args) {
   ASSERT_EQ(parser["--output"], "out.txt");
 }
 
+TEST_F(UnitTests, parse_sets_remaining_args_empty) {
+  std::vector<std::string> args {
+    "progname", "-v", "--output", "out.txt", "-N", "3", "in.txt"
+  };
+  TestParser parser;
+  parser.add_flag("-v");
+  parser.add_argflag("-o", "--output");
+  parser.add_argflag("-N");
+  parser.add_positional("input");
+  parser.parse(args);
+  std::vector<std::string> expected_remaining {};
+  ASSERT_EQ(parser.remaining(), expected_remaining);
+}
+
+TEST_F(UnitTests, parse_sets_remaining_args_all) {
+  std::vector<std::string> args {
+    "progname", "-v", "--output", "out.txt", "-N", "3", "in.txt"
+  };
+  TestParser parser;
+  parser.parse(args);
+  std::vector<std::string> expected_remaining {
+    "-v", "--output", "out.txt", "-N", "3", "in.txt"
+  };
+  ASSERT_EQ(parser.remaining(), expected_remaining);
+}
+
+TEST_F(UnitTests, parse_sets_remaining_args_part) {
+  std::vector<std::string> args {
+    "progname", "-v", "--output", "out.txt", "-N", "3", "in.txt"
+  };
+  TestParser parser;
+  parser.add_argflag("-o", "--output");
+  parser.add_positional("input");
+  parser.parse(args);
+  std::vector<std::string> expected_remaining { "-N", "3", "in.txt" };
+  ASSERT_TRUE(parser._parsed.find("input") != parser._parsed.end());
+  ASSERT_EQ(*parser._parsed["input"], "-v");
+  ASSERT_EQ(parser.remaining(), expected_remaining);
+}
+
 TEST_F(UnitTests, has_finds_parsed) {
   TestParser parser;
   parser.add_flag("-h", "--help");
@@ -287,4 +327,165 @@ TEST_F(UnitTests, array_operator_throws_not_recognized) {
   TestParser parser;
   parser.add_flag("-f", "--flag");
   ASSERT_THROW(parser["-nothing"], std::invalid_argument);
+}
+
+TEST_F(UnitTests, usage_before_parse) {
+  TestParser parser;
+  EXPECT_EQ(parser.usage(),
+            "Usage:\n"
+            "  <program-name>\n"
+            "\n");
+}
+
+TEST_F(UnitTests, usage_empty) {
+  TestParser parser;
+  parser.parse({"hello"});
+  EXPECT_EQ(parser.usage(),
+            "Usage:\n"
+            "  hello\n"
+            "\n");
+}
+
+TEST_F(UnitTests, usage_flags) {
+  // usage flags are sorted alphabetically (on first variant) after removing dashes
+  TestParser parser;
+  parser.add_flag("-h", "--help");
+  parser.add_flag("--verbose");
+  parser.parse({"progname"});
+  EXPECT_EQ(parser.usage(),
+            "Usage:\n"
+            "  progname\n"
+            "    [-h]\n"
+            "    [--verbose]\n"
+            "\n"
+            "Optional Flags:\n"
+            "  -h, --help\n"
+            "  --verbose\n"
+            "\n");
+}
+
+TEST_F(UnitTests, usage_flags_required) {
+  TestParser parser;
+  parser.add_flag("-h", "--help");
+  parser.add_flag("--verbose");
+  parser.set_required("--help");
+  parser.set_required("--verbose");
+  parser.parse({"progname"});
+  EXPECT_EQ(parser.usage(),
+            "Usage:\n"
+            "  progname\n"
+            "    -h\n"
+            "    --verbose\n"
+            "\n"
+            "Required Flags:\n"
+            "  -h, --help\n"
+            "  --verbose\n"
+            "\n");
+}
+
+TEST_F(UnitTests, usage_argflags) {
+  TestParser parser;
+  parser.add_argflag("-N", "--number");
+  parser.add_argflag("--out", "-o");
+  parser.parse({"progname"});
+  EXPECT_EQ(parser.usage(),
+            "Usage:\n"
+            "  progname\n"
+            "    [-N <arg>]\n"
+            "    [--out <arg>]\n"
+            "\n"
+            "Optional Flags:\n"
+            "  -N <arg>, --number <arg>\n"
+            "  --out <arg>, -o <arg>\n"
+            "\n");
+}
+
+TEST_F(UnitTests, usage_argflags_required) {
+  TestParser parser;
+  parser.add_argflag("--out", "-o");
+  parser.add_argflag("--number", "-N");
+  parser.set_required("--number");
+  parser.set_required("--out");
+  parser.parse({"progname"});
+  EXPECT_EQ(parser.usage(),
+            "Usage:\n"
+            "  progname\n"
+            "    --number <arg>\n"
+            "    --out <arg>\n"
+            "\n"
+            "Required Flags:\n"
+            "  --number <arg>, -N <arg>\n"
+            "  --out <arg>, -o <arg>\n"
+            "\n");
+}
+
+TEST_F(UnitTests, usage_positional) {
+  TestParser parser;
+  parser.add_positional("number");
+  parser.add_positional("outfile");
+  parser.parse({"progname"});
+  EXPECT_EQ(parser.usage(),
+            "Usage:\n"
+            "  progname\n"
+            "    [<number>]\n"
+            "    [<outfile>]\n"
+            "\n"
+            "Optional Positional Arguments:\n"
+            "  number\n"
+            "  outfile\n"
+            "\n");
+}
+
+TEST_F(UnitTests, usage_positional_required) {
+  TestParser parser;
+  parser.add_positional("number");
+  parser.add_positional("outfile");
+  parser.set_required("number");
+  parser.set_required("outfile");
+  parser.parse({"progname"});
+  EXPECT_EQ(parser.usage(),
+            "Usage:\n"
+            "  progname\n"
+            "    <number>\n"
+            "    <outfile>\n"
+            "\n"
+            "Required Positional Arguments:\n"
+            "  number\n"
+            "  outfile\n"
+            "\n");
+}
+
+TEST_F(UnitTests, usage_all) {
+  TestParser parser;
+  parser.add_flag("-h", "-help", "--help");
+  parser.add_flag("-v", "--verbose");
+  parser.add_argflag("-k", "--biggest");
+  parser.add_argflag("-N");
+  parser.add_argflag("-o", "--output");
+  parser.add_positional("input");
+  parser.set_required("--output");
+  parser.set_required("input");
+  parser._args = {"progname"};
+  EXPECT_EQ(parser.usage(),
+            "Usage:\n"
+            "  progname\n"
+            "    [-h]\n"
+            "    [-v]\n"
+            "    [-k <val>]\n"
+            "    [-N <val>]\n"
+            "    -o <val>\n"
+            "    <input>\n"
+            "\n"
+            "Required Positional Arguments:\n"
+            "  input\n"
+            "\n"
+            "Required Flags:\n"
+            "  -o <val>, --output <val>\n"
+            "\n"
+            "Optional Flags:\n"
+            "  -h, --help\n"
+            "  -v, --verbose\n"
+            "  -k <val>, --biggest <val>\n"
+            "  -N <val>\n"
+            "\n");
 }

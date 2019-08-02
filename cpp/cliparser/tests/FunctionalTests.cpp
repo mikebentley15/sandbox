@@ -84,28 +84,34 @@ TEST_F(FunctionalTests, CommandLineExample) {
   EXPECT_EQ(parser.remaining(), expected_remaining);
 
   EXPECT_EQ(parser.usage(),
-      "Usage:\n"
-      "  progname\n"
-      "    [-h]\n"
-      "    [-v]\n"
-      "    [-k <val>]\n"
-      "    [-N <val>]\n"
-      "    -o <val>\n"
-      "    <input>\n"
-      "\n"
-      "Required Positional Arguments:\n"
-      "  input\n"
-      "\n"
-      "Required Flags:\n"
-      "  -o <val>, --output <val>\n"
-      "\n"
-      "Optional Flags:\n"
-      "  -h, --help\n"
-      "  -v, --verbose\n"
-      "  -k <val>, --biggest <val>\n"
-      "  -N <val>\n"
-      "\n");
+            "Usage:\n"
+            "  progname\n"
+            "    [-h]\n"
+            "    [-v]\n"
+            "    [-k <val>]\n"
+            "    [-N <val>]\n"
+            "    -o <val>\n"
+            "    <input>\n"
+            "\n"
+            "Required Positional Arguments:\n"
+            "  input\n"
+            "\n"
+            "Required Flags:\n"
+            "  -o <val>, --output <val>\n"
+            "\n"
+            "Optional Flags:\n"
+            "  -h, --help\n"
+            "  -v, --verbose\n"
+            "  -k <val>, --biggest <val>\n"
+            "  -N <val>\n"
+            "\n");
 }
+
+/// TODO: test a metavar instead of <val> in usage string
+/// TODO: test incorrect command-line usage handling
+/// TODO: test adding overall description
+/// TODO: test adding description for each option
+/// TODO: test making a later positional required, but not an earlier
 
 //TEST_F(FunctionalTests, NoArguments) {
 //  // Fred tries to parse arguments, but only the program name
