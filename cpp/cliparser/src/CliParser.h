@@ -229,6 +229,7 @@ public:
   std::string usage() {
     std::ostringstream out;
     auto optional_ops = optional_flags();
+    auto required_ops = required_flags();
 
     // get program name
     std::string progname;
@@ -241,12 +242,22 @@ public:
     // brief usage section
     out << "Usage:\n"
            "  " << progname << "\n";
-    if (optional_ops.size() > 0) {
-      for (auto &op : optional_ops) {
-        out << "    [" << op->variants[0] << "]\n";
-      }
+    for (auto &op : optional_ops) {
+      out << "    [" << op->variants[0] << "]\n";
+    }
+    for (auto &op : required_ops) {
+      out << "    " << op->variants[0] << "\n";
     }
     out << "\n";
+
+    // required flags section
+    if (required_ops.size() > 0) {
+      out << "Required Flags:\n";
+      for (auto &op : required_ops) {
+        print_flag(out, op);
+      }
+      out << "\n";
+    }
 
     // optional flags section
     if (optional_ops.size() > 0) {
@@ -328,8 +339,14 @@ protected:
     return flags;
   }
 
-  vector<OpPtr> required_flags() const {
-    return {};
+  std::set<OpPtr, Option::Less> required_flags() const {
+    std::set<OpPtr, Option::Less> flags;
+    for (auto &kv : _optionmap) {
+      if (kv.second->required) {
+        flags.emplace(kv.second);
+      }
+    }
+    return flags;
   }
 
   static string lstrip_dashes(const std::string &val) {
