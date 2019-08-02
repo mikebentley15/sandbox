@@ -243,10 +243,10 @@ public:
     out << "Usage:\n"
            "  " << progname << "\n";
     for (auto &op : optional_ops) {
-      out << "    [" << op->variants[0] << "]\n";
+      print_flag_usage(out, op);
     }
     for (auto &op : required_ops) {
-      out << "    " << op->variants[0] << "\n";
+      print_flag_usage(out, op);
     }
     out << "\n";
 
@@ -353,22 +353,24 @@ protected:
     return val.substr(val.find_first_not_of('-'));
   }
 
-  template <typename T> static
-  std::ostream& print_vec(std::ostream& out, const vector<T> &vec) {
-    bool first = true;
-    for (auto &item : vec) {
-      if (!first) {
-        out << ", ";
-      }
-      first = false;
-      out << item;
+  static std::ostream& print_flag_usage(std::ostream& out, const OpPtr &p) {
+    out << "    ";
+    if (!p->required) { out << "["; }
+    out << p->variants[0];
+    if (p->expects_arg) {
+      out << " <arg>";
     }
+    if (!p->required) { out << "]"; }
+    out << "\n";
     return out;
   }
 
   static std::ostream& print_flag(std::ostream& out, const OpPtr &p) {
-    out << "  ";
-    print_vec(out, p->variants);
+    string suffix (p->expects_arg ? " <arg>" : "");
+    out << "  " << p->variants[0] << suffix;
+    for (int i = 1; i < p->variants.size(); i++) {
+      out << ", " << p->variants[i] << suffix;
+    }
     out << "\n";
     return out;
   }
