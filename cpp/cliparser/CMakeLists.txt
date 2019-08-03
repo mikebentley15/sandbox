@@ -14,11 +14,10 @@ enable_testing()
 find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
 
-set(TEST_FOLDER tests)
-
 add_executable(AllTests
-  ${TEST_FOLDER}/FunctionalTests.cpp
-  ${TEST_FOLDER}/UnitTests.cpp
+  tests/FunctionalTests.cpp
+  tests/UnitTests.cpp
+  tests/test_helpers.h
   )
 set_property(TARGET AllTests PROPERTY CXX_STANDARD 14)
 #target_link_libraries(AllTests CliParser gtest gtest_main)

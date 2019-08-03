@@ -1,6 +1,7 @@
-#include "gtest/gtest.h"
-
 #include "CliParser.h"
+#include "test_helpers.h"
+
+#include <gtest/gtest.h>
 
 #include <memory>
 
@@ -26,6 +27,17 @@ public:
   using CliParser::_recognized;
   using CliParser::_remaining;
 };
+
+struct Point { int x, y; };
+std::istream &operator>>(std::istream &in, Point &p) {
+  return in >> p.x >> p.y;
+}
+bool operator==(const Point &a, const Point &b) {
+  return a.x == b.x && a.y == b.y;
+}
+std::ostream& operator<<(std::ostream& out, const Point &p) {
+  return out << "Point(" << p.x << ", " << p.y << ")";
+}
 
 void compare(const TestParser::OpPtr &a, const TestParser::OpPtr &b) {
   ASSERT_EQ(a->variants,    b->variants);
@@ -211,6 +223,50 @@ TEST_F(UnitTests, args_returns_given_cstring_args) {
   ASSERT_EQ(parser.args(), expected_args);
 }
 
+TEST_F(UnitTests, parse_help_exits) {
+  CliParser parser;
+  std::string usage {
+    "Usage:\n"
+    "  ./a.out --help\n"
+    "  ./a.out\n"
+    "\n"
+    "Optional Flags:\n"
+    "  -h, --help    Print this help and exit\n"
+    "\n"
+  };
+  assert_help_exit(parser, {"./a.out", "-h"}, usage);
+  assert_help_exit(parser, {"./a.out", "--help"}, usage);
+}
+
+TEST_F(UnitTests, parse_help_exits_with_correct_message) {
+  CliParser parser;
+  parser.add_argflag("-x");
+  parser.add_positional("infile");
+  parser.set_required("infile");
+  std::string usage {
+    "Usage:\n"
+    "  progname --help\n"
+    "  progname\n"
+    "    [-x <val>]\n"
+    "    <infile>\n"
+    "\n"
+    "Required Positional Arguments:\n"
+    "  infile\n"
+    "\n"
+    "Optional Flags:\n"
+    "  -h, --help    Print this help and exit\n"
+    "  -x <val>\n"
+    "\n"
+  };
+  ASSERT_EQ(parser.usage("progname"), usage);
+  ASSERT_THROW(parser.parse_with_exceptions({"progname", "-h"}),
+               CliParser::HelpRequest);
+  ASSERT_THROW(parser.parse_with_exceptions({"progname", "--help"}),
+               CliParser::HelpRequest);
+  assert_help_exit(parser, {"progname", "-h"}, usage);
+  assert_help_exit(parser, {"progname", "--help"}, usage);
+}
+
 TEST_F(UnitTests, parse_finds_flags) {
   TestParser parser;
   parser.add_flag("-m", "--move");
@@ -244,6 +300,14 @@ TEST_F(UnitTests, parse_finds_flags_with_args) {
   ASSERT_EQ(parser["-N"], "3");
   ASSERT_EQ(parser["-o"], "out.txt");
   ASSERT_EQ(parser["--output"], "out.txt");
+}
+
+TEST_F(UnitTests, parse_finds_all_argflags) {
+  // A bug found by a functional test, minimized here
+  CliParser parser;
+  parser.add_argflag("-N");
+  parser.parse({"progname", "-N", "3", "-o", "out.txt", "in.txt", "extra", "args"});
+  ASSERT_TRUE(parser.has("-N"));
 }
 
 TEST_F(UnitTests, parse_sets_remaining_args_empty) {
@@ -281,34 +345,41 @@ TEST_F(UnitTests, parse_missing_required_flag) {
   TestParser parser;
   parser.add_flag("-x");
   parser.set_required("-x");
-  ASSERT_THROW(parser.parse({"progname"}), std::invalid_argument);
+  ASSERT_THROW(parser.parse_with_exceptions({"progname"}), std::invalid_argument);
+  assert_error_exit(parser, {"progname"}, "ParseError");
 }
 
 TEST_F(UnitTests, parse_missing_required_argflag) {
   TestParser parser;
   parser.add_argflag("-x");
   parser.set_required("-x");
-  ASSERT_THROW(parser.parse({"progname"}), std::invalid_argument);
+  ASSERT_THROW(parser.parse_with_exceptions({"progname"}), std::invalid_argument);
+  assert_error_exit(parser, {"progname"}, "ParseError");
 }
 
 TEST_F(UnitTests, parse_missing_required_positional_arg) {
   TestParser parser;
   parser.add_positional("input");
   parser.set_required("input");
-  ASSERT_THROW(parser.parse({"progname"}), std::invalid_argument);
+  ASSERT_THROW(parser.parse_with_exceptions({"progname"}), std::invalid_argument);
+  assert_error_exit(parser, {"progname"}, "ParseError");
 }
 
 TEST_F(UnitTests, parse_missing_argflag_value) {
   TestParser parser;
   parser.add_argflag("-x");
-  ASSERT_THROW(parser.parse({"progname", "-x"}), std::invalid_argument);
+  ASSERT_THROW(parser.parse_with_exceptions({"progname", "-x"}),
+               std::invalid_argument);
+  assert_error_exit(parser, {"progname", "-x"}, "ParseError");
 }
 
 TEST_F(UnitTests, parse_missing_argflag_required_value) {
   TestParser parser;
   parser.add_argflag("-x");
   parser.set_required("-x");
-  ASSERT_THROW(parser.parse({"progname", "-x"}), std::invalid_argument);
+  ASSERT_THROW(parser.parse_with_exceptions({"progname", "-x"}),
+               std::invalid_argument);
+  assert_error_exit(parser, {"progname", "-x"}, "ParseError");
 }
 
 TEST_F(UnitTests, has_finds_parsed) {
@@ -363,7 +434,6 @@ TEST_F(UnitTests, array_operator_throws_not_recognized) {
   parser.add_flag("-f", "--flag");
   ASSERT_THROW(parser["-nothing"], std::invalid_argument);
 }
-
 
 TEST_F(UnitTests, get_non_argflag) {
   TestParser parser;
@@ -499,19 +569,6 @@ TEST_F(UnitTests, get_with_default_invalid_cast) {
   ASSERT_THROW(parser.get("number", true),  std::invalid_argument);
 }
 
-namespace {
-struct Point { int x, y; };
-std::istream &operator>>(std::istream &in, Point &p) {
-  return in >> p.x >> p.y;
-}
-bool operator==(const Point &a, const Point &b) {
-  return a.x == b.x && a.y == b.y;
-}
-std::ostream& operator<<(std::ostream& out, const Point &p) {
-  return out << "Point(" << p.x << ", " << p.y << ")";
-}
-} // end of unnamed namespace
-
 TEST_F(UnitTests, get_custom_type) {
   TestParser parser;
   parser.add_positional("point");
@@ -529,7 +586,7 @@ TEST_F(UnitTests, get_custom_type) {
 
 TEST_F(UnitTests, usage_before_parse) {
   TestParser parser;
-  EXPECT_EQ(parser.usage(),
+  ASSERT_EQ(parser.usage(),
             "Usage:\n"
             "  <program-name> --help\n"
             "  <program-name>\n"
@@ -542,7 +599,7 @@ TEST_F(UnitTests, usage_before_parse) {
 TEST_F(UnitTests, usage_empty) {
   TestParser parser;
   parser.parse({"hello"});
-  EXPECT_EQ(parser.usage(),
+  ASSERT_EQ(parser.usage(),
             "Usage:\n"
             "  hello --help\n"
             "  hello\n"
@@ -554,7 +611,7 @@ TEST_F(UnitTests, usage_empty) {
 
 TEST_F(UnitTests, usage_empty_with_given_name) {
   TestParser parser;
-  EXPECT_EQ(parser.usage("a.out"),
+  ASSERT_EQ(parser.usage("a.out"),
             "Usage:\n"
             "  a.out --help\n"
             "  a.out\n"
@@ -570,7 +627,7 @@ TEST_F(UnitTests, usage_flags) {
   parser.add_flag("-a", "--about");
   parser.add_flag("--verbose");
   parser.parse({"progname"});
-  EXPECT_EQ(parser.usage(),
+  ASSERT_EQ(parser.usage(),
             "Usage:\n"
             "  progname --help\n"
             "  progname\n"
@@ -590,8 +647,7 @@ TEST_F(UnitTests, usage_flags_required) {
   parser.add_flag("--verbose");
   parser.set_required("--about");
   parser.set_required("--verbose");
-  EXPECT_THROW(parser.parse({"progname"}), std::invalid_argument);
-  EXPECT_EQ(parser.usage(),
+  ASSERT_EQ(parser.usage("progname"),
             "Usage:\n"
             "  progname --help\n"
             "  progname\n"
@@ -611,8 +667,7 @@ TEST_F(UnitTests, usage_argflags) {
   TestParser parser;
   parser.add_argflag("-N", "--number");
   parser.add_argflag("--out", "-o");
-  parser.parse({"progname"});
-  EXPECT_EQ(parser.usage(),
+  ASSERT_EQ(parser.usage("progname"),
             "Usage:\n"
             "  progname --help\n"
             "  progname\n"
@@ -632,8 +687,7 @@ TEST_F(UnitTests, usage_argflags_required) {
   parser.add_argflag("--number", "-N");
   parser.set_required("--number");
   parser.set_required("--out");
-  EXPECT_THROW(parser.parse({"progname"}), std::invalid_argument);
-  EXPECT_EQ(parser.usage(),
+  ASSERT_EQ(parser.usage("progname"),
             "Usage:\n"
             "  progname --help\n"
             "  progname\n"
@@ -653,8 +707,7 @@ TEST_F(UnitTests, usage_positional) {
   TestParser parser;
   parser.add_positional("number");
   parser.add_positional("outfile");
-  parser.parse({"progname"});
-  EXPECT_EQ(parser.usage(),
+  ASSERT_EQ(parser.usage("progname"),
             "Usage:\n"
             "  progname --help\n"
             "  progname\n"
@@ -676,8 +729,7 @@ TEST_F(UnitTests, usage_positional_required) {
   parser.add_positional("outfile");
   parser.set_required("number");
   parser.set_required("outfile");
-  EXPECT_THROW(parser.parse({"progname"}), std::invalid_argument);
-  EXPECT_EQ(parser.usage(),
+  ASSERT_EQ(parser.usage("progname"),
             "Usage:\n"
             "  progname --help\n"
             "  progname\n"
@@ -705,7 +757,7 @@ TEST_F(UnitTests, usage_all) {
   parser.set_required("--output");
   parser.set_required("input");
   parser._args = {"progname"};
-  EXPECT_EQ(parser.usage(),
+  ASSERT_EQ(parser.usage(),
             "Usage:\n"
             "  progname --help\n"
             "  progname\n"

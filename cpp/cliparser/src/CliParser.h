@@ -2,6 +2,8 @@
 #define CLIPARSER_H
 
 #include <algorithm>
+#include <iomanip>
+#include <iostream>
 #include <memory>
 #include <set>
 #include <stdexcept>
@@ -43,10 +45,12 @@ public:
   template <typename T> using set = std::unordered_set<T>;
 
   class ParseError : public std::invalid_argument {
+  public:
     using std::invalid_argument::invalid_argument; // use the same constructor
   };
 
   class HelpRequest : public std::exception {
+  public:
     HelpRequest() {} // only the default constructor
   };
 
@@ -109,7 +113,7 @@ public:
   /// next positional argument that is not part of a flag
   void add_positional(string name) {
     if (_recognized.count(name) > 0) {
-      throw std::invalid_argument("Already registered argument '" + name + "'");
+      throw ParseError("Already registered argument '" + name + "'");
     }
     _positional.emplace_back(std::make_shared<PositionArg>(name, false));
     _recognized.emplace(std::move(name));
@@ -124,7 +128,7 @@ public:
 
     // TODO: check positional
 
-    throw std::invalid_argument("set_description(): Unrecognized option '" + name + "'");
+    throw ParseError("set_description(): Unrecognized option '" + name + "'");
   }
 
   /// set a flag or positional argument as required (all are optional by default)
@@ -144,7 +148,7 @@ public:
     }
 
     // unrecognized type
-    throw std::invalid_argument("set_required(): Unrecognized option '" + name + "'");
+    throw ParseError("set_required(): Unrecognized option '" + name + "'");
   }
 
   /** return the string representation of the value for the parsed arg
@@ -192,19 +196,11 @@ public:
     }
 
     // check to see if we recognize name
-    // TODO: error check to see if it is a flag
-    if (_optionmap.find(name) != _optionmap.end()) {
+    if (_recognized.count(name) > 0) {
       throw std::out_of_range("Not found in parsing: '" + name + "'");
     }
 
-    // check positional args
-    for (auto &p : _positional) {
-      if (p->name == name) {
-        throw std::out_of_range("Not found in parsing: '" + name + "'");
-      }
-    }
-
-    throw std::invalid_argument("Unrecognized argument name: '" + name + "'");
+    throw ParseError("Unrecognized argument name: '" + name + "'");
   }
 
   /// returns true if the flag or positional argument was found in parse()
@@ -213,27 +209,19 @@ public:
       return true;
     }
 
-    // TODO: error check to see if it is a flag
-    if (_optionmap.find(name) != _optionmap.end()) {
+    if (_recognized.count(name) > 0) {
       return false;
     }
 
-    // check positional args
-    for (auto &p : _positional) {
-      if (p->name == name) {
-        return false;
-      }
-    }
-
     // otherwise, it is unrecognized
-    throw std::invalid_argument("has(): unrecognized argument '" + name + "'");
+    throw ParseError("Unrecognized argument name: '" + name + "'");
   }
 
   /** returns as a specific type the value obtained from operator[]().
    *  an optional default value can be given if the argument was not seen.
    *
    * @throws std::out_of_range if the argument was not specified on the command-line
-   * @throws std::invalid_argument if the argument cannot be converted to type T
+   * @throws ParseError if the argument cannot be converted to type T
    */
   template <typename T> T get(const string &name) const {
     // Note: use std::boolalpha to treat "true" as true and "false" as false
@@ -241,7 +229,7 @@ public:
     T val{};
     in >> std ::boolalpha >> val;
     if (in.fail()) {
-      throw std::invalid_argument("cannot convert '" + operator[](name)
+      throw ParseError("cannot convert '" + operator[](name)
                                   + "' to the type '" + typeid(T).name());
     }
     return val;
@@ -333,8 +321,24 @@ public:
   void parse(int argc, const char * const * argv) {
     parse(vector<string>(argv, argv+argc));
   }
+  void parse_with_exceptions(int argc, const char * const * argv) {
+    parse_with_exceptions(vector<string>(argv, argv+argc));
+  }
 
   void parse(vector<string> args) {
+    try {
+      parse_with_exceptions(std::move(args));
+    } catch (HelpRequest&) {
+      std::cout << usage();
+      std::cout.flush();
+      std::exit(0);
+    } catch (ParseError &ex) {
+      std::cerr << "ParseError: " << ex.what() << "\n";
+      std::cerr.flush();
+      std::exit(1);
+    }
+  }
+  void parse_with_exceptions(vector<string> args) {
     _args = std::move(args);
     _parsed.clear();
     _remaining.clear();
@@ -346,11 +350,14 @@ public:
       auto opit = _optionmap.find(arg);
       if (opit != _optionmap.end()) {
         OpPtr &op = opit->second;
+        if (op->variants[0] == "-h") { // handle --help separately
+          throw HelpRequest();
+        }
         if (op->expects_arg) {
           it++;
           if (it == _args.end()) {
-            throw std::invalid_argument("Flag '" + arg +
-                                        "' requires another parameter");
+            throw ParseError("Flag '" + arg +
+                             "' requires another parameter");
           }
         }
         for (auto &name : op->variants) {
@@ -371,16 +378,16 @@ public:
     // check for required flags
     for (auto &flag : required_flags()) {
       if (!has(flag->variants[0])) {
-        throw std::invalid_argument("Missing required flag '" +
-                                    flag->variants[0] + "'");
+        throw ParseError("Missing required flag '" +
+                         flag->variants[0] + "'");
       }
     }
 
     // check for required positional
     for (auto &pos : required_positional()) {
       if (!has(pos->name)) {
-        throw std::invalid_argument("Missing required positional argument '" +
-                                    pos->name + "'");
+        throw ParseError("Missing required positional argument '" +
+                         pos->name + "'");
       }
     }
   }
@@ -392,7 +399,7 @@ protected:
     OpPtr op = std::make_shared<Option>(std::move(variants), hasarg);
     for (auto &name : op->variants) {
       if (_recognized.count(name) > 0) {
-        throw std::invalid_argument("Already registered argument '" + name + "'");
+        throw ParseError("Already registered argument '" + name + "'");
       }
     }
     for (auto &name : op->variants) {
