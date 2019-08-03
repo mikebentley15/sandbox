@@ -16,13 +16,12 @@ protected:
 
 TEST_F(FunctionalTests, CommandLineExample) {
   std::vector<std::string> args {
-    "progname", "--help", "-N", "3", "-o", "out.txt", "in.txt", "extra", "args"
+    "progname" "-N", "3", "-o", "out.txt", "in.txt", "extra", "args"
   };
 
   CliParser parser;
-  parser.add_flag("-h", "-help", "--help");
   parser.add_flag("-v", "--verbose");
-  parser.add_argflag("-k", "--biggest");
+  parser.add_argflag("-k", "-big", "--biggest");
   parser.add_argflag("-N");
   parser.add_argflag("-o", "--output");
   parser.add_positional("input");
@@ -34,16 +33,15 @@ TEST_F(FunctionalTests, CommandLineExample) {
   //parser.set_description("-N", "N-description");
   //parser.set_description("--output", "my output description");
 
-  parser.parse(args);
+  // check that the help flag was detected
+  EXPECT_THROW(parser.parse(args), CliParser::HelpRequest);
 
   // see that we can get the arguments back unchanged
   EXPECT_EQ(parser.args(), args);
 
   // see that we can check for which arguments were present
-  EXPECT_TRUE(parser.has("-h"));
-  EXPECT_TRUE(parser.has("-help"));
-  EXPECT_TRUE(parser.has("--help"));
   EXPECT_FALSE(parser.has("-k"));
+  EXPECT_FALSE(parser.has("-big"));
   EXPECT_FALSE(parser.has("--biggest"));
   EXPECT_FALSE(parser.has("-v"));
   EXPECT_FALSE(parser.has("--verbose"));
@@ -56,12 +54,10 @@ TEST_F(FunctionalTests, CommandLineExample) {
   EXPECT_THROW(parser.has("--non-existent"), std::invalid_argument);
 
   // get the values of the arguments
-  EXPECT_EQ(parser["-h"], "--help");
-  EXPECT_EQ(parser["-help"], "--help");
-  EXPECT_EQ(parser["--help"], "--help");
   EXPECT_THROW(parser["-v"], std::out_of_range);
   EXPECT_THROW(parser["--verbose"], std::out_of_range);
   EXPECT_THROW(parser["-k"], std::out_of_range);
+  EXPECT_THROW(parser["-big"], std::out_of_range);
   EXPECT_THROW(parser["--biggest"], std::out_of_range);
   EXPECT_EQ(parser["-N"], "3");
   EXPECT_EQ(parser["-o"], "out.txt");
@@ -85,9 +81,9 @@ TEST_F(FunctionalTests, CommandLineExample) {
 
   EXPECT_EQ(parser.usage(),
             "Usage:\n"
+            "  progname --help\n"
             "  progname\n"
             "    [-N <val>]\n"
-            "    [-h]\n"
             "    [-k <val>]\n"
             "    [-v]\n"
             "    -o <val>\n"
@@ -101,23 +97,16 @@ TEST_F(FunctionalTests, CommandLineExample) {
             "\n"
             "Optional Flags:\n"
             "  -N <val>\n"
-            "  -h, -help, --help\n"
+            "  -h, --help    Print this help and exit\n"
             "  -k <val>, --biggest <val>\n"
             "  -v, --verbose\n"
             "\n");
 }
 
-/// TODO: test a metavar instead of <val> in usage string
-/// TODO: test incorrect command-line usage handling
-/// TODO: test adding overall description
-/// TODO: test adding description for each option and overall description
-/// TODO: test making a later positional required, but not an earlier
-
 TEST_F(FunctionalTests, InvalidArguments) {
   // Bob wants to make sure that invalid arguments are handled properly
   // when users use his command-line interface wrong
   CliParser parser;
-  parser.add_flag("-h", "-help", "--help");
 
   // required
   parser.add_flag("-?");
@@ -160,16 +149,12 @@ TEST_F(FunctionalTests, InvalidArguments) {
 
 TEST_F(FunctionalTests, UseHelpWithoutRequiredFlags) {
   CliParser parser;
-  parser.add_flag("-h", "-help", "--help");
   parser.add_argflag("-x");
   parser.add_positional("infile");
   parser.set_required("infile");
-  EXPECT_THROW(parser.parse({"progname", "-h"}), std::invalid_argument);
-  EXPECT_EQ(parser["-h"], "-h");
-  EXPECT_TRUE(parser.has("-h"));
   EXPECT_EQ(parser.usage(),
             "Usage:\n"
-            "  progname\n"
+            "  <program-name>\n"
             "    [-h]\n"
             "    [-x <val>]\n"
             "    <infile>\n"
@@ -178,10 +163,53 @@ TEST_F(FunctionalTests, UseHelpWithoutRequiredFlags) {
             "  infile\n"
             "\n"
             "Optional Flags:\n"
-            "  -h, -help, --help\n"
+            "  -h, --help    Print this help and exit\n"
+            "  -x <val>\n"
+            "\n");
+  EXPECT_EXIT(parser.parse({"progname", "-h"}), testing::ExitedWithCode(0), "");
+}
+
+TEST_F(FunctionalTests, UsageWithoutParsing) {
+  CliParser parser;
+  parser.add_argflag("-x");
+  parser.add_positional("infile");
+  parser.set_required("infile");
+  EXPECT_EQ(parser.usage(),
+            "Usage:\n"
+            "  <program-name>\n"
+            "    [-h]\n"
+            "    [-x <val>]\n"
+            "    <infile>\n"
+            "\n"
+            "Required Positional Arguments:\n"
+            "  infile\n"
+            "\n"
+            "Optional Flags:\n"
+            "  -h, --help    Print this help and exit\n"
+            "  -x <val>\n"
+            "\n");
+  EXPECT_EQ(parser.usage("my-program-name"),
+            "Usage:\n"
+            "  my-program-name\n"
+            "    [-h]\n"
+            "    [-x <val>]\n"
+            "    <infile>\n"
+            "\n"
+            "Required Positional Arguments:\n"
+            "  infile\n"
+            "\n"
+            "Optional Flags:\n"
+            "  -h, --help    Print this help and exit\n"
             "  -x <val>\n"
             "\n");
 }
+
+
+
+/// TODO: test a metavar instead of <val> in usage string
+/// TODO: test adding overall description
+/// TODO: test adding description for each option and overall description
+/// TODO: test making a later positional required, but not an earlier
 
 //TEST_F(FunctionalTests, OptionArguments) {
 //  // Bob is parsing arguments and there are a few options he wants to find

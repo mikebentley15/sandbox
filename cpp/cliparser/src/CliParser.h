@@ -17,7 +17,6 @@
  * \code
  *   int main(int argc, char** argv) {
  *     CliParser parser;
- *     parser.add_flag("-h", "-help", "--help");
  *     parser.add_flag("-v", "--verbose");
  *     parser.add_argflag("-N");
  *     parser.add_argflag("-o", "--output");
@@ -25,20 +24,10 @@
  *     parser.set_required("input");
  *     parser.set_required("--output");
  *
- *     try {
- *       parser.parse();
- *     } catch (ParseError &ex) {
- *       std::cerr << "ParseError: " << ex.what() << std::endl;
- *       return 1;
- *     }
- *
- *     if (parser.has("-h")) {
- *       std::cout << parser.usage() << std::endl;
- *       return 0;
- *     }
+ *     parser.parse(); // will call exit() with --help or with error
  *
  *     bool verbose = parser.has("-v");
- *     int N = parser.get<int>("-N", 10); // use 10 as default
+ *     int N = parser.get("-N", 10); // use 10 as default
  *     auto output = parser["--output"];
  *     auto input = parser["input"];
  *     std::vector<std::string> remaining = parser.remaining();
@@ -57,11 +46,16 @@ public:
     using std::invalid_argument::invalid_argument; // use the same constructor
   };
 
+  class HelpRequest : public std::exception {
+    HelpRequest() {} // only the default constructor
+  };
+
 protected:
   struct Option {
     vector<string> variants;
     bool expects_arg;
     bool required;
+    string description;
     Option(vector<string> &&_variants, bool _expects_arg)
       : variants(std::move(_variants))
       , expects_arg(_expects_arg)
@@ -88,7 +82,10 @@ protected:
   using ParseMap = std::unordered_map<string, string*>;
 
 public:
-  CliParser() {}
+  CliParser() {
+    add_flag("-h", "--help");
+    set_description("--help", "Print this help and exit");
+  }
   CliParser(const CliParser& other) = delete;
   CliParser(CliParser &&other) = default;
   virtual ~CliParser() = default;
@@ -116,6 +113,18 @@ public:
     }
     _positional.emplace_back(std::make_shared<PositionArg>(name, false));
     _recognized.emplace(std::move(name));
+  }
+
+  // set the description of the given flag or positional argument
+  void set_description(const string &name, const string &desc) {
+    if (_optionmap.find(name) != _optionmap.end()) {
+      _optionmap[name]->description = desc;
+      return;
+    }
+
+    // TODO: check positional
+
+    throw std::invalid_argument("set_description(): Unrecognized option '" + name + "'");
   }
 
   /// set a flag or positional argument as required (all are optional by default)
@@ -244,23 +253,16 @@ public:
     return defaultval;
   }
 
-  std::string usage() {
+  std::string usage(const std::string &progname) {
     std::ostringstream out;
     auto optional_ops = optional_flags();
     auto required_ops = required_flags();
     auto optional_pos = optional_positional();
     auto required_pos = required_positional();
 
-    // get program name
-    std::string progname;
-    if (_args.size() > 0) {
-      progname = _args[0];
-    } else {
-      progname = "<program-name>";
-    }
-
     // brief usage section
     out << "Usage:\n"
+           "  " << progname << " --help\n"
            "  " << progname << "\n";
     for (auto &op : optional_ops) {
       print_flag_usage(out, op);
@@ -314,6 +316,17 @@ public:
     }
 
     return out.str();
+  }
+
+  std::string usage() {
+    // get program name
+    std::string progname;
+    if (_args.size() > 0) {
+      progname = _args[0];
+    } else {
+      progname = "<program-name>";
+    }
+    return usage(progname);
   }
 
   /// parse command-line options
@@ -439,6 +452,11 @@ protected:
   }
 
   static std::ostream& print_flag_usage(std::ostream& out, const OpPtr &p) {
+    // we handle --help separately
+    if (p->variants[0] == "-h") {
+      return out;
+    }
+
     out << "    ";
     if (!p->required) { out << "["; }
     out << p->variants[0];
@@ -455,6 +473,9 @@ protected:
     out << "  " << p->variants[0] << suffix;
     for (int i = 1; i < p->variants.size(); i++) {
       out << ", " << p->variants[i] << suffix;
+    }
+    if (p->description != "") {
+      out << "    " << p->description;
     }
     out << "\n";
     return out;

@@ -52,22 +52,37 @@ TEST_F(UnitTests, program_name_returns_first_argument) {
   ASSERT_EQ(parser.program_name(), args[0]);
 }
 
+TEST_F(UnitTests, constructor_creates_help_flag) {
+  TestParser parser;
+  ASSERT_EQ(parser._optionmap.size(), 2);
+  ASSERT_TRUE(parser._optionmap.find("-h") != parser._optionmap.end());
+  ASSERT_TRUE(parser._optionmap.find("--help") != parser._optionmap.end());
+  ASSERT_EQ(parser._optionmap["-h"], parser._optionmap["--help"]);
+  ASSERT_EQ(parser._optionmap["-h"]->variants.size(), 2);
+  ASSERT_EQ(parser._optionmap["-h"]->variants[0], "-h");
+  ASSERT_EQ(parser._optionmap["-h"]->variants[1], "--help");
+  ASSERT_FALSE(parser._optionmap["-h"]->expects_arg);
+  ASSERT_FALSE(parser._optionmap["-h"]->required);
+  ASSERT_EQ(parser._recognized.count("-h"), 1);
+  ASSERT_EQ(parser._recognized.count("--help"), 1);
+}
+
 TEST_F(UnitTests, add_flag_adds_to_flags) {
-  auto help_option = std::make_shared<TestParser::Option>(
-                       std::vector<std::string>{"-h"}, false);
+  auto m_option = std::make_shared<TestParser::Option>(
+                    std::vector<std::string>{"-m"}, false);
   auto verbose_option = std::make_shared<TestParser::Option>(
                           std::vector<std::string>{"-v", "--verbose"}, false);
 
   TestParser parser;
-  parser.add_flag("-h");
+  parser.add_flag("-m");
   parser.add_flag("-v", "--verbose");
 
-  ASSERT_TRUE(parser._optionmap.find("-h") != parser._optionmap.end());
+  ASSERT_TRUE(parser._optionmap.find("-m") != parser._optionmap.end());
   ASSERT_TRUE(parser._optionmap.find("-v") != parser._optionmap.end());
   ASSERT_TRUE(
         parser._optionmap.find("--verbose") != parser._optionmap.end());
 
-  compare(parser._optionmap["-h"], help_option);
+  compare(parser._optionmap["-m"], m_option);
   compare(parser._optionmap["-v"], verbose_option);
   compare(parser._optionmap["--verbose"], verbose_option);
   ASSERT_EQ(parser._optionmap["-v"], parser._optionmap["--verbose"]);
@@ -75,9 +90,9 @@ TEST_F(UnitTests, add_flag_adds_to_flags) {
 
 TEST_F(UnitTests, add_flag_adds_to_recognized) {
   TestParser parser;
-  parser.add_flag("-h");
+  parser.add_flag("-m");
   parser.add_flag("-v", "--verbose");
-  ASSERT_EQ(parser._recognized.count("-h"), 1);
+  ASSERT_EQ(parser._recognized.count("-m"), 1);
   ASSERT_EQ(parser._recognized.count("-v"), 1);
   ASSERT_EQ(parser._recognized.count("--verbose"), 1);
   ASSERT_EQ(parser._recognized.count("--not-there"), 0);
@@ -141,13 +156,16 @@ TEST_F(UnitTests, add_argument_duplicate_exception) {
   ASSERT_THROW(parser.add_flag("one"), std::invalid_argument);
   ASSERT_THROW(parser.add_argflag("other", "two"), std::invalid_argument);
   ASSERT_THROW(parser.add_positional("three"), std::invalid_argument);
+  ASSERT_THROW(parser.add_flag("-h"), std::invalid_argument);
+  ASSERT_THROW(parser.add_flag("--help"), std::invalid_argument);
 }
 
 TEST_F(UnitTests, set_required_flag) {
   TestParser parser;
-  parser.add_flag("-h", "--help");
-  parser.set_required("--help");
-  ASSERT_TRUE(parser._optionmap["-h"]->required);
+  parser.add_flag("-m", "--move");
+  parser.set_required("--move");
+  ASSERT_TRUE(parser._optionmap["-m"]->required);
+  ASSERT_TRUE(parser._optionmap["--move"]->required);
 }
 
 TEST_F(UnitTests, set_required_argflag) {
@@ -155,6 +173,7 @@ TEST_F(UnitTests, set_required_argflag) {
   parser.add_argflag("-N", "-number");
   parser.set_required("-N");
   ASSERT_TRUE(parser._optionmap["-N"]->required);
+  ASSERT_TRUE(parser._optionmap["-number"]->required);
 }
 
 TEST_F(UnitTests, set_required_positional) {
@@ -193,41 +212,32 @@ TEST_F(UnitTests, args_returns_given_cstring_args) {
 }
 
 TEST_F(UnitTests, parse_finds_flags) {
-  std::vector<std::string> args {
-    "progname", "-h", "-N"
-  };
   TestParser parser;
-  parser.add_flag("-h", "--help");
+  parser.add_flag("-m", "--move");
   parser.add_flag("-k");
-  parser.parse(args);
-  ASSERT_TRUE(parser._parsed.find("-h") != parser._parsed.end());
-  ASSERT_TRUE(parser._parsed.find("--help") != parser._parsed.end());
+  parser.parse({"progname", "-m", "-N"});
+  ASSERT_TRUE(parser._parsed.find("-m") != parser._parsed.end());
+  ASSERT_TRUE(parser._parsed.find("--move") != parser._parsed.end());
   ASSERT_TRUE(parser._parsed.find("-k") == parser._parsed.end());
-  ASSERT_EQ(*parser._parsed["-h"], "-h");
-  ASSERT_EQ(*parser._parsed["--help"], "-h");
+  ASSERT_EQ(*parser._parsed["-m"], "-m");
+  ASSERT_EQ(*parser._parsed["--move"], "-m");
 }
 
 TEST_F(UnitTests, parse_finds_positional) {
-  std::vector<std::string> args {
-    "progname", "-h", "-N", "out.txt", "extra"
-  };
   TestParser parser;
-  parser.add_flag("-h", "--help");
+  parser.add_flag("-m", "--move");
   parser.add_flag("-N");
   parser.add_positional("output");
-  parser.parse(args);
+  parser.parse({"progname", "-m", "-N", "out.txt", "extra"});
   ASSERT_TRUE(parser._parsed.find("output") != parser._parsed.end());
   ASSERT_EQ(*parser._parsed["output"], "out.txt");
 }
 
 TEST_F(UnitTests, parse_finds_flags_with_args) {
-  std::vector<std::string> args {
-    "progname", "--output", "out.txt", "-N", "3"
-  };
   TestParser parser;
   parser.add_argflag("-N");
   parser.add_argflag("-o", "--output");
-  parser.parse(args);
+  parser.parse({"progname", "--output", "out.txt", "-N", "3"});
   ASSERT_TRUE(parser._parsed.find("-N") != parser._parsed.end());
   ASSERT_TRUE(parser._parsed.find("-o") != parser._parsed.end());
   ASSERT_TRUE(parser._parsed.find("--output") != parser._parsed.end());
@@ -237,25 +247,19 @@ TEST_F(UnitTests, parse_finds_flags_with_args) {
 }
 
 TEST_F(UnitTests, parse_sets_remaining_args_empty) {
-  std::vector<std::string> args {
-    "progname", "-v", "--output", "out.txt", "-N", "3", "in.txt"
-  };
   TestParser parser;
   parser.add_flag("-v");
   parser.add_argflag("-o", "--output");
   parser.add_argflag("-N");
   parser.add_positional("input");
-  parser.parse(args);
+  parser.parse({"progname", "-v", "--output", "out.txt", "-N", "3", "in.txt"});
   std::vector<std::string> expected_remaining {};
   ASSERT_EQ(parser.remaining(), expected_remaining);
 }
 
 TEST_F(UnitTests, parse_sets_remaining_args_all) {
-  std::vector<std::string> args {
-    "progname", "-v", "--output", "out.txt", "-N", "3", "in.txt"
-  };
   TestParser parser;
-  parser.parse(args);
+  parser.parse({"progname", "-v", "--output", "out.txt", "-N", "3", "in.txt"});
   std::vector<std::string> expected_remaining {
     "-v", "--output", "out.txt", "-N", "3", "in.txt"
   };
@@ -263,13 +267,10 @@ TEST_F(UnitTests, parse_sets_remaining_args_all) {
 }
 
 TEST_F(UnitTests, parse_sets_remaining_args_part) {
-  std::vector<std::string> args {
-    "progname", "-v", "--output", "out.txt", "-N", "3", "in.txt"
-  };
   TestParser parser;
   parser.add_argflag("-o", "--output");
   parser.add_positional("input");
-  parser.parse(args);
+  parser.parse({"progname", "-v", "--output", "out.txt", "-N", "3", "in.txt"});
   std::vector<std::string> expected_remaining { "-N", "3", "in.txt" };
   ASSERT_TRUE(parser._parsed.find("input") != parser._parsed.end());
   ASSERT_EQ(*parser._parsed["input"], "-v");
@@ -312,15 +313,15 @@ TEST_F(UnitTests, parse_missing_argflag_required_value) {
 
 TEST_F(UnitTests, has_finds_parsed) {
   TestParser parser;
-  parser.add_flag("-h", "--help");
+  parser.add_flag("-m", "--move");
   parser.add_flag("-N");
   parser.add_argflag("-k");
   parser.add_positional("positional");
   parser._args = {"progname", "-h"};
-  parser._parsed["-h"] = &parser._args[1];
-  parser._parsed["--help"] = &parser._args[1];
-  ASSERT_TRUE(parser.has("-h"));
-  ASSERT_TRUE(parser.has("--help"));
+  parser._parsed["-m"] = &parser._args[1];
+  parser._parsed["--move"] = &parser._args[1];
+  ASSERT_TRUE(parser.has("-m"));
+  ASSERT_TRUE(parser.has("--move"));
   ASSERT_FALSE(parser.has("-N"));
   ASSERT_FALSE(parser.has("-k"));
   ASSERT_FALSE(parser.has("positional"));
@@ -328,25 +329,25 @@ TEST_F(UnitTests, has_finds_parsed) {
 
 TEST_F(UnitTests, has_throws_for_unrecognized_args) {
   TestParser parser;
-  parser.add_flag("-h", "--help");
+  parser.add_flag("-m", "--move");
   ASSERT_THROW(parser.has("anything"), std::invalid_argument);
 }
 
 TEST_F(UnitTests, array_operator_returns_parsed) {
   std::vector<std::string> args {
-    "a.out", "-N", "-3", "--help", "out.txt"
+    "a.out", "-N", "-3", "--move", "out.txt"
   };
   TestParser parser;
   // parsed manually
-  parser._parsed["-h"] = &args[3];
-  parser._parsed["-help"] = parser._parsed["-h"];
-  parser._parsed["--help"] = parser._parsed["-h"];
+  parser._parsed["-m"] = &args[3];
+  parser._parsed["-move"] = parser._parsed["-m"];
+  parser._parsed["--move"] = parser._parsed["-m"];
   parser._parsed["-N"] = &args[2];
   parser._parsed["positional"] = &args[4];
   // check it reads from _parsed
-  ASSERT_EQ(parser["-h"], "--help");
-  ASSERT_EQ(parser["-help"], "--help");
-  ASSERT_EQ(parser["--help"], "--help");
+  ASSERT_EQ(parser["-m"], "--move");
+  ASSERT_EQ(parser["-move"], "--move");
+  ASSERT_EQ(parser["--move"], "--move");
   ASSERT_EQ(parser["-N"], "-3");
   ASSERT_EQ(parser["positional"], "out.txt");
 }
@@ -530,7 +531,11 @@ TEST_F(UnitTests, usage_before_parse) {
   TestParser parser;
   EXPECT_EQ(parser.usage(),
             "Usage:\n"
+            "  <program-name> --help\n"
             "  <program-name>\n"
+            "\n"
+            "Optional Flags:\n"
+            "  -h, --help    Print this help and exit\n"
             "\n");
 }
 
@@ -539,44 +544,66 @@ TEST_F(UnitTests, usage_empty) {
   parser.parse({"hello"});
   EXPECT_EQ(parser.usage(),
             "Usage:\n"
+            "  hello --help\n"
             "  hello\n"
+            "\n"
+            "Optional Flags:\n"
+            "  -h, --help    Print this help and exit\n"
+            "\n");
+}
+
+TEST_F(UnitTests, usage_empty_with_given_name) {
+  TestParser parser;
+  EXPECT_EQ(parser.usage("a.out"),
+            "Usage:\n"
+            "  a.out --help\n"
+            "  a.out\n"
+            "\n"
+            "Optional Flags:\n"
+            "  -h, --help    Print this help and exit\n"
             "\n");
 }
 
 TEST_F(UnitTests, usage_flags) {
   // usage flags are sorted alphabetically (on first variant) after removing dashes
   TestParser parser;
-  parser.add_flag("-h", "--help");
+  parser.add_flag("-a", "--about");
   parser.add_flag("--verbose");
   parser.parse({"progname"});
   EXPECT_EQ(parser.usage(),
             "Usage:\n"
+            "  progname --help\n"
             "  progname\n"
-            "    [-h]\n"
+            "    [-a]\n"
             "    [--verbose]\n"
             "\n"
             "Optional Flags:\n"
-            "  -h, --help\n"
+            "  -a, --about\n"
+            "  -h, --help    Print this help and exit\n"
             "  --verbose\n"
             "\n");
 }
 
 TEST_F(UnitTests, usage_flags_required) {
   TestParser parser;
-  parser.add_flag("-h", "--help");
+  parser.add_flag("-a", "--about");
   parser.add_flag("--verbose");
-  parser.set_required("--help");
+  parser.set_required("--about");
   parser.set_required("--verbose");
   EXPECT_THROW(parser.parse({"progname"}), std::invalid_argument);
   EXPECT_EQ(parser.usage(),
             "Usage:\n"
+            "  progname --help\n"
             "  progname\n"
-            "    -h\n"
+            "    -a\n"
             "    --verbose\n"
             "\n"
             "Required Flags:\n"
-            "  -h, --help\n"
+            "  -a, --about\n"
             "  --verbose\n"
+            "\n"
+            "Optional Flags:\n"
+            "  -h, --help    Print this help and exit\n"
             "\n");
 }
 
@@ -587,12 +614,14 @@ TEST_F(UnitTests, usage_argflags) {
   parser.parse({"progname"});
   EXPECT_EQ(parser.usage(),
             "Usage:\n"
+            "  progname --help\n"
             "  progname\n"
             "    [-N <val>]\n"
             "    [--out <val>]\n"
             "\n"
             "Optional Flags:\n"
             "  -N <val>, --number <val>\n"
+            "  -h, --help    Print this help and exit\n"
             "  --out <val>, -o <val>\n"
             "\n");
 }
@@ -606,6 +635,7 @@ TEST_F(UnitTests, usage_argflags_required) {
   EXPECT_THROW(parser.parse({"progname"}), std::invalid_argument);
   EXPECT_EQ(parser.usage(),
             "Usage:\n"
+            "  progname --help\n"
             "  progname\n"
             "    --number <val>\n"
             "    --out <val>\n"
@@ -613,6 +643,9 @@ TEST_F(UnitTests, usage_argflags_required) {
             "Required Flags:\n"
             "  --number <val>, -N <val>\n"
             "  --out <val>, -o <val>\n"
+            "\n"
+            "Optional Flags:\n"
+            "  -h, --help    Print this help and exit\n"
             "\n");
 }
 
@@ -623,6 +656,7 @@ TEST_F(UnitTests, usage_positional) {
   parser.parse({"progname"});
   EXPECT_EQ(parser.usage(),
             "Usage:\n"
+            "  progname --help\n"
             "  progname\n"
             "    [<number>]\n"
             "    [<outfile>]\n"
@@ -630,6 +664,9 @@ TEST_F(UnitTests, usage_positional) {
             "Optional Positional Arguments:\n"
             "  number\n"
             "  outfile\n"
+            "\n"
+            "Optional Flags:\n"
+            "  -h, --help    Print this help and exit\n"
             "\n");
 }
 
@@ -642,6 +679,7 @@ TEST_F(UnitTests, usage_positional_required) {
   EXPECT_THROW(parser.parse({"progname"}), std::invalid_argument);
   EXPECT_EQ(parser.usage(),
             "Usage:\n"
+            "  progname --help\n"
             "  progname\n"
             "    <number>\n"
             "    <outfile>\n"
@@ -649,12 +687,15 @@ TEST_F(UnitTests, usage_positional_required) {
             "Required Positional Arguments:\n"
             "  number\n"
             "  outfile\n"
+            "\n"
+            "Optional Flags:\n"
+            "  -h, --help    Print this help and exit\n"
             "\n");
 }
 
 TEST_F(UnitTests, usage_all) {
   TestParser parser;
-  parser.add_flag("-h", "-help", "--help");
+  parser.add_flag("-m", "-move", "--move");
   parser.add_flag("-v", "--verbose");
   parser.add_argflag("-k", "--biggest");
   parser.add_argflag("-N");
@@ -666,10 +707,11 @@ TEST_F(UnitTests, usage_all) {
   parser._args = {"progname"};
   EXPECT_EQ(parser.usage(),
             "Usage:\n"
+            "  progname --help\n"
             "  progname\n"
             "    [-N <val>]\n"
-            "    [-h]\n"
             "    [-k <val>]\n"
+            "    [-m]\n"
             "    [-v]\n"
             "    -o <val>\n"
             "    <input>\n"
@@ -686,8 +728,9 @@ TEST_F(UnitTests, usage_all) {
             "\n"
             "Optional Flags:\n"
             "  -N <val>\n"
-            "  -h, -help, --help\n"
+            "  -h, --help    Print this help and exit\n"
             "  -k <val>, --biggest <val>\n"
+            "  -m, -move, --move\n"
             "  -v, --verbose\n"
             "\n");
 }
