@@ -276,6 +276,40 @@ TEST_F(UnitTests, parse_sets_remaining_args_part) {
   ASSERT_EQ(parser.remaining(), expected_remaining);
 }
 
+TEST_F(UnitTests, parse_missing_required_flag) {
+  TestParser parser;
+  parser.add_flag("-x");
+  parser.set_required("-x");
+  ASSERT_THROW(parser.parse({"progname"}), std::invalid_argument);
+}
+
+TEST_F(UnitTests, parse_missing_required_argflag) {
+  TestParser parser;
+  parser.add_argflag("-x");
+  parser.set_required("-x");
+  ASSERT_THROW(parser.parse({"progname"}), std::invalid_argument);
+}
+
+TEST_F(UnitTests, parse_missing_required_positional_arg) {
+  TestParser parser;
+  parser.add_positional("input");
+  parser.set_required("input");
+  ASSERT_THROW(parser.parse({"progname"}), std::invalid_argument);
+}
+
+TEST_F(UnitTests, parse_missing_argflag_value) {
+  TestParser parser;
+  parser.add_argflag("-x");
+  ASSERT_THROW(parser.parse({"progname", "-x"}), std::invalid_argument);
+}
+
+TEST_F(UnitTests, parse_missing_argflag_required_value) {
+  TestParser parser;
+  parser.add_argflag("-x");
+  parser.set_required("-x");
+  ASSERT_THROW(parser.parse({"progname", "-x"}), std::invalid_argument);
+}
+
 TEST_F(UnitTests, has_finds_parsed) {
   TestParser parser;
   parser.add_flag("-h", "--help");
@@ -329,6 +363,169 @@ TEST_F(UnitTests, array_operator_throws_not_recognized) {
   ASSERT_THROW(parser["-nothing"], std::invalid_argument);
 }
 
+
+TEST_F(UnitTests, get_non_argflag) {
+  TestParser parser;
+  parser.add_flag("-g");
+  parser.parse({"progname", "-g"});
+  ASSERT_EQ(parser["-g"], "-g");
+  ASSERT_THROW(parser.get<bool              >("-g"), std::invalid_argument);
+  ASSERT_THROW(parser.get<int               >("-g"), std::invalid_argument);
+  ASSERT_THROW(parser.get<long              >("-g"), std::invalid_argument);
+  ASSERT_THROW(parser.get<long long         >("-g"), std::invalid_argument);
+  ASSERT_THROW(parser.get<unsigned int      >("-g"), std::invalid_argument);
+  ASSERT_THROW(parser.get<unsigned long     >("-g"), std::invalid_argument);
+  ASSERT_THROW(parser.get<unsigned long long>("-g"), std::invalid_argument);
+  ASSERT_THROW(parser.get<float             >("-g"), std::invalid_argument);
+  ASSERT_THROW(parser.get<double            >("-g"), std::invalid_argument);
+  ASSERT_THROW(parser.get<long double       >("-g"), std::invalid_argument);
+  ASSERT_EQ(parser.get<std::string>("-g"), "-g");
+}
+
+TEST_F(UnitTests, get_different_types) {
+  TestParser parser;
+  parser.add_positional("boolean");
+  parser.add_positional("number");
+  parser.parse({"progname", "true", "3"});
+  ASSERT_EQ(parser["boolean"], "true");
+  ASSERT_EQ(parser["number"], "3");
+  ASSERT_EQ(parser.get<bool              >("boolean"), true);
+  ASSERT_EQ(parser.get<std::string       >("boolean"), "true");
+  ASSERT_EQ(parser.get<int               >("number"), 3);
+  ASSERT_EQ(parser.get<long              >("number"), 3L);
+  ASSERT_EQ(parser.get<long long         >("number"), 3LL);
+  ASSERT_EQ(parser.get<unsigned int      >("number"), 3U);
+  ASSERT_EQ(parser.get<unsigned long     >("number"), 3UL);
+  ASSERT_EQ(parser.get<unsigned long long>("number"), 3ULL);
+  ASSERT_EQ(parser.get<float             >("number"), 3.0f);
+  ASSERT_EQ(parser.get<double            >("number"), 3.0);
+  ASSERT_EQ(parser.get<long double       >("number"), 3.0L);
+  ASSERT_EQ(parser.get<std::string       >("number"), "3");
+}
+
+TEST_F(UnitTests, get_missing_arg) {
+  TestParser parser;
+  parser.add_positional("boolean");
+  parser.add_positional("number");
+  parser.parse({"progname"});
+  ASSERT_THROW(parser["boolean"],                         std::out_of_range);
+  ASSERT_THROW(parser["number"],                          std::out_of_range);
+  ASSERT_THROW(parser.get<bool              >("boolean"), std::out_of_range);
+  ASSERT_THROW(parser.get<std::string       >("boolean"), std::out_of_range);
+  ASSERT_THROW(parser.get<int               >("number"),  std::out_of_range);
+  ASSERT_THROW(parser.get<long              >("number"),  std::out_of_range);
+  ASSERT_THROW(parser.get<long long         >("number"),  std::out_of_range);
+  ASSERT_THROW(parser.get<unsigned int      >("number"),  std::out_of_range);
+  ASSERT_THROW(parser.get<unsigned long     >("number"),  std::out_of_range);
+  ASSERT_THROW(parser.get<unsigned long long>("number"),  std::out_of_range);
+  ASSERT_THROW(parser.get<float             >("number"),  std::out_of_range);
+  ASSERT_THROW(parser.get<double            >("number"),  std::out_of_range);
+  ASSERT_THROW(parser.get<long double       >("number"),  std::out_of_range);
+  ASSERT_THROW(parser.get<std::string       >("number"),  std::out_of_range);
+}
+
+TEST_F(UnitTests, get_invalid_cast) {
+  TestParser parser;
+  parser.add_positional("boolean");
+  parser.add_positional("number");
+  parser.parse({"progname", "true", "5"});
+  ASSERT_THROW(parser.get<int               >("boolean"), std::invalid_argument);
+  ASSERT_THROW(parser.get<long              >("boolean"), std::invalid_argument);
+  ASSERT_THROW(parser.get<long long         >("boolean"), std::invalid_argument);
+  ASSERT_THROW(parser.get<unsigned int      >("boolean"), std::invalid_argument);
+  ASSERT_THROW(parser.get<unsigned long     >("boolean"), std::invalid_argument);
+  ASSERT_THROW(parser.get<unsigned long long>("boolean"), std::invalid_argument);
+  ASSERT_THROW(parser.get<float             >("boolean"), std::invalid_argument);
+  ASSERT_THROW(parser.get<double            >("boolean"), std::invalid_argument);
+  ASSERT_THROW(parser.get<long double       >("boolean"), std::invalid_argument);
+  ASSERT_THROW(parser.get<bool              >("number"),  std::invalid_argument);
+}
+
+TEST_F(UnitTests, get_with_default) {
+  TestParser parser;
+  parser.add_positional("boolean");
+  parser.add_positional("number");
+  parser.parse({"progname"});
+  ASSERT_THROW(parser["boolean"], std::out_of_range);
+  ASSERT_THROW(parser["number"],  std::out_of_range);
+
+  // it's nice to have template deduction
+  ASSERT_EQ(parser.get("boolean", true               ), true  );
+  ASSERT_EQ(parser.get("boolean", std::string("true")), "true");
+  ASSERT_EQ(parser.get("number",  3                  ), 3     );
+  ASSERT_EQ(parser.get("number",  3L                 ), 3L    );
+  ASSERT_EQ(parser.get("number",  3LL                ), 3LL   );
+  ASSERT_EQ(parser.get("number",  3U                 ), 3U    );
+  ASSERT_EQ(parser.get("number",  3UL                ), 3UL   );
+  ASSERT_EQ(parser.get("number",  3ULL               ), 3ULL  );
+  ASSERT_EQ(parser.get("number",  3.0f               ), 3.0f  );
+  ASSERT_EQ(parser.get("number",  3.0                ), 3.0   );
+  ASSERT_EQ(parser.get("number",  3.0L               ), 3.0L  );
+  ASSERT_EQ(parser.get("number",  std::string("3")   ), "3"   );
+
+  parser.parse({"progname", "false", "5"});
+  ASSERT_EQ(parser["boolean"], "false");
+  ASSERT_EQ(parser["number"],  "5"    );
+
+  ASSERT_EQ(parser.get("boolean", true               ), false  );
+  ASSERT_EQ(parser.get("boolean", std::string("true")), "false");
+  ASSERT_EQ(parser.get("number",  3                  ), 5     );
+  ASSERT_EQ(parser.get("number",  3L                 ), 5L    );
+  ASSERT_EQ(parser.get("number",  3LL                ), 5LL   );
+  ASSERT_EQ(parser.get("number",  3U                 ), 5U    );
+  ASSERT_EQ(parser.get("number",  3UL                ), 5UL   );
+  ASSERT_EQ(parser.get("number",  3ULL               ), 5ULL  );
+  ASSERT_EQ(parser.get("number",  3.0f               ), 5.0f  );
+  ASSERT_EQ(parser.get("number",  3.0                ), 5.0   );
+  ASSERT_EQ(parser.get("number",  3.0L               ), 5.0L  );
+  ASSERT_EQ(parser.get("number",  std::string("3")   ), "5"   );
+}
+
+TEST_F(UnitTests, get_with_default_invalid_cast) {
+  TestParser parser;
+  parser.add_positional("boolean");
+  parser.add_positional("number");
+  parser.parse({"progname", "true", "5"});
+  ASSERT_THROW(parser.get("boolean", 3   ), std::invalid_argument);
+  ASSERT_THROW(parser.get("boolean", 3L  ), std::invalid_argument);
+  ASSERT_THROW(parser.get("boolean", 3LL ), std::invalid_argument);
+  ASSERT_THROW(parser.get("boolean", 3U  ), std::invalid_argument);
+  ASSERT_THROW(parser.get("boolean", 3UL ), std::invalid_argument);
+  ASSERT_THROW(parser.get("boolean", 3ULL), std::invalid_argument);
+  ASSERT_THROW(parser.get("boolean", 3.0f), std::invalid_argument);
+  ASSERT_THROW(parser.get("boolean", 3.0 ), std::invalid_argument);
+  ASSERT_THROW(parser.get("boolean", 3.0L), std::invalid_argument);
+  ASSERT_THROW(parser.get("number", true),  std::invalid_argument);
+}
+
+namespace {
+struct Point { int x, y; };
+std::istream &operator>>(std::istream &in, Point &p) {
+  return in >> p.x >> p.y;
+}
+bool operator==(const Point &a, const Point &b) {
+  return a.x == b.x && a.y == b.y;
+}
+std::ostream& operator<<(std::ostream& out, const Point &p) {
+  return out << "Point(" << p.x << ", " << p.y << ")";
+}
+} // end of unnamed namespace
+
+TEST_F(UnitTests, get_custom_type) {
+  TestParser parser;
+  parser.add_positional("point");
+  parser.add_argflag("--start");
+  parser.parse({"a.out", "3 5"});
+  Point expected_point {3, 5};
+  Point other_point {1, 2};
+  ASSERT_EQ(parser["point"], "3 5");
+  ASSERT_EQ(parser.get<Point>("point"), expected_point);
+  ASSERT_EQ(parser.get("point", other_point), expected_point);
+  ASSERT_THROW(parser["--start"], std::out_of_range);
+  ASSERT_THROW(parser.get<Point>("--start"), std::out_of_range);
+  ASSERT_EQ(parser.get("--start", other_point), other_point);
+}
+
 TEST_F(UnitTests, usage_before_parse) {
   TestParser parser;
   EXPECT_EQ(parser.usage(),
@@ -370,7 +567,7 @@ TEST_F(UnitTests, usage_flags_required) {
   parser.add_flag("--verbose");
   parser.set_required("--help");
   parser.set_required("--verbose");
-  parser.parse({"progname"});
+  EXPECT_THROW(parser.parse({"progname"}), std::invalid_argument);
   EXPECT_EQ(parser.usage(),
             "Usage:\n"
             "  progname\n"
@@ -406,7 +603,7 @@ TEST_F(UnitTests, usage_argflags_required) {
   parser.add_argflag("--number", "-N");
   parser.set_required("--number");
   parser.set_required("--out");
-  parser.parse({"progname"});
+  EXPECT_THROW(parser.parse({"progname"}), std::invalid_argument);
   EXPECT_EQ(parser.usage(),
             "Usage:\n"
             "  progname\n"
@@ -442,7 +639,7 @@ TEST_F(UnitTests, usage_positional_required) {
   parser.add_positional("outfile");
   parser.set_required("number");
   parser.set_required("outfile");
-  parser.parse({"progname"});
+  EXPECT_THROW(parser.parse({"progname"}), std::invalid_argument);
   EXPECT_EQ(parser.usage(),
             "Usage:\n"
             "  progname\n"

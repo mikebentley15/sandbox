@@ -222,9 +222,27 @@ public:
 
   /** returns as a specific type the value obtained from operator[]().
    *  an optional default value can be given if the argument was not seen.
+   *
+   * @throws std::out_of_range if the argument was not specified on the command-line
+   * @throws std::invalid_argument if the argument cannot be converted to type T
    */
-  template <typename T> T get(const string &name) const;
-  //template <typename T> T get(const string &name, T defaultval) const;
+  template <typename T> T get(const string &name) const {
+    // Note: use std::boolalpha to treat "true" as true and "false" as false
+    std::istringstream in(operator[](name));
+    T val{};
+    in >> std ::boolalpha >> val;
+    if (in.fail()) {
+      throw std::invalid_argument("cannot convert '" + operator[](name)
+                                  + "' to the type '" + typeid(T).name());
+    }
+    return val;
+  }
+
+  /// instead of std::out_of_range, you can specify a default value
+  template <typename T> T get(const string &name, T defaultval) const {
+    if (has(name)) { return get<T>(name); }
+    return defaultval;
+  }
 
   std::string usage() {
     std::ostringstream out;
@@ -311,12 +329,16 @@ public:
     std::size_t pos = 0;
     for (auto it = _args.begin() + 1; it != _args.end(); it++) {
       // first check known flags
-      auto opit = _optionmap.find(*it);
+      auto &arg = *it;
+      auto opit = _optionmap.find(arg);
       if (opit != _optionmap.end()) {
         OpPtr &op = opit->second;
         if (op->expects_arg) {
-          // TODO: check for the end of the argument list
           it++;
+          if (it == _args.end()) {
+            throw std::invalid_argument("Flag '" + arg +
+                                        "' requires another parameter");
+          }
         }
         for (auto &name : op->variants) {
           _parsed[name] = &(*it);
@@ -330,6 +352,22 @@ public:
       // otherwise, it is a remaining argument
       else {
         _remaining.emplace_back(*it);
+      }
+    }
+
+    // check for required flags
+    for (auto &flag : required_flags()) {
+      if (!has(flag->variants[0])) {
+        throw std::invalid_argument("Missing required flag '" +
+                                    flag->variants[0] + "'");
+      }
+    }
+
+    // check for required positional
+    for (auto &pos : required_positional()) {
+      if (!has(pos->name)) {
+        throw std::invalid_argument("Missing required positional argument '" +
+                                    pos->name + "'");
       }
     }
   }
@@ -434,50 +472,5 @@ protected:
   ParseMap _parsed;
   vector<string> _remaining;
 };
-
-template <> inline
-int CliParser::get<int>(const std::string &name) const {
-  return std::stoi(operator[](name));
-}
-
-template <> inline
-long CliParser::get<long>(const std::string &name) const {
-  return std::stol(operator[](name));
-}
-
-template <> inline
-long long CliParser::get<long long>(const std::string &name) const {
-  return std::stoll(operator[](name));
-}
-
-template <> inline
-unsigned long CliParser::get<unsigned long>(const std::string &name) const {
-  return std::stoul(operator[](name));
-}
-
-template <> inline
-unsigned long long CliParser::get<unsigned long long>(const std::string &name) const {
-  return std::stoull(operator[](name));
-}
-
-template <> inline
-float CliParser::get<float>(const std::string &name) const {
-  return std::stof(operator[](name));
-}
-
-template <> inline
-double CliParser::get<double>(const std::string &name) const {
-  return std::stod(operator[](name));
-}
-
-template <> inline
-long double CliParser::get<long double>(const std::string &name) const {
-  return std::stold(operator[](name));
-}
-
-template <> inline
-std::string CliParser::get<std::string>(const std::string &name) const {
-  return operator[](name);
-}
 
 #endif // CLIPARSER_H
