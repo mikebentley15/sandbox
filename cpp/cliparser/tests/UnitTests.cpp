@@ -263,8 +263,23 @@ TEST_F(UnitTests, parse_help_exits_with_correct_message) {
                CliParser::HelpRequest);
   ASSERT_THROW(parser.parse_with_exceptions({"progname", "--help"}),
                CliParser::HelpRequest);
-  assert_help_exit(parser, {"progname", "-h"}, usage);
-  assert_help_exit(parser, {"progname", "--help"}, usage);
+  std::string usage_regex {
+    "Usage:\n"
+    "  progname --help\n"
+    "  progname\n"
+    "    \\[-x <val>\\]\n"
+    "    <infile>\n"
+    "\n"
+    "Required Positional Arguments:\n"
+    "  infile\n"
+    "\n"
+    "Optional Flags:\n"
+    "  -h, --help    Print this help and exit\n"
+    "  -x <val>\n"
+    "\n"
+  };
+  assert_help_exit(parser, {"progname", "-h"}, usage_regex);
+  assert_help_exit(parser, {"progname", "--help"}, usage_regex);
 }
 
 TEST_F(UnitTests, parse_finds_flags) {

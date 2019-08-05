@@ -152,11 +152,11 @@ TEST_F(FunctionalTests, UseHelpWithoutRequiredFlags) {
   parser.add_argflag("-x");
   parser.add_positional("infile");
   parser.set_required("infile");
-  std::string usage {
+  std::string usage_regex {
     "Usage:\n"
     "  progname --help\n"
     "  progname\n"
-    "    [-x <val>]\n"
+    "    \\[-x <val>\\]\n"
     "    <infile>\n"
     "\n"
     "Required Positional Arguments:\n"
@@ -167,13 +167,12 @@ TEST_F(FunctionalTests, UseHelpWithoutRequiredFlags) {
     "  -x <val>\n"
     "\n"
   };
-  //ASSERT_EQ(parser.usage("progname"), usage);
   ASSERT_THROW(parser.parse_with_exceptions({"progname", "-h"}),
                CliParser::HelpRequest);
   ASSERT_THROW(parser.parse_with_exceptions({"progname", "--help"}),
                CliParser::HelpRequest);
-  assert_help_exit(parser, {"progname", "-h"}, usage);
-  assert_help_exit(parser, {"progname", "--help"}, usage);
+  assert_help_exit(parser, {"progname", "-h"}, usage_regex);
+  assert_help_exit(parser, {"progname", "--help"}, usage_regex);
 }
 
 TEST_F(FunctionalTests, UsageWithoutParsing) {
@@ -183,8 +182,8 @@ TEST_F(FunctionalTests, UsageWithoutParsing) {
   parser.set_required("infile");
   ASSERT_EQ(parser.usage(),
             "Usage:\n"
+            "  <program-name> --help\n"
             "  <program-name>\n"
-            "    [-h]\n"
             "    [-x <val>]\n"
             "    <infile>\n"
             "\n"
@@ -197,8 +196,8 @@ TEST_F(FunctionalTests, UsageWithoutParsing) {
             "\n");
   ASSERT_EQ(parser.usage("my-program-name"),
             "Usage:\n"
+            "  my-program-name --help\n"
             "  my-program-name\n"
-            "    [-h]\n"
             "    [-x <val>]\n"
             "    <infile>\n"
             "\n"
