@@ -19,13 +19,19 @@
  * \code
  *   int main(int argc, char** argv) {
  *     CliParser parser;
+ *     parser.set_program_description("Add some elements to an input file");
  *     parser.add_flag("-v", "--verbose");
  *     parser.add_argflag("-N");
  *     parser.add_argflag("-o", "--output");
  *     parser.add_positional("input");
  *     parser.set_required("input");
  *     parser.set_required("--output");
+ *     parser.set_description("-N", "number of elements");
+ *     parser.set_description("--output", "output file location");
+ *     parser.set_description("input", "file to read");
  *
+ *     // use parser.parse_with_exceptions() if you want to use exceptions
+ *     // rather than the parser calling exit().
  *     parser.parse(); // will call exit() with --help or with error
  *
  *     bool verbose = parser.has("-v");
