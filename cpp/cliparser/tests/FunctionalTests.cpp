@@ -210,78 +210,45 @@ TEST_F(FunctionalTests, UsageWithoutParsing) {
             "\n");
 }
 
-
+TEST_F(FunctionalTests, UsageWithDescriptions) {
+  CliParser parser;
+  parser.set_program_description("Parse a file and add XML stuff.");
+  parser.add_flag("-d", "--debug");
+  parser.set_description("--debug", "Turn on debugging messages");
+  parser.add_argflag("-x");
+  parser.set_description("-x", "add this XML element");
+  parser.add_argflag("--really-long-option-here");
+  parser.set_description("--really-long-option-here", "Really long option");
+  parser.add_positional("infile");
+  parser.set_description("infile", "File to parse");
+  parser.set_required("infile");
+  std::string usage_regex {
+    "Usage:\n"
+    "  progname --help\n"
+    "  progname\n"
+    "    \\[-d\\]\n"
+    "    \\[--really-long-option-here <val>\\]\n"
+    "    \\[-x <val>\\]\n"
+    "    <infile>\n"
+    "\n"
+    "Description:\n"
+    "  Parse a file and add XML stuff.\n"
+    "\n"
+    "Required Positional Arguments:\n"
+    "  infile        File to parse\n"
+    "\n"
+    "Optional Flags:\n"
+    "  -d, --debug   Turn on debugging messages\n"
+    "  -h, --help    Print this help and exit\n"
+    "  --really-long-option-here <val>\n"
+    "                Really long option\n"
+    "  -x <val>      add this XML element\n"
+    "\n"
+  };
+  assert_help_exit(parser, {"progname", "-h"}, usage_regex);
+  assert_help_exit(parser, {"progname", "--help"}, usage_regex);
+}
 
 /// TODO: test a metavar instead of <val> in usage string
-/// TODO: test adding overall description
-/// TODO: test adding description for each option and overall description
 /// TODO: test making a later positional required, but not an earlier
-
-//TEST_F(FunctionalTests, OptionArguments) {
-//  // Bob is parsing arguments and there are a few options he wants to find
-//  std::vector<std::string> args {
-//    "prog-name", "-h", "--verbose", "--not-quiet"
-//  };
-//  CliParser parser(args);
-//  ASSERT_TRUE(parser.has_argument("-h", "--help"));
-//  ASSERT_TRUE(parser.has_argument("-v", "--verbose"));
-//  ASSERT_TRUE(parser.has_argument("--not-quiet"));
-//  ASSERT_FALSE(parser.has_argument("-q", "--quiet"));
-//  ASSERT_FALSE(parser.has_argument("-bbday", "--bobs-birthday"));
-//  ASSERT_FALSE(parser.has_argument("--get-fridge"));
-//  // all arguments have been queried, so no remaining arguments
-//  ASSERT_EQ(parser.remaining_args(), decltype(args){});
-//}
-
-//TEST_F(FunctionalTests, RemainingArgumentsNoOptions) {
-//  std::vector<std::string> args {
-//    "program-name", "-h", "--verbose", "--not-quiet",
-//  };
-//  std::vector<std::string> expected_remaining(args.begin()+1, args.end());
-//  CliParser parser(args);
-//  ASSERT_EQ(expected_remaining, parser.remaining_args());
-//}
-
-//TEST_F(FunctionalTests, RemainingArgumentsSomeOptions) {
-//  std::vector<std::string> args {
-//    "program-name", "-h", "--verbose", "--not-quiet",
-//  };
-//  std::vector<std::string> expected_remaining {"-h", "--not-quiet"};
-//  CliParser parser(args);
-//  ASSERT_TRUE(parser.has_argument("-v", "--verbose"));
-//  ASSERT_EQ(expected_remaining, parser.remaining_args());
-//}
-
-//TEST_F(FunctionalTests, ManyOptionTypesGiven) {
-//  std::vector<std::string> args {
-//    "program-name", "-h", "--help", "--verbose"
-//  };
-//  std::vector<std::string> expected_remaining {"--verbose"};
-//  CliParser parser(args);
-//  ASSERT_TRUE(parser.has_argument("-h", "-help", "--help"));
-//  ASSERT_EQ(expected_remaining, parser.remaining_args());
-//}
-
-//TEST_F(FunctionalTests, CountArgumentZeroTimes) {
-//  std::vector<std::string> args { "pn", "--help" };
-//  CliParser parser(args);
-//  ASSERT_EQ(0, parser.count_argument("-v", "--verbose"));
-//}
-
-//TEST_F(FunctionalTests, CountArgumentOccurrences) {
-//  std::vector<std::string> args {
-//    "program-name", "-h", "-verb", "--help", "--verbose", "-v"
-//  };
-//  std::vector<std::string> expected_remaining {"-h", "--help"};
-//  CliParser parser(args);
-//  ASSERT_EQ(3, parser.count_argument("-v", "-verb", "--verbose"));
-//  ASSERT_EQ(expected_remaining, parser.remaining_args());
-//}
-
-//TEST_F(FunctionalTests, GetParamMissingFlag) {
-
-//}
-
-//TEST_F(FunctionalTests, GetParamMissingValue) {
-
-//}
+/// TODO: line wrap long descriptions (program, flag, and positional)

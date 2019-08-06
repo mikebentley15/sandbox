@@ -172,6 +172,124 @@ TEST_F(UnitTests, add_argument_duplicate_exception) {
   ASSERT_THROW(parser.add_flag("--help"), std::invalid_argument);
 }
 
+TEST_F(UnitTests, set_description_flag) {
+  TestParser parser;
+  parser.add_flag("-f", "--forget");
+  parser.set_description("-f", "first flag description");
+  ASSERT_EQ(parser.usage("a.out"),
+            "Usage:\n"
+            "  a.out --help\n"
+            "  a.out\n"
+            "    [-f]\n"
+            "\n"
+            "Optional Flags:\n"
+            "  -f, --forget  first flag description\n"
+            "  -h, --help    Print this help and exit\n"
+            "\n");
+  parser.set_description("--forget", "new flag description");
+  ASSERT_EQ(parser.usage("a.out"),
+            "Usage:\n"
+            "  a.out --help\n"
+            "  a.out\n"
+            "    [-f]\n"
+            "\n"
+            "Optional Flags:\n"
+            "  -f, --forget  new flag description\n"
+            "  -h, --help    Print this help and exit\n"
+            "\n");
+}
+
+TEST_F(UnitTests, set_description_argflag) {
+  TestParser parser;
+  parser.add_argflag("-f", "--flag");
+  parser.set_description("-f", "first flag description");
+  ASSERT_EQ(parser.usage("a.out"),
+            "Usage:\n"
+            "  a.out --help\n"
+            "  a.out\n"
+            "    [-f <val>]\n"
+            "\n"
+            "Optional Flags:\n"
+            "  -f <val>, --flag <val>\n"
+            "                first flag description\n"
+            "  -h, --help    Print this help and exit\n"
+            "\n");
+  parser.set_description("--flag", "new flag description");
+  ASSERT_EQ(parser.usage("a.out"),
+            "Usage:\n"
+            "  a.out --help\n"
+            "  a.out\n"
+            "    [-f <val>]\n"
+            "\n"
+            "Optional Flags:\n"
+            "  -f <val>, --flag <val>\n"
+            "                new flag description\n"
+            "  -h, --help    Print this help and exit\n"
+            "\n");
+}
+
+TEST_F(UnitTests, set_description_positional) {
+  TestParser parser;
+  parser.add_positional("falicy");
+  parser.set_description("falicy", "first falicy description");
+  parser.set_required("falicy");
+  parser.add_positional("a-really-long-positional");
+  parser.set_description("a-really-long-positional", "not a long description");
+  parser.set_required("a-really-long-positional");
+  ASSERT_EQ(parser.usage("./a.out"),
+            "Usage:\n"
+            "  ./a.out --help\n"
+            "  ./a.out\n"
+            "    <falicy>\n"
+            "    <a-really-long-positional>\n"
+            "\n"
+            "Required Positional Arguments:\n"
+            "  falicy        first falicy description\n"
+            "  a-really-long-positional\n"
+            "                not a long description\n"
+            "\n"
+            "Optional Flags:\n"
+            "  -h, --help    Print this help and exit\n"
+            "\n");
+  parser.set_description("falicy", "new falicy description");
+  parser.set_description("a-really-long-positional", ""); // unset
+  ASSERT_EQ(parser.usage("./a.out"),
+            "Usage:\n"
+            "  ./a.out --help\n"
+            "  ./a.out\n"
+            "    <falicy>\n"
+            "    <a-really-long-positional>\n"
+            "\n"
+            "Required Positional Arguments:\n"
+            "  falicy        new falicy description\n"
+            "  a-really-long-positional\n"
+            "\n"
+            "Optional Flags:\n"
+            "  -h, --help    Print this help and exit\n"
+            "\n");
+}
+
+TEST_F(UnitTests, set_description_unrecognized) {
+  TestParser parser;
+  ASSERT_THROW(parser.set_description("nonexistent", "description"), CliParser::ParseError);
+}
+
+TEST_F(UnitTests, set_program_description) {
+  TestParser parser;
+  parser.set_program_description("program description here");
+  ASSERT_EQ(parser.usage("./c"),
+            "Usage:\n"
+            "  ./c --help\n"
+            "  ./c\n"
+            "\n"
+            "Description:\n"
+            "  program description here\n"
+            "\n"
+            "Optional Flags:\n"
+            "  -h, --help    Print this help and exit\n"
+            "\n");
+}
+
 TEST_F(UnitTests, set_required_flag) {
   TestParser parser;
   parser.add_flag("-m", "--move");

@@ -76,8 +76,9 @@ protected:
   struct PositionArg {
     string name;
     bool required;
+    string description;
     PositionArg(string _name, bool _required)
-      : name(_name), required(_required) {}
+      : name(_name), required(_required), description() {}
   };
 
   using OpPtr = std::shared_ptr<Option>;
@@ -119,6 +120,10 @@ public:
     _recognized.emplace(std::move(name));
   }
 
+  void set_program_description(const string &desc) {
+    _prog_description = desc;
+  }
+
   // set the description of the given flag or positional argument
   void set_description(const string &name, const string &desc) {
     if (_optionmap.find(name) != _optionmap.end()) {
@@ -127,6 +132,12 @@ public:
     }
 
     // TODO: check positional
+    auto it = std::find_if(_positional.begin(), _positional.end(),
+                           [&name](PosPtr p) { return p->name == name; });
+    if (it != _positional.end()) {
+      it->get()->description = desc;
+      return;
+    }
 
     throw ParseError("set_description(): Unrecognized option '" + name + "'");
   }
@@ -241,6 +252,17 @@ public:
     return defaultval;
   }
 
+  std::string usage() {
+    // get program name
+    std::string progname;
+    if (_args.size() > 0) {
+      progname = _args[0];
+    } else {
+      progname = "<program-name>";
+    }
+    return usage(progname);
+  }
+
   std::string usage(const std::string &progname) {
     std::ostringstream out;
     auto optional_ops = optional_flags();
@@ -252,12 +274,8 @@ public:
     out << "Usage:\n"
            "  " << progname << " --help\n"
            "  " << progname << "\n";
-    for (auto &op : optional_ops) {
-      print_flag_usage(out, op);
-    }
-    for (auto &op : required_ops) {
-      print_flag_usage(out, op);
-    }
+    for (auto &op : optional_ops) { print_flag_usage(out, op); }
+    for (auto &op : required_ops) { print_flag_usage(out, op); }
     for (auto &pos : _positional) {
       out << "    ";
       if (!pos->required) { out << "["; }
@@ -267,11 +285,17 @@ public:
     }
     out << "\n";
 
+    if (_prog_description.size() > 0) {
+      out << "Description:\n"
+             "  " << _prog_description << "\n"
+             "\n";
+    }
+
     // required positional section
     if (required_pos.size() > 0) {
       out << "Required Positional Arguments:\n";
       for (auto &pos : required_pos) {
-        out << "  " << pos->name << "\n";
+        print_pos(out, pos);
       }
       out << "\n";
     }
@@ -280,7 +304,7 @@ public:
     if (optional_pos.size() > 0) {
       out << "Optional Positional Arguments:\n";
       for (auto &pos : optional_pos) {
-        out << "  " << pos->name << "\n";
+        print_pos(out, pos);
       }
       out << "\n";
     }
@@ -304,17 +328,6 @@ public:
     }
 
     return out.str();
-  }
-
-  std::string usage() {
-    // get program name
-    std::string progname;
-    if (_args.size() > 0) {
-      progname = _args[0];
-    } else {
-      progname = "<program-name>";
-    }
-    return usage(progname);
   }
 
   /// parse command-line options
@@ -476,23 +489,40 @@ protected:
   }
 
   static std::ostream& print_flag(std::ostream& out, const OpPtr &p) {
+    std::ostringstream tmpout;
     string suffix (p->expects_arg ? " <val>" : "");
-    out << "  " << p->variants[0] << suffix;
+    tmpout << "  " << p->variants[0] << suffix;
     for (int i = 1; i < p->variants.size(); i++) {
-      out << ", " << p->variants[i] << suffix;
+      tmpout << ", " << p->variants[i] << suffix;
     }
+    out << tmpout.str();
     if (p->description != "") {
-      out << "    " << p->description;
+      if (tmpout.str().size() > 14) {
+        out << "\n" << string(16, ' ');
+      } else {
+        out << string(16 - tmpout.str().size(), ' ');
+      }
+      out << p->description;
     }
     out << "\n";
     return out;
   }
 
   static std::ostream& print_pos(std::ostream& out, const PosPtr &p) {
-    return out << "  " << p->name << "\n";
+    out << "  " << p->name;
+    if (p->description.size() > 0) {
+      if (p->name.size() >= 14) {
+        out << "\n" << string(16, ' ');
+      } else {
+        out << string(14 - p->name.size(), ' ');
+      }
+      out << p->description;
+    }
+    return out << "\n";
   }
 
 protected:
+  string _prog_description;
   vector<string> _args;
   vector<PosPtr> _positional;
   set<string> _recognized;
