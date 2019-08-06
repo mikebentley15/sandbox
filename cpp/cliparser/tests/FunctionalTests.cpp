@@ -252,3 +252,4 @@ TEST_F(FunctionalTests, UsageWithDescriptions) {
 /// TODO: test a metavar instead of <val> in usage string
 /// TODO: test making a later positional required, but not an earlier
 /// TODO: line wrap long descriptions (program, flag, and positional)
+/// TODO: test positional that takes the rest of the arguments

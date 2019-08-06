@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <iomanip>
+#include <ios>
 #include <iostream>
 #include <memory>
 #include <set>
@@ -498,7 +499,7 @@ protected:
     std::ostringstream tmpout;
     string suffix (p->expects_arg ? " <val>" : "");
     tmpout << "  " << p->variants[0] << suffix;
-    for (int i = 1; i < p->variants.size(); i++) {
+    for (size_t i = 1; i < p->variants.size(); i++) {
       tmpout << ", " << p->variants[i] << suffix;
     }
     out << tmpout.str();
