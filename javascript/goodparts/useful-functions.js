@@ -90,3 +90,5 @@ Array.method('duplicate', function (number) {
   // else
   return this.concat(this.duplicate(number - 1));
 });
+
+Array.method('shallow_copy', function () { return this.slice(0); });
