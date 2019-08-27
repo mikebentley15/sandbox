@@ -4,6 +4,7 @@ MAINTAINER mikebentley15@gmail.com
 # Setup development environment
 RUN apt-get update && \
     apt-get install -y \
+      bash-completion \
       cmake \
       curl \
       g++ \
@@ -42,6 +43,6 @@ RUN rmdir ~/.vim/bundle/Vundle.vim && \
     git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim && \
     vim +PluginInstall +qall
 
-COPY Dockerfile Dockerfile-ubuntu-dev
+COPY Dockerfile Dockerfile-travis-cheapclone
 
 CMD ["/bin/bash"]

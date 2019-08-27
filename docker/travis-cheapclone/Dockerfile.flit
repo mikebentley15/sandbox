@@ -1,0 +1,32 @@
+FROM travis-cheapclone
+MAINTAINER mikebentley15@gmail.com
+
+USER root
+
+# Setup development environment
+RUN apt-get update && \
+    apt-get install -y \
+      libopenmpi-dev \
+      openmpi-bin \
+      && \
+    rm -rf /var/lib/apt/lists/*
+
+USER dockuser
+WORKDIR /home/dockuser
+
+# FLiT dependencies
+RUN pip3 install --user toml pyelftools
+
+# Setup FLiT
+RUN mkdir -p git && \
+    cd git && \
+    git clone https://github.com/PRUNERS/FLiT.git && \
+    cd FLiT && \
+    make -j4 && \
+    make -j4 -C tests && \
+    mkdir -p ~/bin && \
+    ln -s ~/git/FLiT/scripts/flitcli/flit.py ~/bin/flit
+
+COPY Dockerfile.flit Dockerfile-flit
+
+CMD ["/bin/bash"]
