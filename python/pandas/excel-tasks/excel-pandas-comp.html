@@ -1,0 +1,1690 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Common Excel Tasks Demonstrated in Pandas - Practical Business Python</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Common excel tasks in pandas part" />
+    <meta name="author" content="Chris Moffitt" />
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Common Excel Tasks Demonstrated in Pandas">
+    <meta name="twitter:description" content="Common excel tasks in pandas part">
+    <meta name="twitter:site" content="@chris1610">
+    <meta name="twitter:creator" content="@chris1610">
+    <meta name="twitter:domain" content="https://pbpython.com">
+
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css" />
+        <link href='https://fonts.googleapis.com/css?family=Fjalla+One' rel='stylesheet' type='text/css'>
+        <link href='https://fonts.googleapis.com/css?family=Average+Sans' rel='stylesheet' type='text/css'>
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" />
+
+
+      <link rel="stylesheet" href="https://pbpython.com/theme/css/friendly.css" />
+      <link rel="stylesheet" href="https://pbpython.com/theme/css/voidybootstrap.css" />
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <link rel="shortcut icon" href="https://pbpython.com/favicon.ico" />
+
+        <link href="https://pbpython.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Practical Business Python Atom Feed" />
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-55110683-1', '');
+  ga('send', 'pageview');
+
+</script>
+  </head>
+
+  <body>
+    <div class="navbar navbar-default" role="navigation">
+      <div class="container">
+	   <div class="navbar-header">
+		<button type="button" class="navbar-toggle"
+				data-toggle="collapse" data-target="#main-navbar-collapse">
+		  <span class="sr-only">Toggle navigation</span>
+		  <span class="icon-bar"></span>
+		  <span class="icon-bar"></span>
+		  <span class="icon-bar"></span>
+		</button>
+		<a class="navbar-brand" href="https://pbpython.com/" rel="home">
+          <i class="fa fa-home fa-fw fa-lg"> </i> </a>
+       </div>
+
+      <div class="collapse navbar-collapse" id="main-navbar-collapse">
+        <ul class="nav navbar-nav">
+          <!-- <li> <a href="https://pbpython.com/">Home</a> </li> -->
+            <li><a href="/">Home</a></li>
+            <li><a href="/pages/about-site.html">About</a></li>
+            <li><a href="/pages/resources.html">Resources</a></li>
+            <li><a href="/pages/mailinglist.html">Mailing List</a></li>
+            <li class="divider"></li>
+            <li class="">
+              <a href="https://pbpython.com/archives.html">Archives</a>
+            </li>
+          <li class="divider"></li>
+            <li><a href="https://pbpython.com/feeds/all.atom.xml"
+                   type="application/atom+xml" rel="alternate">
+                <i class="fa fa-rss fa-fw fa-lg"></i> </a></li>
+        </ul> <!-- /nav -->
+      </div> <!-- /navbar-collapse -->
+	  </div> <!-- /container -->
+    </div> <!-- /navbar -->
+
+	<div class="jumbotron" id="overview">
+	  <div class="container">
+		<h1><a href="https://pbpython.com/">Practical Business Python</a></h1>
+		<p class="lead">Taking care of business, one python script at a time</p>
+	  </div>
+	</div>
+
+    <div class="container">
+      <div class="row">
+        <div class="col-md-9" id="content">
+<article itemscope="itemscope" itemtype="http://schema.org/BlogPosting">
+  <header class="article-header">
+<abbr class="article-header-date">
+  Sun 30 November 2014
+</abbr> <h1>
+  <a href="https://pbpython.com/excel-pandas-comp.html" rel="bookmark"
+     title="Permalink to Common Excel Tasks Demonstrated in Pandas">
+    Common Excel Tasks Demonstrated in&nbsp;Pandas
+  </a>
+</h1><div class="article-header-info">
+  <p>
+      Posted by <a href="https://pbpython.com/author/chris-moffitt.html">Chris Moffitt</a>
+    in 
+    <a href="https://pbpython.com/category/articles.html">
+      articles</a>
+    &nbsp;&nbsp;
+  </p>
+</div> <!-- /.article-header-info -->  </header>
+  <div class="content-body" itemprop="text articleBody">
+	<div class="section" id="introduction">
+<h2>Introduction</h2>
+<p>The purpose of this article is to show some common Excel tasks and how
+you would execute similar tasks in <a class="reference external" href="http://pandas.pydata.org/">pandas</a>. Some of the examples are somewhat trivial
+but I think it is important to show the simple as well as the more
+complex functions you can find elsewhere. As an added bonus, I’m going to do some fuzzy string
+matching to show a little twist to the process and show how pandas can
+utilize the full python system of modules to do something simply in
+python that would be complex in Excel.</p>
+<p>Make sense? Let’s get started.</p>
+</div>
+<div class="section" id="adding-a-sum-to-a-row">
+<h2>Adding a Sum to a Row</h2>
+<p>The first task I’ll cover is summing some columns to add a total column.</p>
+<p>We will start by importing our <a class="reference external" href="https://pbpython.com/extras/excel-comp-data.xlsx">excel data</a> into a pandas dataframe.</p>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="s2">"excel-comp-data.xlsx"</span><span class="p">)</span>
+<span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+<div style="max-height:1000px;max-width:1500px;overflow:auto;">
+<table border="1" class="table table-condensed">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>account</th>
+<th>name</th>
+<th>street</th>
+<th>city</th>
+<th>state</th>
+<th>postal-code</th>
+<th>Jan</th>
+<th>Feb</th>
+<th>Mar</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td> 211829</td>
+<td>  Kerluke, Koepp and Hilpert</td>
+<td>                   34456 Sean Highway</td>
+<td>      New Jaycob</td>
+<td>         Texas</td>
+<td> 28752</td>
+<td>  10000</td>
+<td>  62000</td>
+<td> 35000</td>
+</tr>
+<tr>
+<th>1</th>
+<td> 320563</td>
+<td>              Walter-Trantow</td>
+<td>                    1311 Alvis Tunnel</td>
+<td>   Port Khadijah</td>
+<td> NorthCarolina</td>
+<td> 38365</td>
+<td>  95000</td>
+<td>  45000</td>
+<td> 35000</td>
+</tr>
+<tr>
+<th>2</th>
+<td> 648336</td>
+<td>  Bashirian, Kunde and Price</td>
+<td> 62184 Schamberger Underpass Apt. 231</td>
+<td>  New Lilianland</td>
+<td>          Iowa</td>
+<td> 76517</td>
+<td>  91000</td>
+<td> 120000</td>
+<td> 35000</td>
+</tr>
+<tr>
+<th>3</th>
+<td> 109996</td>
+<td> D’Amore, Gleichner and Bode</td>
+<td>          155 Fadel Crescent Apt. 144</td>
+<td>      Hyattburgh</td>
+<td>         Maine</td>
+<td> 46021</td>
+<td>  45000</td>
+<td> 120000</td>
+<td> 10000</td>
+</tr>
+<tr>
+<th>4</th>
+<td> 121213</td>
+<td>               Bauch-Goldner</td>
+<td>                  7274 Marissa Common</td>
+<td> Shanahanchester</td>
+<td>    California</td>
+<td> 49681</td>
+<td> 162000</td>
+<td> 120000</td>
+<td> 35000</td>
+</tr>
+</tbody>
+</table>
+</div><p>We want to add a total column to show total sales for Jan, Feb and Mar.</p>
+<p>This is straightforward in Excel and in pandas. For Excel, I have added the formula <code class="code">
+sum(G2:I2)</code>
+ in column J.
+Here is what it looks like in Excel:</p>
+<div class="figure" style="width: 1100px; height: auto; max-width: 100%;">
+<img alt="Excel sum example" src="https://pbpython.com/images/excel-1.png" style="width: 1100px; height: auto; max-width: 100%;"/>
+</div>
+<p>Next, here is how we do it in pandas:</p>
+<div class="highlight"><pre><span></span><span class="n">df</span><span class="p">[</span><span class="s2">"total"</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">"Jan"</span><span class="p">]</span> <span class="o">+</span> <span class="n">df</span><span class="p">[</span><span class="s2">"Feb"</span><span class="p">]</span> <span class="o">+</span> <span class="n">df</span><span class="p">[</span><span class="s2">"Mar"</span><span class="p">]</span>
+<span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+<div style="max-height:1000px;max-width:1500px;overflow:auto;">
+<table border="1" class="table table-condensed">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>account</th>
+<th>name</th>
+<th>street</th>
+<th>city</th>
+<th>state</th>
+<th>postal-code</th>
+<th>Jan</th>
+<th>Feb</th>
+<th>Mar</th>
+<th>total</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td> 211829</td>
+<td>  Kerluke, Koepp and Hilpert</td>
+<td>                   34456 Sean Highway</td>
+<td>      New Jaycob</td>
+<td>         Texas</td>
+<td> 28752</td>
+<td>  10000</td>
+<td>  62000</td>
+<td> 35000</td>
+<td> 107000</td>
+</tr>
+<tr>
+<th>1</th>
+<td> 320563</td>
+<td>              Walter-Trantow</td>
+<td>                    1311 Alvis Tunnel</td>
+<td>   Port Khadijah</td>
+<td> NorthCarolina</td>
+<td> 38365</td>
+<td>  95000</td>
+<td>  45000</td>
+<td> 35000</td>
+<td> 175000</td>
+</tr>
+<tr>
+<th>2</th>
+<td> 648336</td>
+<td>  Bashirian, Kunde and Price</td>
+<td> 62184 Schamberger Underpass Apt. 231</td>
+<td>  New Lilianland</td>
+<td>          Iowa</td>
+<td> 76517</td>
+<td>  91000</td>
+<td> 120000</td>
+<td> 35000</td>
+<td> 246000</td>
+</tr>
+<tr>
+<th>3</th>
+<td> 109996</td>
+<td> D’Amore, Gleichner and Bode</td>
+<td>          155 Fadel Crescent Apt. 144</td>
+<td>      Hyattburgh</td>
+<td>         Maine</td>
+<td> 46021</td>
+<td>  45000</td>
+<td> 120000</td>
+<td> 10000</td>
+<td> 175000</td>
+</tr>
+<tr>
+<th>4</th>
+<td> 121213</td>
+<td>               Bauch-Goldner</td>
+<td>                  7274 Marissa Common</td>
+<td> Shanahanchester</td>
+<td>    California</td>
+<td> 49681</td>
+<td> 162000</td>
+<td> 120000</td>
+<td> 35000</td>
+<td> 317000</td>
+</tr>
+</tbody>
+</table>
+</div><p>Next, let’s get some totals and other values for each month. Here is what
+we are trying to do as shown in Excel:</p>
+<div class="figure" style="width: 1111px; height: auto; max-width: 100%;">
+<img alt="Excel sum example 2" src="https://pbpython.com/images/excel-2.png" style="width: 1111px; height: auto; max-width: 100%;"/>
+</div>
+<p>As you can see, we added a <code class="code">
+SUM(G2:G16)</code>
+ in row 17 in each of the columns to get
+totals by month.</p>
+<p>Performing column level analysis is easy in pandas. Here are a couple of examples.</p>
+<div class="highlight"><pre><span></span><span class="n">df</span><span class="p">[</span><span class="s2">"Jan"</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span> <span class="n">df</span><span class="p">[</span><span class="s2">"Jan"</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span><span class="n">df</span><span class="p">[</span><span class="s2">"Jan"</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span><span class="n">df</span><span class="p">[</span><span class="s2">"Jan"</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+</pre></div>
+<pre class="literal-block">
+(1462000, 97466.666666666672, 10000, 162000)
+</pre>
+<p>Now, we want to add a total by month and grand total. This is where
+pandas and Excel diverge a little. It is very simple to add totals in
+cells in Excel for each month. Because pandas need to maintain the
+integrity of the entire DataFrame, there are a couple more steps.</p>
+<p>First, create a sum for the month and total columns.</p>
+<div class="highlight"><pre><span></span><span class="n">sum_row</span><span class="o">=</span><span class="n">df</span><span class="p">[[</span><span class="s2">"Jan"</span><span class="p">,</span><span class="s2">"Feb"</span><span class="p">,</span><span class="s2">"Mar"</span><span class="p">,</span><span class="s2">"total"</span><span class="p">]]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+<span class="n">sum_row</span>
+</pre></div>
+<pre class="literal-block">
+Jan      1462000
+Feb      1507000
+Mar       717000
+total    3686000
+dtype: int64
+</pre>
+<p>This is fairly intuitive however, if you want to add totals as a row,
+you need to do some minor manipulations.</p>
+<p>We need to transpose the data and convert the Series to a DataFrame so
+that it is easier to concat onto our existing data. The <code class="code">
+T</code>
+ function
+allows us to switch the data from being row-based to column-based.</p>
+<div class="highlight"><pre><span></span><span class="n">df_sum</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">sum_row</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+<span class="n">df_sum</span>
+</pre></div>
+<div style="max-height:1000px;max-width:1500px;overflow:auto;">
+<table border="1" class="table table-condensed">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>Jan</th>
+<th>Feb</th>
+<th>Mar</th>
+<th>total</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td> 1462000</td>
+<td> 1507000</td>
+<td> 717000</td>
+<td> 3686000</td>
+</tr>
+</tbody>
+</table>
+</div><p>The final thing we need to do before adding the totals back is to add
+the missing columns. We use <code class="code">
+reindex</code>
+ to do this for us. The trick is to
+add all of our columns and then allow pandas to fill in the values that
+are missing.</p>
+<div class="highlight"><pre><span></span><span class="n">df_sum</span><span class="o">=</span><span class="n">df_sum</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+<span class="n">df_sum</span>
+</pre></div>
+<div style="max-height:1000px;max-width:1500px;overflow:auto;">
+<table border="1" class="table table-condensed">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>account</th>
+<th>name</th>
+<th>street</th>
+<th>city</th>
+<th>state</th>
+<th>postal-code</th>
+<th>Jan</th>
+<th>Feb</th>
+<th>Mar</th>
+<th>total</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td> 1462000</td>
+<td> 1507000</td>
+<td> 717000</td>
+<td> 3686000</td>
+</tr>
+</tbody>
+</table>
+</div><p>Now that we have a nicely formatted DataFrame, we can add it to our
+existing one using <code class="code">
+append</code>
+.</p>
+<div class="highlight"><pre><span></span><span class="n">df_final</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">df_sum</span><span class="p">,</span><span class="n">ignore_index</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">df_final</span><span class="o">.</span><span class="n">tail</span><span class="p">()</span>
+</pre></div>
+<div style="max-height:1000px;max-width:1500px;overflow:auto;">
+<table border="1" class="table table-condensed">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>account</th>
+<th>name</th>
+<th>street</th>
+<th>city</th>
+<th>state</th>
+<th>postal-code</th>
+<th>Jan</th>
+<th>Feb</th>
+<th>Mar</th>
+<th>total</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>11</th>
+<td> 231907</td>
+<td>                   Hahn-Moore</td>
+<td> 18115 Olivine Throughway</td>
+<td>   Norbertomouth</td>
+<td> NorthDakota</td>
+<td> 31415</td>
+<td>  150000</td>
+<td>   10000</td>
+<td> 162000</td>
+<td>  322000</td>
+</tr>
+<tr>
+<th>12</th>
+<td> 242368</td>
+<td> Frami, Anderson and Donnelly</td>
+<td>          182 Bertie Road</td>
+<td>     East Davian</td>
+<td>        Iowa</td>
+<td> 72686</td>
+<td>  162000</td>
+<td>  120000</td>
+<td>  35000</td>
+<td>  317000</td>
+</tr>
+<tr>
+<th>13</th>
+<td> 268755</td>
+<td>                  Walsh-Haley</td>
+<td>     2624 Beatty Parkways</td>
+<td>    Goodwinmouth</td>
+<td> RhodeIsland</td>
+<td> 31919</td>
+<td>   55000</td>
+<td>  120000</td>
+<td>  35000</td>
+<td>  210000</td>
+</tr>
+<tr>
+<th>14</th>
+<td> 273274</td>
+<td>                McDermott <span class="caps">PLC</span></td>
+<td>    8917 Bergstrom Meadow</td>
+<td> Kathryneborough</td>
+<td>    Delaware</td>
+<td> 27933</td>
+<td>  150000</td>
+<td>  120000</td>
+<td>  70000</td>
+<td>  340000</td>
+</tr>
+<tr>
+<th>15</th>
+<td>    NaN</td>
+<td>                          NaN</td>
+<td>                      NaN</td>
+<td>             NaN</td>
+<td>         NaN</td>
+<td>   NaN</td>
+<td> 1462000</td>
+<td> 1507000</td>
+<td> 717000</td>
+<td> 3686000</td>
+</tr>
+</tbody>
+</table>
+</div></div>
+<div class="section" id="additional-data-transforms">
+<h2>Additional Data Transforms</h2>
+<p>For another example, let’s try to add a state abbreviation to the data set.</p>
+<p>From an Excel perspective the easiest way is probably to add a new
+column, do a vlookup on the state name and fill in the abbreviation.</p>
+<p>I did this and here is a snapshot of what the results looks like:</p>
+<div class="figure" style="width: 1171px; height: auto; max-width: 100%;">
+<img alt="Excel vlookup example" src="https://pbpython.com/images/excel-3.png" style="width: 1171px; height: auto; max-width: 100%;"/>
+</div>
+<p>You’ll notice that after performing the vlookup, there are some values that are not
+coming through correctly. That’s because we misspelled some of the
+states. Handling this in Excel would be really challenging (on big data sets).</p>
+<p>Fortunately with pandas we have the full power of the python ecosystem
+at our disposal. In thinking about how to solve this type of messy data problem,
+I thought about trying to do some fuzzy text matching to determine the correct value.</p>
+<p>Fortunately someone else has done a lot of work in this are. The <a class="reference external" href="http://chairnerd.seatgeek.com/fuzzywuzzy-fuzzy-string-matching-in-python/">fuzzy wuzzy</a> library has some pretty useful
+functions for this type of situation. Make sure to get it and install it first.</p>
+<p>The other piece of code we need is a state name to abbreviation mapping. Instead of trying to
+type it myself, a little googling found this <a class="reference external" href="http://www.cmmichael.com/blog/2006/12/29/state-code-mappings-for-python">code</a>.</p>
+<p>Get started by importing the appropriate fuzzywuzzy functions and define our state map dictionary.</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">fuzzywuzzy</span> <span class="kn">import</span> <span class="n">fuzz</span>
+<span class="kn">from</span> <span class="nn">fuzzywuzzy</span> <span class="kn">import</span> <span class="n">process</span>
+<span class="n">state_to_code</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"VERMONT"</span><span class="p">:</span> <span class="s2">"VT"</span><span class="p">,</span> <span class="s2">"GEORGIA"</span><span class="p">:</span> <span class="s2">"GA"</span><span class="p">,</span> <span class="s2">"IOWA"</span><span class="p">:</span> <span class="s2">"IA"</span><span class="p">,</span> <span class="s2">"Armed Forces Pacific"</span><span class="p">:</span> <span class="s2">"AP"</span><span class="p">,</span> <span class="s2">"GUAM"</span><span class="p">:</span> <span class="s2">"GU"</span><span class="p">,</span>
+                 <span class="s2">"KANSAS"</span><span class="p">:</span> <span class="s2">"KS"</span><span class="p">,</span> <span class="s2">"FLORIDA"</span><span class="p">:</span> <span class="s2">"FL"</span><span class="p">,</span> <span class="s2">"AMERICAN SAMOA"</span><span class="p">:</span> <span class="s2">"AS"</span><span class="p">,</span> <span class="s2">"NORTH CAROLINA"</span><span class="p">:</span> <span class="s2">"NC"</span><span class="p">,</span> <span class="s2">"HAWAII"</span><span class="p">:</span> <span class="s2">"HI"</span><span class="p">,</span>
+                 <span class="s2">"NEW YORK"</span><span class="p">:</span> <span class="s2">"NY"</span><span class="p">,</span> <span class="s2">"CALIFORNIA"</span><span class="p">:</span> <span class="s2">"CA"</span><span class="p">,</span> <span class="s2">"ALABAMA"</span><span class="p">:</span> <span class="s2">"AL"</span><span class="p">,</span> <span class="s2">"IDAHO"</span><span class="p">:</span> <span class="s2">"ID"</span><span class="p">,</span> <span class="s2">"FEDERATED STATES OF MICRONESIA"</span><span class="p">:</span> <span class="s2">"FM"</span><span class="p">,</span>
+                 <span class="s2">"Armed Forces Americas"</span><span class="p">:</span> <span class="s2">"AA"</span><span class="p">,</span> <span class="s2">"DELAWARE"</span><span class="p">:</span> <span class="s2">"DE"</span><span class="p">,</span> <span class="s2">"ALASKA"</span><span class="p">:</span> <span class="s2">"AK"</span><span class="p">,</span> <span class="s2">"ILLINOIS"</span><span class="p">:</span> <span class="s2">"IL"</span><span class="p">,</span>
+                 <span class="s2">"Armed Forces Africa"</span><span class="p">:</span> <span class="s2">"AE"</span><span class="p">,</span> <span class="s2">"SOUTH DAKOTA"</span><span class="p">:</span> <span class="s2">"SD"</span><span class="p">,</span> <span class="s2">"CONNECTICUT"</span><span class="p">:</span> <span class="s2">"CT"</span><span class="p">,</span> <span class="s2">"MONTANA"</span><span class="p">:</span> <span class="s2">"MT"</span><span class="p">,</span> <span class="s2">"MASSACHUSETTS"</span><span class="p">:</span> <span class="s2">"MA"</span><span class="p">,</span>
+                 <span class="s2">"PUERTO RICO"</span><span class="p">:</span> <span class="s2">"PR"</span><span class="p">,</span> <span class="s2">"Armed Forces Canada"</span><span class="p">:</span> <span class="s2">"AE"</span><span class="p">,</span> <span class="s2">"NEW HAMPSHIRE"</span><span class="p">:</span> <span class="s2">"NH"</span><span class="p">,</span> <span class="s2">"MARYLAND"</span><span class="p">:</span> <span class="s2">"MD"</span><span class="p">,</span> <span class="s2">"NEW MEXICO"</span><span class="p">:</span> <span class="s2">"NM"</span><span class="p">,</span>
+                 <span class="s2">"MISSISSIPPI"</span><span class="p">:</span> <span class="s2">"MS"</span><span class="p">,</span> <span class="s2">"TENNESSEE"</span><span class="p">:</span> <span class="s2">"TN"</span><span class="p">,</span> <span class="s2">"PALAU"</span><span class="p">:</span> <span class="s2">"PW"</span><span class="p">,</span> <span class="s2">"COLORADO"</span><span class="p">:</span> <span class="s2">"CO"</span><span class="p">,</span> <span class="s2">"Armed Forces Middle East"</span><span class="p">:</span> <span class="s2">"AE"</span><span class="p">,</span>
+                 <span class="s2">"NEW JERSEY"</span><span class="p">:</span> <span class="s2">"NJ"</span><span class="p">,</span> <span class="s2">"UTAH"</span><span class="p">:</span> <span class="s2">"UT"</span><span class="p">,</span> <span class="s2">"MICHIGAN"</span><span class="p">:</span> <span class="s2">"MI"</span><span class="p">,</span> <span class="s2">"WEST VIRGINIA"</span><span class="p">:</span> <span class="s2">"WV"</span><span class="p">,</span> <span class="s2">"WASHINGTON"</span><span class="p">:</span> <span class="s2">"WA"</span><span class="p">,</span>
+                 <span class="s2">"MINNESOTA"</span><span class="p">:</span> <span class="s2">"MN"</span><span class="p">,</span> <span class="s2">"OREGON"</span><span class="p">:</span> <span class="s2">"OR"</span><span class="p">,</span> <span class="s2">"VIRGINIA"</span><span class="p">:</span> <span class="s2">"VA"</span><span class="p">,</span> <span class="s2">"VIRGIN ISLANDS"</span><span class="p">:</span> <span class="s2">"VI"</span><span class="p">,</span> <span class="s2">"MARSHALL ISLANDS"</span><span class="p">:</span> <span class="s2">"MH"</span><span class="p">,</span>
+                 <span class="s2">"WYOMING"</span><span class="p">:</span> <span class="s2">"WY"</span><span class="p">,</span> <span class="s2">"OHIO"</span><span class="p">:</span> <span class="s2">"OH"</span><span class="p">,</span> <span class="s2">"SOUTH CAROLINA"</span><span class="p">:</span> <span class="s2">"SC"</span><span class="p">,</span> <span class="s2">"INDIANA"</span><span class="p">:</span> <span class="s2">"IN"</span><span class="p">,</span> <span class="s2">"NEVADA"</span><span class="p">:</span> <span class="s2">"NV"</span><span class="p">,</span> <span class="s2">"LOUISIANA"</span><span class="p">:</span> <span class="s2">"LA"</span><span class="p">,</span>
+                 <span class="s2">"NORTHERN MARIANA ISLANDS"</span><span class="p">:</span> <span class="s2">"MP"</span><span class="p">,</span> <span class="s2">"NEBRASKA"</span><span class="p">:</span> <span class="s2">"NE"</span><span class="p">,</span> <span class="s2">"ARIZONA"</span><span class="p">:</span> <span class="s2">"AZ"</span><span class="p">,</span> <span class="s2">"WISCONSIN"</span><span class="p">:</span> <span class="s2">"WI"</span><span class="p">,</span> <span class="s2">"NORTH DAKOTA"</span><span class="p">:</span> <span class="s2">"ND"</span><span class="p">,</span>
+                 <span class="s2">"Armed Forces Europe"</span><span class="p">:</span> <span class="s2">"AE"</span><span class="p">,</span> <span class="s2">"PENNSYLVANIA"</span><span class="p">:</span> <span class="s2">"PA"</span><span class="p">,</span> <span class="s2">"OKLAHOMA"</span><span class="p">:</span> <span class="s2">"OK"</span><span class="p">,</span> <span class="s2">"KENTUCKY"</span><span class="p">:</span> <span class="s2">"KY"</span><span class="p">,</span> <span class="s2">"RHODE ISLAND"</span><span class="p">:</span> <span class="s2">"RI"</span><span class="p">,</span>
+                 <span class="s2">"DISTRICT OF COLUMBIA"</span><span class="p">:</span> <span class="s2">"DC"</span><span class="p">,</span> <span class="s2">"ARKANSAS"</span><span class="p">:</span> <span class="s2">"AR"</span><span class="p">,</span> <span class="s2">"MISSOURI"</span><span class="p">:</span> <span class="s2">"MO"</span><span class="p">,</span> <span class="s2">"TEXAS"</span><span class="p">:</span> <span class="s2">"TX"</span><span class="p">,</span> <span class="s2">"MAINE"</span><span class="p">:</span> <span class="s2">"ME"</span><span class="p">}</span>
+</pre></div>
+<p>Here are some example of how the fuzzy text matching function works.</p>
+<div class="highlight"><pre><span></span><span class="n">process</span><span class="o">.</span><span class="n">extractOne</span><span class="p">(</span><span class="s2">"Minnesotta"</span><span class="p">,</span><span class="n">choices</span><span class="o">=</span><span class="n">state_to_code</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+</pre></div>
+<pre class="literal-block">
+('MINNESOTA', 95)
+</pre>
+<div class="highlight"><pre><span></span><span class="n">process</span><span class="o">.</span><span class="n">extractOne</span><span class="p">(</span><span class="s2">"AlaBAMMazzz"</span><span class="p">,</span><span class="n">choices</span><span class="o">=</span><span class="n">state_to_code</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span><span class="n">score_cutoff</span><span class="o">=</span><span class="mi">80</span><span class="p">)</span>
+</pre></div>
+<p>Now that we know how this works, we create our function to take the state column and convert it to a valid
+abbreviation. We use the 80 score_cutoff for this data. You can play
+with it to see what number works for your data. You’ll notice that we either return a valid
+abbreviation or an <code class="code">
+np.nan</code>
+ so that we have some valid values in the field.</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">convert_state</span><span class="p">(</span><span class="n">row</span><span class="p">):</span>
+    <span class="n">abbrev</span> <span class="o">=</span> <span class="n">process</span><span class="o">.</span><span class="n">extractOne</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"state"</span><span class="p">],</span><span class="n">choices</span><span class="o">=</span><span class="n">state_to_code</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span><span class="n">score_cutoff</span><span class="o">=</span><span class="mi">80</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">abbrev</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">state_to_code</span><span class="p">[</span><span class="n">abbrev</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+</pre></div>
+<p>Add the column in the location we want and fill it with NaN values</p>
+<div class="highlight"><pre><span></span><span class="n">df_final</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="s2">"abbrev"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+<span class="n">df_final</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+<div style="max-height:1000px;max-width:1500px;overflow:auto;">
+<table border="1" class="table table-condensed">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>account</th>
+<th>name</th>
+<th>street</th>
+<th>city</th>
+<th>state</th>
+<th>postal-code</th>
+<th>abbrev</th>
+<th>Jan</th>
+<th>Feb</th>
+<th>Mar</th>
+<th>total</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td> 211829</td>
+<td>  Kerluke, Koepp and Hilpert</td>
+<td>                   34456 Sean Highway</td>
+<td>      New Jaycob</td>
+<td>         Texas</td>
+<td> 28752</td>
+<td>NaN</td>
+<td>  10000</td>
+<td>  62000</td>
+<td> 35000</td>
+<td> 107000</td>
+</tr>
+<tr>
+<th>1</th>
+<td> 320563</td>
+<td>              Walter-Trantow</td>
+<td>                    1311 Alvis Tunnel</td>
+<td>   Port Khadijah</td>
+<td> NorthCarolina</td>
+<td> 38365</td>
+<td>NaN</td>
+<td>  95000</td>
+<td>  45000</td>
+<td> 35000</td>
+<td> 175000</td>
+</tr>
+<tr>
+<th>2</th>
+<td> 648336</td>
+<td>  Bashirian, Kunde and Price</td>
+<td> 62184 Schamberger Underpass Apt. 231</td>
+<td>  New Lilianland</td>
+<td>          Iowa</td>
+<td> 76517</td>
+<td>NaN</td>
+<td>  91000</td>
+<td> 120000</td>
+<td> 35000</td>
+<td> 246000</td>
+</tr>
+<tr>
+<th>3</th>
+<td> 109996</td>
+<td> D’Amore, Gleichner and Bode</td>
+<td>          155 Fadel Crescent Apt. 144</td>
+<td>      Hyattburgh</td>
+<td>         Maine</td>
+<td> 46021</td>
+<td>NaN</td>
+<td>  45000</td>
+<td> 120000</td>
+<td> 10000</td>
+<td> 175000</td>
+</tr>
+<tr>
+<th>4</th>
+<td> 121213</td>
+<td>               Bauch-Goldner</td>
+<td>                  7274 Marissa Common</td>
+<td> Shanahanchester</td>
+<td>    California</td>
+<td> 49681</td>
+<td>NaN</td>
+<td> 162000</td>
+<td> 120000</td>
+<td> 35000</td>
+<td> 317000</td>
+</tr>
+</tbody>
+</table>
+</div><p>We use <code class="code">
+apply</code>
+ to add the abbreviations into the approriate column.</p>
+<div class="highlight"><pre><span></span><span class="n">df_final</span><span class="p">[</span><span class="s1">'abbrev'</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_final</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">convert_state</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">df_final</span><span class="o">.</span><span class="n">tail</span><span class="p">()</span>
+</pre></div>
+<div style="max-height:1000px;max-width:1500px;overflow:auto;">
+<table border="1" class="table table-condensed">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>account</th>
+<th>name</th>
+<th>street</th>
+<th>city</th>
+<th>state</th>
+<th>postal-code</th>
+<th>abbrev</th>
+<th>Jan</th>
+<th>Feb</th>
+<th>Mar</th>
+<th>total</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>11</th>
+<td> 231907</td>
+<td>                   Hahn-Moore</td>
+<td> 18115 Olivine Throughway</td>
+<td>   Norbertomouth</td>
+<td> NorthDakota</td>
+<td> 31415</td>
+<td> <span class="caps">ND</span></td>
+<td>  150000</td>
+<td>   10000</td>
+<td> 162000</td>
+<td>  322000</td>
+</tr>
+<tr>
+<th>12</th>
+<td> 242368</td>
+<td> Frami, Anderson and Donnelly</td>
+<td>          182 Bertie Road</td>
+<td>     East Davian</td>
+<td>        Iowa</td>
+<td> 72686</td>
+<td> <span class="caps">IA</span></td>
+<td>  162000</td>
+<td>  120000</td>
+<td>  35000</td>
+<td>  317000</td>
+</tr>
+<tr>
+<th>13</th>
+<td> 268755</td>
+<td>                  Walsh-Haley</td>
+<td>     2624 Beatty Parkways</td>
+<td>    Goodwinmouth</td>
+<td> RhodeIsland</td>
+<td> 31919</td>
+<td> <span class="caps">RI</span></td>
+<td>   55000</td>
+<td>  120000</td>
+<td>  35000</td>
+<td>  210000</td>
+</tr>
+<tr>
+<th>14</th>
+<td> 273274</td>
+<td>                McDermott <span class="caps">PLC</span></td>
+<td>    8917 Bergstrom Meadow</td>
+<td> Kathryneborough</td>
+<td>    Delaware</td>
+<td> 27933</td>
+<td> <span class="caps">DE</span></td>
+<td>  150000</td>
+<td>  120000</td>
+<td>  70000</td>
+<td>  340000</td>
+</tr>
+<tr>
+<th>15</th>
+<td>    NaN</td>
+<td>                          NaN</td>
+<td>                      NaN</td>
+<td>             NaN</td>
+<td>         NaN</td>
+<td>   NaN</td>
+<td> NaN</td>
+<td> 1462000</td>
+<td> 1507000</td>
+<td> 717000</td>
+<td> 3686000</td>
+</tr>
+</tbody>
+</table>
+</div><p>I think this is pretty cool. We have developed a very simple process to intelligently clean up
+this data. Obviously when you only have 15 or so rows, this is not a big deal. However, what if you had
+15,000? You would have to do something manual in Excel to clean this up.</p>
+</div>
+<div class="section" id="subtotals">
+<h2>Subtotals</h2>
+<p>For the final section of this article, let’s get some subtotals by state.</p>
+<p>In Excel, we would use the <code class="code">
+subtotal</code>
+ tool to do this for us.</p>
+<div class="figure" style="width: 1179px; height: auto; max-width: 100%;">
+<img alt="Excel vlookup example" src="https://pbpython.com/images/excel-4.png" style="width: 1179px; height: auto; max-width: 100%;"/>
+</div>
+<p>The output would look like this:</p>
+<div class="figure" style="width: 486px; height: auto; max-width: 100%;">
+<img alt="Excel vlookup example" src="https://pbpython.com/images/excel-5.png" style="width: 486px; height: auto; max-width: 100%;"/>
+</div>
+<p>Creating a subtotal in pandas, is accomplished using <code class="code">
+groupby</code>
+</p>
+<div class="highlight"><pre><span></span><span class="n">df_sub</span><span class="o">=</span><span class="n">df_final</span><span class="p">[[</span><span class="s2">"abbrev"</span><span class="p">,</span><span class="s2">"Jan"</span><span class="p">,</span><span class="s2">"Feb"</span><span class="p">,</span><span class="s2">"Mar"</span><span class="p">,</span><span class="s2">"total"</span><span class="p">]]</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">'abbrev'</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+<span class="n">df_sub</span>
+</pre></div>
+<div style="max-height:1000px;max-width:1500px;overflow:auto;">
+<table border="1" class="table table-condensed">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>Jan</th>
+<th>Feb</th>
+<th>Mar</th>
+<th>total</th>
+</tr>
+<tr>
+<th>abbrev</th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th><span class="caps">AR</span></th>
+<td> 150000</td>
+<td> 120000</td>
+<td>  35000</td>
+<td> 305000</td>
+</tr>
+<tr>
+<th><span class="caps">CA</span></th>
+<td> 162000</td>
+<td> 120000</td>
+<td>  35000</td>
+<td> 317000</td>
+</tr>
+<tr>
+<th><span class="caps">DE</span></th>
+<td> 150000</td>
+<td> 120000</td>
+<td>  70000</td>
+<td> 340000</td>
+</tr>
+<tr>
+<th><span class="caps">IA</span></th>
+<td> 253000</td>
+<td> 240000</td>
+<td>  70000</td>
+<td> 563000</td>
+</tr>
+<tr>
+<th><span class="caps">ID</span></th>
+<td>  70000</td>
+<td> 120000</td>
+<td>  35000</td>
+<td> 225000</td>
+</tr>
+<tr>
+<th><span class="caps">ME</span></th>
+<td>  45000</td>
+<td> 120000</td>
+<td>  10000</td>
+<td> 175000</td>
+</tr>
+<tr>
+<th><span class="caps">MS</span></th>
+<td>  62000</td>
+<td> 120000</td>
+<td>  70000</td>
+<td> 252000</td>
+</tr>
+<tr>
+<th><span class="caps">NC</span></th>
+<td>  95000</td>
+<td>  45000</td>
+<td>  35000</td>
+<td> 175000</td>
+</tr>
+<tr>
+<th><span class="caps">ND</span></th>
+<td> 150000</td>
+<td>  10000</td>
+<td> 162000</td>
+<td> 322000</td>
+</tr>
+<tr>
+<th><span class="caps">PA</span></th>
+<td>  70000</td>
+<td>  95000</td>
+<td>  35000</td>
+<td> 200000</td>
+</tr>
+<tr>
+<th><span class="caps">RI</span></th>
+<td> 200000</td>
+<td> 215000</td>
+<td>  70000</td>
+<td> 485000</td>
+</tr>
+<tr>
+<th><span class="caps">TN</span></th>
+<td>  45000</td>
+<td> 120000</td>
+<td>  55000</td>
+<td> 220000</td>
+</tr>
+<tr>
+<th><span class="caps">TX</span></th>
+<td>  10000</td>
+<td>  62000</td>
+<td>  35000</td>
+<td> 107000</td>
+</tr>
+</tbody>
+</table>
+</div><p>Next, we want to format the data as currency by using <code class="code">
+applymap</code>
+ to all the values in the
+data frame.</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">money</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s2">"${:,.0f}"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+<span class="n">formatted_df</span> <span class="o">=</span> <span class="n">df_sub</span><span class="o">.</span><span class="n">applymap</span><span class="p">(</span><span class="n">money</span><span class="p">)</span>
+<span class="n">formatted_df</span>
+</pre></div>
+<div style="max-height:1000px;max-width:1500px;overflow:auto;">
+<table border="1" class="table table-condensed">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>Jan</th>
+<th>Feb</th>
+<th>Mar</th>
+<th>total</th>
+</tr>
+<tr>
+<th>abbrev</th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th><span class="caps">AR</span></th>
+<td> $150,000</td>
+<td> $120,000</td>
+<td>  $35,000</td>
+<td> $305,000</td>
+</tr>
+<tr>
+<th><span class="caps">CA</span></th>
+<td> $162,000</td>
+<td> $120,000</td>
+<td>  $35,000</td>
+<td> $317,000</td>
+</tr>
+<tr>
+<th><span class="caps">DE</span></th>
+<td> $150,000</td>
+<td> $120,000</td>
+<td>  $70,000</td>
+<td> $340,000</td>
+</tr>
+<tr>
+<th><span class="caps">IA</span></th>
+<td> $253,000</td>
+<td> $240,000</td>
+<td>  $70,000</td>
+<td> $563,000</td>
+</tr>
+<tr>
+<th><span class="caps">ID</span></th>
+<td>  $70,000</td>
+<td> $120,000</td>
+<td>  $35,000</td>
+<td> $225,000</td>
+</tr>
+<tr>
+<th><span class="caps">ME</span></th>
+<td>  $45,000</td>
+<td> $120,000</td>
+<td>  $10,000</td>
+<td> $175,000</td>
+</tr>
+<tr>
+<th><span class="caps">MS</span></th>
+<td>  $62,000</td>
+<td> $120,000</td>
+<td>  $70,000</td>
+<td> $252,000</td>
+</tr>
+<tr>
+<th><span class="caps">NC</span></th>
+<td>  $95,000</td>
+<td>  $45,000</td>
+<td>  $35,000</td>
+<td> $175,000</td>
+</tr>
+<tr>
+<th><span class="caps">ND</span></th>
+<td> $150,000</td>
+<td>  $10,000</td>
+<td> $162,000</td>
+<td> $322,000</td>
+</tr>
+<tr>
+<th><span class="caps">PA</span></th>
+<td>  $70,000</td>
+<td>  $95,000</td>
+<td>  $35,000</td>
+<td> $200,000</td>
+</tr>
+<tr>
+<th><span class="caps">RI</span></th>
+<td> $200,000</td>
+<td> $215,000</td>
+<td>  $70,000</td>
+<td> $485,000</td>
+</tr>
+<tr>
+<th><span class="caps">TN</span></th>
+<td>  $45,000</td>
+<td> $120,000</td>
+<td>  $55,000</td>
+<td> $220,000</td>
+</tr>
+<tr>
+<th><span class="caps">TX</span></th>
+<td>  $10,000</td>
+<td>  $62,000</td>
+<td>  $35,000</td>
+<td> $107,000</td>
+</tr>
+</tbody>
+</table>
+</div><p>The formatting looks good, now we can get the totals like we did earlier.</p>
+<div class="highlight"><pre><span></span><span class="n">sum_row</span><span class="o">=</span><span class="n">df_sub</span><span class="p">[[</span><span class="s2">"Jan"</span><span class="p">,</span><span class="s2">"Feb"</span><span class="p">,</span><span class="s2">"Mar"</span><span class="p">,</span><span class="s2">"total"</span><span class="p">]]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+<span class="n">sum_row</span>
+</pre></div>
+<pre class="literal-block">
+Jan      1462000
+Feb      1507000
+Mar       717000
+total    3686000
+dtype: int64
+</pre>
+<p>Convert the values to columns and format it.</p>
+<div class="highlight"><pre><span></span><span class="n">df_sub_sum</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">sum_row</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+<span class="n">df_sub_sum</span><span class="o">=</span><span class="n">df_sub_sum</span><span class="o">.</span><span class="n">applymap</span><span class="p">(</span><span class="n">money</span><span class="p">)</span>
+<span class="n">df_sub_sum</span>
+</pre></div>
+<div style="max-height:1000px;max-width:1500px;overflow:auto;">
+<table border="1" class="table table-condensed">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>Jan</th>
+<th>Feb</th>
+<th>Mar</th>
+<th>total</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td> $1,462,000</td>
+<td> $1,507,000</td>
+<td> $717,000</td>
+<td> $3,686,000</td>
+</tr>
+</tbody>
+</table>
+</div><p>Finally, add the total value to the DataFrame.</p>
+<div class="highlight"><pre><span></span><span class="n">final_table</span> <span class="o">=</span> <span class="n">formatted_df</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">df_sub_sum</span><span class="p">)</span>
+<span class="n">final_table</span>
+</pre></div>
+<div style="max-height:1000px;max-width:1500px;overflow:auto;">
+<table border="1" class="table table-condensed">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>Jan</th>
+<th>Feb</th>
+<th>Mar</th>
+<th>total</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th><span class="caps">AR</span></th>
+<td>   $150,000</td>
+<td>   $120,000</td>
+<td>  $35,000</td>
+<td>   $305,000</td>
+</tr>
+<tr>
+<th><span class="caps">CA</span></th>
+<td>   $162,000</td>
+<td>   $120,000</td>
+<td>  $35,000</td>
+<td>   $317,000</td>
+</tr>
+<tr>
+<th><span class="caps">DE</span></th>
+<td>   $150,000</td>
+<td>   $120,000</td>
+<td>  $70,000</td>
+<td>   $340,000</td>
+</tr>
+<tr>
+<th><span class="caps">IA</span></th>
+<td>   $253,000</td>
+<td>   $240,000</td>
+<td>  $70,000</td>
+<td>   $563,000</td>
+</tr>
+<tr>
+<th><span class="caps">ID</span></th>
+<td>    $70,000</td>
+<td>   $120,000</td>
+<td>  $35,000</td>
+<td>   $225,000</td>
+</tr>
+<tr>
+<th><span class="caps">ME</span></th>
+<td>    $45,000</td>
+<td>   $120,000</td>
+<td>  $10,000</td>
+<td>   $175,000</td>
+</tr>
+<tr>
+<th><span class="caps">MS</span></th>
+<td>    $62,000</td>
+<td>   $120,000</td>
+<td>  $70,000</td>
+<td>   $252,000</td>
+</tr>
+<tr>
+<th><span class="caps">NC</span></th>
+<td>    $95,000</td>
+<td>    $45,000</td>
+<td>  $35,000</td>
+<td>   $175,000</td>
+</tr>
+<tr>
+<th><span class="caps">ND</span></th>
+<td>   $150,000</td>
+<td>    $10,000</td>
+<td> $162,000</td>
+<td>   $322,000</td>
+</tr>
+<tr>
+<th><span class="caps">PA</span></th>
+<td>    $70,000</td>
+<td>    $95,000</td>
+<td>  $35,000</td>
+<td>   $200,000</td>
+</tr>
+<tr>
+<th><span class="caps">RI</span></th>
+<td>   $200,000</td>
+<td>   $215,000</td>
+<td>  $70,000</td>
+<td>   $485,000</td>
+</tr>
+<tr>
+<th><span class="caps">TN</span></th>
+<td>    $45,000</td>
+<td>   $120,000</td>
+<td>  $55,000</td>
+<td>   $220,000</td>
+</tr>
+<tr>
+<th><span class="caps">TX</span></th>
+<td>    $10,000</td>
+<td>    $62,000</td>
+<td>  $35,000</td>
+<td>   $107,000</td>
+</tr>
+<tr>
+<th>0</th>
+<td> $1,462,000</td>
+<td> $1,507,000</td>
+<td> $717,000</td>
+<td> $3,686,000</td>
+</tr>
+</tbody>
+</table>
+</div><p>You’ll notice that the index is ‘0’ for the total line. We want to change
+that using <code class="code">
+rename</code>
+.</p>
+<div class="highlight"><pre><span></span><span class="n">final_table</span> <span class="o">=</span> <span class="n">final_table</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="p">{</span><span class="mi">0</span><span class="p">:</span><span class="s2">"Total"</span><span class="p">})</span>
+<span class="n">final_table</span>
+</pre></div>
+<div style="max-height:1000px;max-width:1500px;overflow:auto;">
+<table border="1" class="table table-condensed">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>Jan</th>
+<th>Feb</th>
+<th>Mar</th>
+<th>total</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th><span class="caps">AR</span></th>
+<td>   $150,000</td>
+<td>   $120,000</td>
+<td>  $35,000</td>
+<td>   $305,000</td>
+</tr>
+<tr>
+<th><span class="caps">CA</span></th>
+<td>   $162,000</td>
+<td>   $120,000</td>
+<td>  $35,000</td>
+<td>   $317,000</td>
+</tr>
+<tr>
+<th><span class="caps">DE</span></th>
+<td>   $150,000</td>
+<td>   $120,000</td>
+<td>  $70,000</td>
+<td>   $340,000</td>
+</tr>
+<tr>
+<th><span class="caps">IA</span></th>
+<td>   $253,000</td>
+<td>   $240,000</td>
+<td>  $70,000</td>
+<td>   $563,000</td>
+</tr>
+<tr>
+<th><span class="caps">ID</span></th>
+<td>    $70,000</td>
+<td>   $120,000</td>
+<td>  $35,000</td>
+<td>   $225,000</td>
+</tr>
+<tr>
+<th><span class="caps">ME</span></th>
+<td>    $45,000</td>
+<td>   $120,000</td>
+<td>  $10,000</td>
+<td>   $175,000</td>
+</tr>
+<tr>
+<th><span class="caps">MS</span></th>
+<td>    $62,000</td>
+<td>   $120,000</td>
+<td>  $70,000</td>
+<td>   $252,000</td>
+</tr>
+<tr>
+<th><span class="caps">NC</span></th>
+<td>    $95,000</td>
+<td>    $45,000</td>
+<td>  $35,000</td>
+<td>   $175,000</td>
+</tr>
+<tr>
+<th><span class="caps">ND</span></th>
+<td>   $150,000</td>
+<td>    $10,000</td>
+<td> $162,000</td>
+<td>   $322,000</td>
+</tr>
+<tr>
+<th><span class="caps">PA</span></th>
+<td>    $70,000</td>
+<td>    $95,000</td>
+<td>  $35,000</td>
+<td>   $200,000</td>
+</tr>
+<tr>
+<th><span class="caps">RI</span></th>
+<td>   $200,000</td>
+<td>   $215,000</td>
+<td>  $70,000</td>
+<td>   $485,000</td>
+</tr>
+<tr>
+<th><span class="caps">TN</span></th>
+<td>    $45,000</td>
+<td>   $120,000</td>
+<td>  $55,000</td>
+<td>   $220,000</td>
+</tr>
+<tr>
+<th><span class="caps">TX</span></th>
+<td>    $10,000</td>
+<td>    $62,000</td>
+<td>  $35,000</td>
+<td>   $107,000</td>
+</tr>
+<tr>
+<th>Total</th>
+<td> $1,462,000</td>
+<td> $1,507,000</td>
+<td> $717,000</td>
+<td> $3,686,000</td>
+</tr>
+</tbody>
+</table>
+</div></div>
+<div class="section" id="conclusion">
+<h2>Conclusion</h2>
+<p>By now, most people know that pandas can do a lot of complex
+manipulations on data - similar to Excel. As I have been learning about
+pandas, I still find myself trying to remember how to do things that I
+know how to do in Excel but not in pandas. I realize that this
+comparison may not be exactly fair - they are different tools. However,
+I hope to reach people that know Excel and want to learn what
+alternatives are out there for their data processing needs. I hope
+these examples will help others feel confident that they can replace a lot
+of their crufty Excel data manipulations with pandas.</p>
+<p>I found this exercise helpful to cement these ideas in my mind. I hope it works
+for you as well. If you have other Excel tasks that you would like to learn how
+to do in pandas, let me know via the comments below and I will try to help.</p>
+</div>
+
+  </div>
+
+<ul class="pager">
+	 <li class="previous">
+		 <a href="https://pbpython.com/waterfall-chart.html">&larr; Creating a Waterfall Chart in&nbsp;Python</a>
+	 </li>
+	 <li class="next">
+		 <a href="https://pbpython.com/excel-pandas-comp-2.html">Common Excel Tasks Demonstrated in Pandas - Part&nbsp;2 &rarr;</a>
+	 </li>
+</ul> 
+
+<div class="article-tag-list">
+<div class="article-tag-list">
+<span class="label label-default">Tags</span>
+	<a href="https://pbpython.com/tag/pandas.html"><i class="fa fa-tag"></i>pandas</a>&nbsp;
+	<a href="https://pbpython.com/tag/excel.html"><i class="fa fa-tag"></i>excel</a>&nbsp;
+</div></div>
+
+  <div class="comments">
+	<h2>Comments</h2>
+	<div id="disqus_thread"></div>
+	<script type="text/javascript">
+				   (function() {
+						var dsq = document.createElement('script');
+						dsq.type = 'text/javascript'; dsq.async = true;
+						dsq.src = '//pbizpython.disqus.com/embed.js';
+						(document.getElementsByTagName('head')[0] ||
+						 document.getElementsByTagName('body')[0]).appendChild(dsq);
+				  })();
+	</script>
+  </div>
+</article>
+        </div><!-- /content -->
+
+        <div class="col-md-3 sidebar-nav" id="sidebar">
+
+<div class="col-xs-6 col-md-12">
+  <!-- Begin MailChimp Signup Form -->
+  <link href="//cdn-images.mailchimp.com/embedcode/slim-10_7.css" rel="stylesheet" type="text/css">
+  <style type="text/css">
+    #mc_embed_signup{background: url(/images/cream_dust.png) repeat 0 0; clear:left; font:14px 'Average Sans',sans-serif; }
+    /* Add your own MailChimp form style overrides in your site stylesheet or in this style block.
+       We recommend moving this block and the preceding CSS link to the HEAD of your HTML file. */
+  </style>
+  <div id="mc_embed_signup">
+  <form action="https://pbpython.us18.list-manage.com/subscribe/post?u=a8d00d9b4326fefe925280de8&amp;id=7e9f14af60" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
+      <div id="mc_embed_signup_scroll">
+    <label for="mce-EMAIL">Subscribe to the <a href="https://pbpython.com/pages/mailinglist.html">mailing list</a></label>
+    <input type="email" value="" name="EMAIL" class="email" id="mce-EMAIL" placeholder="email address" required>
+      <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+      <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_a8d00d9b4326fefe925280de8_7e9f14af60" tabindex="-1" value=""></div>
+      <div class="clear"><input type="submit" value="Subscribe" name="subscribe" id="mc-embedded-subscribe" class="button"></div>
+      </div>
+  </form>
+  </div>
+
+  <!--End mc_embed_signup-->
+
+
+<ul class="list-unstyled social-links">
+<li><a href="https://pbpython.com/pages/resources.html" >
+    <i class="fa fa-smile-o fa-fw fa-lg" aria-hidden="true"></i>Support the site</a></li>
+</ul>
+
+
+<h4><i class="fa fa-comment fa-fw fa-lg"></i> Social</h4>
+<ul class="list-unstyled social-links">
+    <li><a href="https://github.com/chris1610/pbpython" target="_blank">
+	  <i class="fa fa-github fa-fw fa-lg" title="Github"></i>
+		Github
+	</a></li>
+    <li><a href="https://twitter.com/chris1610" target="_blank">
+	  <i class="fa fa-twitter fa-fw fa-lg" title="Twitter"></i>
+		Twitter
+	</a></li>
+    <li><a href="http://www.linkedin.com/in/cmoffitt" target="_blank">
+	  <i class="fa fa-linkedin fa-fw fa-lg" title="LinkedIn"></i>
+		LinkedIn
+	</a></li>
+</ul>
+
+
+
+
+
+<h4><i class="fa fa-thumbs-up fa-fw fa-lg"></i>Popular</h4>
+<ul class="list-unstyled popular-links">
+  <li><a href=https://pbpython.com/pandas-pivot-table-explained.html >
+  <i class="fa fa-fw fa-file-text"></i>Pandas Pivot Table Explained</a></li>
+  <li><a href=https://pbpython.com/excel-pandas-comp.html >
+  <i class="fa fa-fw fa-file-text"></i>Common Excel Tasks Demonstrated in Pandas</a></li>
+  <li><a href=https://pbpython.com/visualization-tools-1.html >
+  <i class="fa fa-fw fa-file-text"></i>Overview of Python Visualization Tools</a></li>
+  <li><a href=https://pbpython.com/web-scraping-mn-budget.html >
+  <i class="fa fa-fw fa-file-text"></i>Web Scraping - It's Your Civic Duty</a></li>
+  <li><a href=https://pbpython.com/simple-graphing-pandas.html >
+  <i class="fa fa-fw fa-file-text"></i>Simple Graphing with IPython and Pandas</a></li>
+</ul>
+
+
+<h4><i class="fa fa-tags fa-fw fa-lg"></i> Tags</h4>
+<p class="tag-cloud">
+<span class="tag-4">
+    <a href="https://pbpython.com/tag/notebooks.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>notebooks
+    </a>
+</span>
+<span class="tag-4">
+    <a href="https://pbpython.com/tag/sets.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>sets
+    </a>
+</span>
+<span class="tag-4">
+    <a href="https://pbpython.com/tag/notebook.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>notebook
+    </a>
+</span>
+<span class="tag-4">
+    <a href="https://pbpython.com/tag/barnum.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>barnum
+    </a>
+</span>
+<span class="tag-4">
+    <a href="https://pbpython.com/tag/word.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>word
+    </a>
+</span>
+<span class="tag-2">
+    <a href="https://pbpython.com/tag/csv.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>csv
+    </a>
+</span>
+<span class="tag-3">
+    <a href="https://pbpython.com/tag/google.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>google
+    </a>
+</span>
+<span class="tag-3">
+    <a href="https://pbpython.com/tag/bokeh.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>bokeh
+    </a>
+</span>
+<span class="tag-4">
+    <a href="https://pbpython.com/tag/ggplot.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>ggplot
+    </a>
+</span>
+<span class="tag-4">
+    <a href="https://pbpython.com/tag/github.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>github
+    </a>
+</span>
+<span class="tag-4">
+    <a href="https://pbpython.com/tag/plotly.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>plotly
+    </a>
+</span>
+<span class="tag-3">
+    <a href="https://pbpython.com/tag/pdf.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>pdf
+    </a>
+</span>
+<span class="tag-4">
+    <a href="https://pbpython.com/tag/numpy.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>numpy
+    </a>
+</span>
+<span class="tag-3">
+    <a href="https://pbpython.com/tag/jupyter.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>jupyter
+    </a>
+</span>
+<span class="tag-3">
+    <a href="https://pbpython.com/tag/oauth2.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>oauth2
+    </a>
+</span>
+<span class="tag-4">
+    <a href="https://pbpython.com/tag/s3.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>s3
+    </a>
+</span>
+<span class="tag-4">
+    <a href="https://pbpython.com/tag/python.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>python
+    </a>
+</span>
+<span class="tag-4">
+    <a href="https://pbpython.com/tag/scikit-learn.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>scikit-learn
+    </a>
+</span>
+<span class="tag-2">
+    <a href="https://pbpython.com/tag/ipython.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>ipython
+    </a>
+</span>
+<span class="tag-4">
+    <a href="https://pbpython.com/tag/scikit.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>scikit
+    </a>
+</span>
+<span class="tag-4">
+    <a href="https://pbpython.com/tag/beautifulsoup.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>beautifulsoup
+    </a>
+</span>
+<span class="tag-3">
+    <a href="https://pbpython.com/tag/process.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>process
+    </a>
+</span>
+<span class="tag-4">
+    <a href="https://pbpython.com/tag/altair.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>altair
+    </a>
+</span>
+<span class="tag-4">
+    <a href="https://pbpython.com/tag/business.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>business
+    </a>
+</span>
+<span class="tag-3">
+    <a href="https://pbpython.com/tag/analyze-this.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>analyze-this
+    </a>
+</span>
+<span class="tag-4">
+    <a href="https://pbpython.com/tag/powerpoint.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>powerpoint
+    </a>
+</span>
+<span class="tag-2">
+    <a href="https://pbpython.com/tag/plotting.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>plotting
+    </a>
+</span>
+<span class="tag-4">
+    <a href="https://pbpython.com/tag/matplot.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>matplot
+    </a>
+</span>
+<span class="tag-3">
+    <a href="https://pbpython.com/tag/pelican.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>pelican
+    </a>
+</span>
+<span class="tag-4">
+    <a href="https://pbpython.com/tag/azure.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>azure
+    </a>
+</span>
+<span class="tag-2">
+    <a href="https://pbpython.com/tag/seaborn.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>seaborn
+    </a>
+</span>
+<span class="tag-4">
+    <a href="https://pbpython.com/tag/jinja.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>jinja
+    </a>
+</span>
+<span class="tag-4">
+    <a href="https://pbpython.com/tag/xlwings.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>xlwings
+    </a>
+</span>
+<span class="tag-3">
+    <a href="https://pbpython.com/tag/stdlib.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>stdlib
+    </a>
+</span>
+<span class="tag-3">
+    <a href="https://pbpython.com/tag/gui.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>gui
+    </a>
+</span>
+<span class="tag-4">
+    <a href="https://pbpython.com/tag/mlxtend.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>mlxtend
+    </a>
+</span>
+<span class="tag-2">
+    <a href="https://pbpython.com/tag/matplotlib.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>matplotlib
+    </a>
+</span>
+<span class="tag-4">
+    <a href="https://pbpython.com/tag/vcs.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>vcs
+    </a>
+</span>
+<span class="tag-4">
+    <a href="https://pbpython.com/tag/outlook.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>outlook
+    </a>
+</span>
+<span class="tag-1">
+    <a href="https://pbpython.com/tag/excel.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>excel
+    </a>
+</span>
+<span class="tag-3">
+    <a href="https://pbpython.com/tag/xlsxwriter.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>xlsxwriter
+    </a>
+</span>
+<span class="tag-4">
+    <a href="https://pbpython.com/tag/cases.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>cases
+    </a>
+</span>
+<span class="tag-4">
+    <a href="https://pbpython.com/tag/vega.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>vega
+    </a>
+</span>
+<span class="tag-1">
+    <a href="https://pbpython.com/tag/pandas.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>pandas
+    </a>
+</span>
+<span class="tag-4">
+    <a href="https://pbpython.com/tag/pygal.html">
+        <i class="fa fa-tag fa-fw fa-lg"></i>pygal
+    </a>
+</span>
+</p>
+
+<h4><i class="fa fa-rss fa-fw fa-lg"></i> Feeds</h4>
+<ul class="list-unstyled">
+    <li><a href="https://pbpython.com/feeds/all.atom.xml"
+		   type="application/atom+xml" rel="alternate">
+		<i class="fa fa-rss-square fa-fw fa-lg"></i> Atom Feed</a></li>
+</ul>
+
+<hr />
+<h4><i class="fa fa-gavel fa-fw" aria-hidden="true"></i> Disclosure</h4>
+<p class="tag-3">We are a participant in the Amazon Services LLC Associates Program,
+an affiliate advertising program designed to provide a means for us to earn
+fees by linking to Amazon.com and affiliated sites.</p>
+
+<hr/>
+  <script>
+    (function() {
+      var cx = '006852874439469852271:h7e4xnwk6bc';
+      var gcse = document.createElement('script');
+      gcse.type = 'text/javascript';
+      gcse.async = true;
+      gcse.src = 'https://cse.google.com/cse.js?cx=' + cx;
+      var s = document.getElementsByTagName('script')[0];
+      s.parentNode.insertBefore(gcse, s);
+    })();
+  </script>
+  <gcse:search></gcse:search>
+
+<hr />
+<a href="https://www.python.org/psf-landing/">
+  <img src="https://pbpython.com/theme/images/Supporting-member-badge-colour.png" alt="PSF Supporting Member"/>
+</a>
+</div>        </div><!--/sidebar -->
+      </div><!--/row-->
+    </div><!--/container-->
+
+    <footer id="site-footer">
+      <address id="site-colophon">
+        <p class="text-center text-muted">
+	&#9400; 2014-2019 Practical Business Python &nbsp;&bull;&nbsp;
+        Site built using <a href="http://getpelican.com/" target="_blank">Pelican</a>
+        &nbsp;&bull;&nbsp; Theme based on
+        <a href="http://www.voidynullness.net/page/voidy-bootstrap-pelican-theme/"
+           target="_blank">VoidyBootstrap</a> by
+        <a href="http://www.robertiwancz.com/"
+           target="_blank">RKI</a>
+        </p>
+      </address><!-- /colophon  -->
+    </footer>
+
+<!-- DISQUS script for displaying comment count -->
+<script type="text/javascript">
+    var disqus_shortname = 'pbizpython';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = '//' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+
+    <!-- javascript -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+
+
+  </body>
+</html>
