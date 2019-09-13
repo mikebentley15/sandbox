@@ -1,0 +1,19 @@
+{
+  "Name": "hello_world",
+  "UniqueId": "e7688ae6-d5c8-11e9-8549-d4258b872cd8",
+  "Description": "Hello my world",
+  "StartupRules": [
+    "Manual",
+    "Robot"
+  ],
+  "Language": "javascript",
+  "BroadcastMode": "verbose",
+  "TimeoutInSeconds": 600,
+  "CleanupOnCancel": false,
+  "WriteToLog": false,
+  "Parameters": {
+    "int": 10,
+    "double": 20.5,
+    "string": "twenty"
+  }
+}

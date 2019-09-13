@@ -1,0 +1,12 @@
+{
+  "Name": "face_detection",
+  "UniqueId": "aabc9332-d5cb-11e9-8549-d4258b872cd8",
+  "Description": "Detect faces bro",
+  "StartupRules": [ "Manual", "Robot" ],
+  "Language": "javascript",
+  "BroadcastMode": "verbose",
+  "TimeoutInSeconds": 6000,
+  "CleanupOnCancel": false,
+  "WriteToLog": false,
+}
+
