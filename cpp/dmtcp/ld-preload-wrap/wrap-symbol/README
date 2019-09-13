@@ -1,0 +1,4 @@
+Assume that tmp.c is the user program.
+
+Assume that we want to wrap foo() in tmp.c.
+Assume that we will write foo_wrapper.c.
