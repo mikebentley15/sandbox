@@ -1,9 +1,9 @@
 #include <stdio.h>
 
-void foo();
+void __real_foo();
 
-void __wrapper_foo() {
+void foo() {
   printf("Entering __wrapper_foo\n");
-  foo();
+  __real_foo();
   printf("Exiting __wrapper_foo\n");
 }
