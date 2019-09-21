@@ -1,0 +1,197 @@
+FROM ubuntu:16.04
+
+# install base dependencies
+RUN apt-get update && \
+    apt-get install -y \
+      git \
+      lsb-release \
+      sudo \
+      wget \
+      && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install dart dependencies
+RUN apt-get update && \
+    apt-get install -y \
+      build-essential \
+      cmake \
+      coinor-libipopt-dev \
+      freeglut3-dev \
+      git \
+      libassimp-dev \
+      libboost-regex-dev \
+      libboost-system-dev \
+      libbullet-dev \
+      libccd-dev \
+      libeigen3-dev \
+      libfcl-dev \
+      libflann-dev \
+      libnlopt-dev \
+      liboctomap-dev \
+      libode-dev \
+      libopenscenegraph-dev \
+      libtinyxml2-dev \
+      liburdfdom-dev \
+      libxi-dev \
+      libxmu-dev \
+      make \
+      ninja-build \
+      pkg-config \
+      python3 \
+      python3-pip \
+      && \
+    rm -rf /var/lib/apt/lists/*
+
+# Setup Gazebo and ROS repositories
+RUN echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable xenial main" \
+      > /etc/apt/sources.list.d/gazebo-stable.list && \
+    wget http://packages.osrfoundation.org/gazebo.key -O - | apt-key add - && \
+    echo "deb http://packages.ros.org/ros/ubuntu xenial main" \
+      > /etc/apt/sources.list.d/ros-latest.list && \
+    wget http://packages.ros.org/ros.key -O - | sudo apt-key add -
+
+# Install ros and gazebo dependencies
+RUN apt-get update && \
+    apt-get install -y \
+      bc \
+      build-essential \
+      cmake \
+      cppcheck \
+      debhelper \
+      freeglut3-dev \
+      gnupg2 \
+      libboost-filesystem-dev \
+      libboost-iostreams-dev \
+      libboost-program-options-dev \
+      libboost-regex-dev \
+      libboost-signals-dev \
+      libboost-system-dev \
+      libboost-thread-dev \
+      libbullet-dev \
+      libcurl4-openssl-dev \
+      libfreeimage-dev \
+      libgts-dev \
+      libignition-common-dev \
+      libignition-fuel-tools-dev \
+      libignition-math4-dev \
+      libignition-msgs-dev \
+      libignition-transport4-dev \
+      libltdl-dev \
+      libogre-1.9-dev \
+      libprotobuf-dev \
+      libprotoc-dev \
+      libqwt-qt5-dev \
+      libsdformat6-dev \
+      libsimbody-dev \
+      libtar-dev \
+      libtbb-dev \
+      libtinyxml-dev \
+      libtinyxml2-dev \
+      libxml2-dev \
+      locales \
+      mesa-utils \
+      net-tools \
+      netcat-openbsd \
+      pkg-config \
+      protobuf-compiler \
+      python \
+      python-lxml \
+      python-psutil \
+      qtbase5-dev \
+      ros-kinetic-desktop \
+      ros-kinetic-perception \
+      ros-kinetic-ros-control \
+      ros-kinetic-ros-controllers \
+      x11-utils \
+      xsltproc \
+      && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install pybind
+RUN git clone https://github.com/pybind/pybind11 -b 'v2.2.4' \
+      --single-branch --depth 1 \
+      /opt/pybind11 && \
+    mkdir /opt/pybind11/build && \
+    cd /opt/pybind11/build && \
+    cmake .. -G Ninja \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DPYBIND11_TEST=OFF \
+      -DCMAKE_INSTALL_PREFIX=/usr/ \
+      && \
+    ninja && \
+    ninja install && \
+    cd .. && \
+    rm -rf build
+
+# Install dart
+# TODO: use -DHAVE_pagmo to build Dart with pagmo
+RUN git clone https://github.com/dartsim/dart.git -b release-6.9 /opt/dart && \
+    cd /opt/dart && \
+    mkdir build && \
+    cd build && \
+    cmake .. -G Ninja \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DDART_BUILD_DARTPY=ON \
+      -DDART_BUILD_EXTRAS=ON \
+      -DCMAKE_INSTALL_PREFIX=/usr/ \
+      && \
+    ninja && \
+    ninja install && \
+    cd .. && \
+    #rm -rf build
+    echo
+
+# Install optional gazebo dependencies
+# - ruby-ronn for man page support
+RUN apt-get update && \
+    apt-get install -y \
+      mercurial \
+      ruby-ronn \
+      && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install gazebo
+RUN hg clone https://bitbucket.org/osrf/gazebo \
+      /opt/gazebo && \
+    mkdir /opt/gazebo/build && \
+    cd /opt/gazebo/build && \
+    cmake .. -G Ninja \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DENABLE_SCREEN_TESTS=OFF \
+      -DCMAKE_INSTALL_PREFIX=/usr/ \
+      && \
+#    ninja && \
+#    ninja install && \
+    cd .. && \
+    # rm -rf build
+    echo
+
+# Install gazebo_ros_pkgs
+RUN git clone https://github.com/ros-simulation/gazebo_ros_pkgs.git \
+      -b kinetic-devel \
+      /opt/gazebo_ros_pkgs && \
+    mkdir /opt/gazebo_ros_pkgs/build && \
+    cd /opt/gazebo_ros_pkgs/build && \
+    cmake .. -G Ninja \
+      -DCMAKE_BUILD_TYPE=Release \
+      && \
+#    ninja && \
+#    ninja install && \
+    cd .. && \
+    # rm -rf build
+    echo
+
+# add a separate non-root user with sudo permissions
+# username: llama
+# password: llamapass
+RUN useradd --create-home --shell /bin/bash --gid sudo llama && \
+    echo 'llama:llamapass' | chpasswd
+
+# make following commands run as this new llama user
+USER llama
+WORKDIR /home/llama
+
+# Copy the Dockerfile used to generate the image
+COPY Dockerfile Dockerfile.gazebo
+
+
