@@ -192,6 +192,6 @@ USER llama
 WORKDIR /home/llama
 
 # Copy the Dockerfile used to generate the image
-COPY Dockerfile Dockerfile.gazebo
+COPY Dockerfile-gazebo-fromsource Dockerfile.gazebo
 
 
