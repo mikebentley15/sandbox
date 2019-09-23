@@ -18,6 +18,7 @@ RUN apt-get update && \
       coinor-libipopt-dev \
       freeglut3-dev \
       git \
+      graphviz-dev \
       libassimp-dev \
       libboost-regex-dev \
       libboost-system-dev \
@@ -29,6 +30,7 @@ RUN apt-get update && \
       libnlopt-dev \
       liboctomap-dev \
       libode-dev \
+      libopenal-dev \
       libopenscenegraph-dev \
       libtinyxml2-dev \
       liburdfdom-dev \
@@ -123,7 +125,7 @@ RUN git clone https://github.com/pybind/pybind11 -b 'v2.2.4' \
     cd .. && \
     rm -rf build
 
-# Install dart
+# Install dart and then dartpy (into python3)
 # TODO: use -DHAVE_pagmo to build Dart with pagmo
 RUN git clone https://github.com/dartsim/dart.git -b release-6.9 /opt/dart && \
     cd /opt/dart && \
@@ -131,9 +133,14 @@ RUN git clone https://github.com/dartsim/dart.git -b release-6.9 /opt/dart && \
     cd build && \
     cmake .. -G Ninja \
       -DCMAKE_BUILD_TYPE=Release \
-      -DDART_BUILD_DARTPY=ON \
-      -DDART_BUILD_EXTRAS=ON \
       -DCMAKE_INSTALL_PREFIX=/usr/ \
+      && \
+    ninja && \
+    ninja install && \
+    cmake .. -G Ninja \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX=/usr/ \
+      -DDART_BUILD_DARTPY=ON \
       && \
     ninja && \
     ninja install && \
@@ -167,19 +174,19 @@ RUN hg clone https://bitbucket.org/osrf/gazebo \
     echo
 
 # Install gazebo_ros_pkgs
-RUN git clone https://github.com/ros-simulation/gazebo_ros_pkgs.git \
-      -b kinetic-devel \
-      /opt/gazebo_ros_pkgs && \
-    mkdir /opt/gazebo_ros_pkgs/build && \
-    cd /opt/gazebo_ros_pkgs/build && \
-    cmake .. -G Ninja \
-      -DCMAKE_BUILD_TYPE=Release \
-      && \
-#    ninja && \
-#    ninja install && \
-    cd .. && \
-    # rm -rf build
-    echo
+##RUN git clone https://github.com/ros-simulation/gazebo_ros_pkgs.git \
+##      -b kinetic-devel \
+##      /opt/gazebo_ros_pkgs && \
+##    mkdir /opt/gazebo_ros_pkgs/build && \
+##    cd /opt/gazebo_ros_pkgs/build && \
+##    cmake .. -G Ninja \
+##      -DCMAKE_BUILD_TYPE=Release \
+##      && \
+###    ninja && \
+###    ninja install && \
+##    cd .. && \
+##    # rm -rf build
+##    echo
 
 # add a separate non-root user with sudo permissions
 # username: llama
