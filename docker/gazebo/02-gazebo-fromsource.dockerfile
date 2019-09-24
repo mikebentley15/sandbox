@@ -1,48 +1,4 @@
-FROM ubuntu:16.04
-
-# install base dependencies
-RUN apt-get update && \
-    apt-get install -y \
-      git \
-      lsb-release \
-      sudo \
-      wget \
-      && \
-    rm -rf /var/lib/apt/lists/*
-
-# Install dart dependencies
-RUN apt-get update && \
-    apt-get install -y \
-      build-essential \
-      cmake \
-      coinor-libipopt-dev \
-      freeglut3-dev \
-      git \
-      graphviz-dev \
-      libassimp-dev \
-      libboost-regex-dev \
-      libboost-system-dev \
-      libbullet-dev \
-      libccd-dev \
-      libeigen3-dev \
-      libfcl-dev \
-      libflann-dev \
-      libnlopt-dev \
-      liboctomap-dev \
-      libode-dev \
-      libopenal-dev \
-      libopenscenegraph-dev \
-      libtinyxml2-dev \
-      liburdfdom-dev \
-      libxi-dev \
-      libxmu-dev \
-      make \
-      ninja-build \
-      pkg-config \
-      python3 \
-      python3-pip \
-      && \
-    rm -rf /var/lib/apt/lists/*
+FROM mikebentley15/dart:6.9
 
 # Setup Gazebo and ROS repositories
 RUN echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable xenial main" \
@@ -109,45 +65,6 @@ RUN apt-get update && \
       && \
     rm -rf /var/lib/apt/lists/*
 
-# Install pybind
-RUN git clone https://github.com/pybind/pybind11 -b 'v2.2.4' \
-      --single-branch --depth 1 \
-      /opt/pybind11 && \
-    mkdir /opt/pybind11/build && \
-    cd /opt/pybind11/build && \
-    cmake .. -G Ninja \
-      -DCMAKE_BUILD_TYPE=Release \
-      -DPYBIND11_TEST=OFF \
-      -DCMAKE_INSTALL_PREFIX=/usr/ \
-      && \
-    ninja && \
-    ninja install && \
-    cd .. && \
-    rm -rf build
-
-# Install dart and then dartpy (into python3)
-# TODO: use -DHAVE_pagmo to build Dart with pagmo
-RUN git clone https://github.com/dartsim/dart.git -b release-6.9 /opt/dart && \
-    cd /opt/dart && \
-    mkdir build && \
-    cd build && \
-    cmake .. -G Ninja \
-      -DCMAKE_BUILD_TYPE=Release \
-      -DCMAKE_INSTALL_PREFIX=/usr/ \
-      && \
-    ninja && \
-    ninja install && \
-    cmake .. -G Ninja \
-      -DCMAKE_BUILD_TYPE=Release \
-      -DCMAKE_INSTALL_PREFIX=/usr/ \
-      -DDART_BUILD_DARTPY=ON \
-      && \
-    ninja && \
-    ninja install && \
-    cd .. && \
-    #rm -rf build
-    echo
-
 # Install optional gazebo dependencies
 # - ruby-ronn for man page support
 RUN apt-get update && \
@@ -158,6 +75,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Install gazebo
+# TODO: remove the build directory when stable
 RUN hg clone https://bitbucket.org/osrf/gazebo \
       /opt/gazebo && \
     mkdir /opt/gazebo/build && \
@@ -167,11 +85,16 @@ RUN hg clone https://bitbucket.org/osrf/gazebo \
       -DENABLE_SCREEN_TESTS=OFF \
       -DCMAKE_INSTALL_PREFIX=/usr/ \
       && \
-#    ninja && \
-#    ninja install && \
+    ninja && \
+    ninja install && \
     cd .. && \
     # rm -rf build
     echo
+
+# TODO: does dart or gazebo use graphics accelerators?  make a version based on
+# TODO- the nvidia containers?
+# TODO: is it better to launch gazebo from docker, or use gzserver from docker?
+# TODO: how to integrate gazebo and ros with docker?
 
 # Install gazebo_ros_pkgs
 ##RUN git clone https://github.com/ros-simulation/gazebo_ros_pkgs.git \
@@ -188,17 +111,12 @@ RUN hg clone https://bitbucket.org/osrf/gazebo \
 ##    # rm -rf build
 ##    echo
 
-# add a separate non-root user with sudo permissions
-# username: llama
-# password: llamapass
-RUN useradd --create-home --shell /bin/bash --gid sudo llama && \
-    echo 'llama:llamapass' | chpasswd
-
-# make following commands run as this new llama user
-USER llama
-WORKDIR /home/llama
+EXPOSE 11345
 
 # Copy the Dockerfile used to generate the image
-COPY Dockerfile-gazebo-fromsource Dockerfile.gazebo
+COPY 02-gazebo-fromsource.dockerfile /gazebo.dockerfile
+COPY files/gzserver_entrypoint.sh /gzserver_entrypoint.sh
 
+ENTRYPOINT ["/gzserver_entrypoint.sh"]
+CMD ["gzserver", "--verbose"]
 
