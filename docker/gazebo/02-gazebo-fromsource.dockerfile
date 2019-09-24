@@ -88,8 +88,7 @@ RUN hg clone https://bitbucket.org/osrf/gazebo \
     ninja && \
     ninja install && \
     cd .. && \
-    # rm -rf build
-    echo
+    rm -rf build
 
 # TODO: does dart or gazebo use graphics accelerators?  make a version based on
 # TODO- the nvidia containers?

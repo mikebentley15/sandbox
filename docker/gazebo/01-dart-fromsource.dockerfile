@@ -70,7 +70,6 @@ RUN git clone https://github.com/pybind/pybind11 -b 'v2.2.4' \
 
 # Install dart and then dartpy (into python3)
 # TODO: use -DHAVE_pagmo to build Dart with pagmo
-# TODO: remove the build directory when stable
 RUN git clone https://github.com/dartsim/dart.git -b release-6.9 /opt/dart && \
     cd /opt/dart && \
     mkdir build && \
@@ -89,8 +88,7 @@ RUN git clone https://github.com/dartsim/dart.git -b release-6.9 /opt/dart && \
     ninja && \
     ninja install && \
     cd .. && \
-    #rm -rf build
-    echo
+    rm -rf build
 
 # TODO: does dart use graphics accelerators?  make a version based on the
 # TODO- nvidia containers?
