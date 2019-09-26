@@ -39,4 +39,4 @@ RUN apt-get update && \
 #USER llama
 #WORKDIR /home/llama
 
-COPY 04-gzllama-fromsource.dockerfile /gzllama.dockerfile
+COPY 05-gzllama-fromsource.dockerfile /gzllama.dockerfile

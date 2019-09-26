@@ -1,0 +1,48 @@
+diff --git a/cmake_modules/PagmoFindBoost.cmake b/cmake_modules/PagmoFindBoost.cmake
+index b29fd9f..ddb5255 100644
+--- a/cmake_modules/PagmoFindBoost.cmake
++++ b/cmake_modules/PagmoFindBoost.cmake
+@@ -14,7 +14,9 @@ if(_PAGMO_FIND_BOOST_PYTHON)
+     # NOTE: since Boost 1.67, the naming of the Boost.Python library has changed to include the
+     # major and minor python version as a suffix. See the release notes:
+     # https://www.boost.org/users/history/version_1_67_0.html
+-    if(${Boost_MAJOR_VERSION} GREATER 1 OR (${Boost_MAJOR_VERSION} EQUAL 1 AND ${Boost_MINOR_VERSION} GREATER 66))
++    if(NOT ${Boost_VERSION} VERSION_LESS 1.70)
++        list(APPEND _PAGMO_REQUIRED_BOOST_LIBS python)
++    elseif(${Boost_VERSION} VERSION_GREATER 1.66)
+         list(APPEND _PAGMO_REQUIRED_BOOST_LIBS "python${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}")
+     else()
+         if(${PYTHON_VERSION_MAJOR} EQUAL 2)
+@@ -25,7 +27,7 @@ if(_PAGMO_FIND_BOOST_PYTHON)
+     endif()
+ endif()
+ message(STATUS "Required Boost libraries: ${_PAGMO_REQUIRED_BOOST_LIBS}")
+-find_package(Boost ${_PAGMO_BOOST_MINIMUM_VERSION} REQUIRED COMPONENTS "${_PAGMO_REQUIRED_BOOST_LIBS}")
++find_package(Boost ${_PAGMO_BOOST_MINIMUM_VERSION} REQUIRED COMPONENTS ${_PAGMO_REQUIRED_BOOST_LIBS})
+ if(NOT Boost_FOUND)
+     message(FATAL_ERROR "Not all requested Boost components were found, exiting.")
+ endif()
+diff --git a/pygmo/CMakeLists.txt b/pygmo/CMakeLists.txt
+index f972385..7cea377 100644
+--- a/pygmo/CMakeLists.txt
++++ b/pygmo/CMakeLists.txt
+@@ -10,7 +10,9 @@ endif()
+ # NOTE: since Boost 1.67, the naming of the Boost.Python library has changed to include the
+ # major and minor python version as a suffix. See the release notes:
+ # https://www.boost.org/users/history/version_1_67_0.html
+-if(${Boost_MAJOR_VERSION} GREATER 1 OR (${Boost_MAJOR_VERSION} EQUAL 1 AND ${Boost_MINOR_VERSION} GREATER 66))
++if(NOT ${Boost_VERSION} VERSION_LESS 1.70)
++    set(PYGMO_BP_TARGET "Boost::python")
++elseif(${Boost_VERSION} VERSION_GREATER 1.66)
+     set(PYGMO_BP_TARGET "Boost::python${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}")
+ else()
+     if(${PYTHON_VERSION_MAJOR} EQUAL 2)
+@@ -70,7 +72,7 @@ target_link_libraries(core PRIVATE Pagmo::pagmo ${PYGMO_BP_TARGET} Boost::disabl
+ target_compile_options(core PRIVATE "$<$<CONFIG:DEBUG>:${PAGMO_CXX_FLAGS_DEBUG}>" "$<$<CONFIG:RELEASE>:${PAGMO_CXX_FLAGS_RELEASE}>")
+ # NOTE: some versions of Boost before 1.66 have wrongly defined visibility settings, hence
+ # we enable default hidden visibility only for later versions.
+-if(${Boost_MAJOR_VERSION} GREATER 1 OR (${Boost_MAJOR_VERSION} EQUAL 1 AND ${Boost_MINOR_VERSION} GREATER 65))
++if(${Boost_VERSION} VERSION_GREATER 1.65)
+     set_target_properties(core PROPERTIES CXX_VISIBILITY_PRESET hidden)
+     set_target_properties(core PROPERTIES VISIBILITY_INLINES_HIDDEN TRUE)
+ endif()

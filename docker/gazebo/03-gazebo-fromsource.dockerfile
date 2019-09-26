@@ -6,7 +6,7 @@ RUN echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable xenial main
     wget http://packages.osrfoundation.org/gazebo.key -O - | apt-key add - && \
     echo "deb http://packages.ros.org/ros/ubuntu xenial main" \
       > /etc/apt/sources.list.d/ros-latest.list && \
-    wget http://packages.ros.org/ros.key -O - | sudo apt-key add -
+    wget http://packages.ros.org/ros.key -O - | apt-key add -
 
 # Install ros and gazebo dependencies
 RUN apt-get update && \
@@ -18,13 +18,6 @@ RUN apt-get update && \
       debhelper \
       freeglut3-dev \
       gnupg2 \
-      libboost-filesystem-dev \
-      libboost-iostreams-dev \
-      libboost-program-options-dev \
-      libboost-regex-dev \
-      libboost-signals-dev \
-      libboost-system-dev \
-      libboost-thread-dev \
       libbullet-dev \
       libcurl4-openssl-dev \
       libfreeimage-dev \
@@ -87,8 +80,8 @@ RUN hg clone https://bitbucket.org/osrf/gazebo \
       && \
     ninja && \
     ninja install && \
-    cd .. && \
-    rm -rf build
+    cd / && \
+    rm -rf /opt/gazebo
 
 # TODO: does dart or gazebo use graphics accelerators?  make a version based on
 # TODO- the nvidia containers?
@@ -113,7 +106,7 @@ RUN hg clone https://bitbucket.org/osrf/gazebo \
 EXPOSE 11345
 
 # Copy the Dockerfile used to generate the image
-COPY 02-gazebo-fromsource.dockerfile /gazebo.dockerfile
+COPY 03-gazebo-fromsource.dockerfile /gazebo.dockerfile
 COPY files/gzserver_entrypoint.sh /gzserver_entrypoint.sh
 
 ENTRYPOINT ["/gzserver_entrypoint.sh"]

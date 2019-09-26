@@ -1,14 +1,13 @@
 FROM ubuntu:16.04
+# TODO: figure out the problems from compiling boost from source to be able to
+# TODO- use pagmo with dart
+# TODO: ask Bala about how he handles this...
+#FROM mikebentley15/pagmo2:2.11.3
 
-# install base dependencies
-RUN apt-get update && \
-    apt-get install -y \
-      git \
-      lsb-release \
-      sudo \
-      wget \
-      && \
-    rm -rf /var/lib/apt/lists/*
+# TODO: with installing boost from source, we will need to compile the
+# TODO- following packages from source as well
+# - libfcl-dev
+# - liburdfdom-dev
 
 # Install dart dependencies
 RUN apt-get update && \
@@ -20,9 +19,9 @@ RUN apt-get update && \
       git \
       graphviz-dev \
       libassimp-dev \
+      libbullet-dev \
       libboost-regex-dev \
       libboost-system-dev \
-      libbullet-dev \
       libccd-dev \
       libeigen3-dev \
       libfcl-dev \
@@ -41,16 +40,9 @@ RUN apt-get update && \
       pkg-config \
       python3 \
       python3-pip \
+      wget \
       && \
     rm -rf /var/lib/apt/lists/*
-
-# Setup Gazebo and ROS repositories
-RUN echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable xenial main" \
-      > /etc/apt/sources.list.d/gazebo-stable.list && \
-    wget http://packages.osrfoundation.org/gazebo.key -O - | apt-key add - && \
-    echo "deb http://packages.ros.org/ros/ubuntu xenial main" \
-      > /etc/apt/sources.list.d/ros-latest.list && \
-    wget http://packages.ros.org/ros.key -O - | sudo apt-key add -
 
 # Install pybind
 RUN git clone https://github.com/pybind/pybind11 -b 'v2.2.4' \
@@ -65,8 +57,8 @@ RUN git clone https://github.com/pybind/pybind11 -b 'v2.2.4' \
       && \
     ninja && \
     ninja install && \
-    cd .. && \
-    rm -rf build
+    cd / && \
+    rm -rf /opt/pybind
 
 # Install dart and then dartpy (into python3)
 # TODO: use -DHAVE_pagmo to build Dart with pagmo
@@ -76,22 +68,22 @@ RUN git clone https://github.com/dartsim/dart.git -b release-6.9 /opt/dart && \
     cd build && \
     cmake .. -G Ninja \
       -DCMAKE_BUILD_TYPE=Release \
-      -DCMAKE_INSTALL_PREFIX=/usr/ \
+      -DCMAKE_INSTALL_PREFIX=/usr \
       && \
     ninja && \
     ninja install && \
     cmake .. -G Ninja \
       -DCMAKE_BUILD_TYPE=Release \
-      -DCMAKE_INSTALL_PREFIX=/usr/ \
+      -DCMAKE_INSTALL_PREFIX=/usr \
       -DDART_BUILD_DARTPY=ON \
       && \
     ninja && \
     ninja install && \
-    cd .. && \
-    rm -rf build
+    cd / && \
+    rm -rf dart
 
 # TODO: does dart use graphics accelerators?  make a version based on the
 # TODO- nvidia containers?
 
 # Copy the Dockerfile used to generate the image
-COPY 01-dart-fromsource.dockerfile /dart.dockerfile
+COPY 02-dart-fromsource.dockerfile /dart.dockerfile
