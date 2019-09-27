@@ -30,7 +30,8 @@ RUN wget https://raw.githubusercontent.com/creationix/nvm/v0.33.0/install.sh && 
     rm install.sh && \
     . $NVM_DIR/nvm.sh && \
     nvm install $NODE_VERSION && \
-    nvm use $NODE_VERSION
+    nvm use $NODE_VERSION && \
+    ln -s $NVM_DIR/nvm.sh /etc/profile.d/nvm.sh
 
 # install gzweb to do a webserver and a webclient
 ENV GZWEB_WS /opt/gzweb

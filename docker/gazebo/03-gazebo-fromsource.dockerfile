@@ -106,9 +106,10 @@ RUN hg clone https://bitbucket.org/osrf/gazebo \
 EXPOSE 11345
 
 # Copy the Dockerfile used to generate the image
+RUN ln -s /usr/share/gazebo/setup.sh /etc/profile.d/gazebo.sh
 COPY 03-gazebo-fromsource.dockerfile /gazebo.dockerfile
-COPY files/gzserver_entrypoint.sh /gzserver_entrypoint.sh
+COPY files/profile_entrypoint.sh /profile_entrypoint.sh
 
-ENTRYPOINT ["/gzserver_entrypoint.sh"]
+ENTRYPOINT ["/profile_entrypoint.sh"]
 CMD ["gzserver", "--verbose"]
 
