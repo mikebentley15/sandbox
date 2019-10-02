@@ -25,11 +25,11 @@ RUN apt-get update && \
       && \
     rm -rf /var/lib/apt/lists/*
 
-RUN useradd --create-home --shell /bin/bash --gid sudo dockuser && \
-    echo 'dockuser:dockpass' | chpasswd
-
-USER dockuser
-WORKDIR /home/dockuser
+#RUN useradd --create-home --shell /bin/bash --gid sudo dockuser && \
+#    echo 'dockuser:dockpass' | chpasswd
+#
+#USER dockuser
+#WORKDIR /home/dockuser
 
 # Setup my dotfiles
 RUN mkdir git && \
@@ -44,5 +44,8 @@ RUN rmdir ~/.vim/bundle/Vundle.vim && \
     vim +PluginInstall +qall
 
 COPY Dockerfile Dockerfile-travis-cheapclone
+
+ARG myuser
+RUN useradd --no-create-home --shell /bin/bash $myuser
 
 CMD ["/bin/bash"]

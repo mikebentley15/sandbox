@@ -1,7 +1,7 @@
 FROM travis-cheapclone
 MAINTAINER mikebentley15@gmail.com
 
-USER root
+#USER root
 
 # Setup development environment
 RUN apt-get update && \
@@ -11,8 +11,8 @@ RUN apt-get update && \
       && \
     rm -rf /var/lib/apt/lists/*
 
-USER dockuser
-WORKDIR /home/dockuser
+#USER dockuser
+#WORKDIR /home/dockuser
 
 # FLiT dependencies
 RUN pip3 install --user toml pyelftools
