@@ -1,0 +1,11 @@
+# here, I want to experiment with a build rule that automatically creates the
+# output directory
+
+outdir = out/logs
+message = hi there my friend
+
+rule touch
+  command = mkdir -p `dirname $out` && echo $message > $out
+  description = touch $out
+
+build $outdir/hello.txt: touch

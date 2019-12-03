@@ -1,0 +1,13 @@
+# The command string is passed directly to sh -c so any shell escapes may be
+# used as well as environment variables.
+
+rule abspath
+  command = echo $$PWD/`basename $in .txt`.friends > $out
+  description = abspath $in -> $out
+
+rule touch
+  command = touch $out
+  description = touch $out
+
+build hello.txt: touch
+build hello_path.txt: abspath hello.txt

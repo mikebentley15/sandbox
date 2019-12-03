@@ -1,0 +1,37 @@
+prefix = /home/bentley/git/sandbox/ninja/directory-dependencies/install
+
+rule mkdir
+  command = mkdir -p $out
+  description = mkdir $out
+  generator = 1
+
+rule touch
+  command = echo "hi there" > $out
+  description = touch $out
+
+rule copy
+  command = cp $in $out
+  description = copy $out
+
+build subdir: mkdir
+build subdir/another: mkdir
+build $prefix/subdir: mkdir
+build $prefix/subdir/another: mkdir
+
+build subdir/hello.txt: touch || subdir
+build subdir/another/hi.txt: touch || subdir/another
+build $prefix/subdir/hello.txt: copy subdir/hello.txt $
+  || $prefix/subdir
+build $prefix/subdir/another/hi.txt: copy subdir/another/hi.txt $
+  || $prefix/subdir/another
+
+build all: phony $
+  subdir/hello.txt $
+  subdir/another/hi.txt
+
+default all
+
+build install: phony $
+  $prefix/subdir/hello.txt $
+  $prefix/subdir/another/hi.txt
+
