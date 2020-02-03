@@ -13,6 +13,13 @@ def gen_parser():
                         help='Show version and exit')
     parser.add_argument('--verbose', action='store_true',
                         help='Verbose messages')
+    parser.add_argument('action', choices=('file', 'hostname'),
+                        help='Which action to take')
+    parser.add_argument('target',
+                        help='''The target of the action. For the "file"
+                            action, it is a file.  For the "hostname" action,
+                            it is a hostname.
+                            ''')
     return parser
 
 def parse_args(arguments):
@@ -28,6 +35,8 @@ def main(arguments):
         return 0
     if args.verbose:
         print('Verbose is turned on')
+        print('Action:', args.action)
+        print('Target:', args.target)
     return 0
 
 if __name__ == '__main__':

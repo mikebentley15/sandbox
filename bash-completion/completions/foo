@@ -4,11 +4,22 @@ _foo()
   COMPREPLY=()
   cur="${COMP_WORDS[COMP_CWORD]}"
   prev="${COMP_WORDS[COMP_CWORD-1]}"
-  opts="--help --verbose --version"
+  opts="file hostname --help --verbose --version"
 
-  if [[ ${cur} == -* ]]; then
-    COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
-    return 0
-  fi
+  case "${prev}" in
+    file)
+      COMPREPLY=( $(compgen -f -- ${cur}) ) # match filenames
+      return 0
+      ;;
+    hostname)
+      COMPREPLY=( $(compgen -A hostname -- ${cur}) ) # match hostnames
+      return 0
+      ;;
+    *)
+      ;;
+  esac
+
+  COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+  return 0
 }
 complete -F _foo foo
