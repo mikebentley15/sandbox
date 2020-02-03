@@ -1,0 +1,47 @@
+# I usually don't use the xm tool, but it has the following options
+#
+# - xm list
+#   list all running Xen instances
+# - xm create ConfigName
+#   Create a new Xen instance using the configuration file in /etc/xen/ConfigName
+# - xm console Name
+#   Connect to the console of the running machine named "Name"
+#
+_xm()
+{
+  local cur prev opts base
+  COMPREPLY=()
+  cur="${COMP_WORDS[COMP_CWORD]}"
+  pref="${COMP_WORDS[COMP_CWORD-1]}"
+
+  #
+  # The basic options we'll complete.
+  #
+  opts="console create list"
+
+  #
+  # Complete the arguments to some of the basic commands
+  #
+  case "${prev}" in
+
+    console)
+      local running=$(for x in `xm list --long | grep \(name | grep -v Domain-0 | awk '{ print $2 }' | tr -d \)`; do echo ${x}; done)
+      COMPREPLY=( $(compgen -w "${running}" -- ${cur}) )
+      return 0
+      ;;
+
+    create)
+      local names=$(for x in `ls -1 /etc/xen/*.cfg`; do echo ${x/\/etc\/xen\//}; done)
+      COMPREPLY=( ${compgen -W "${names}" -- ${cur}} )
+      return 0
+      ;;
+
+    *)
+      ;;
+
+  esac
+
+  COMPREPLY=($(compgen -W "${opts}" -- ${cur}))
+  return 0
+}
+complete -F _xm xm
