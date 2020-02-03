@@ -1,0 +1,36 @@
+#!/usr/bin/env python3
+'''
+Simple script to use as an example for bash-completion
+'''
+
+import argparse
+import sys
+
+def gen_parser():
+    'Creates and returns the ArgumentParser'
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--version', action='store_true',
+                        help='Show version and exit')
+    parser.add_argument('--verbose', action='store_true',
+                        help='Verbose messages')
+    return parser
+
+def parse_args(arguments):
+    'Parses command-line arguments.  Returns the result.'
+    parser = gen_parser()
+    return parser.parse_args(arguments)
+
+def main(arguments):
+    'Main logic here'
+    args = parse_args(arguments)
+    if args.version:
+        print('foo version 1.0')
+        return 0
+    if args.verbose:
+        print('Verbose is turned on')
+    return 0
+
+if __name__ == '__main__':
+    sys.exit(main(sys.argv[1:]))
+
+# vim: set ft=python:
