@@ -2,6 +2,24 @@
 # bash completion for the bar command
 #
 
+_bar__sqlite_files()
+{
+  # match files ending in one of
+  #     .db, .sdb, .sqlite, .db3, .s3db, .sqlite3, .sl3
+  # * First call _filedir to populate everything into ${COMPREPLY[]}
+  # * Then filter out by file ending
+  _filedir
+  mapfile -t COMPREPLY < <( for entry in "${COMPREPLY[@]}"; do
+      if [ -f "${entry}" ]; then
+        echo "${entry}" | egrep ".*\.(db|sdb|sqlite|db3|s3db|sqlite3|sl3)$";
+      else
+        echo "${entry}";
+      fi
+    done
+  )
+  return 0
+}
+
 _bar_help()
 {
   local cur available_subcommands
@@ -47,19 +65,7 @@ _bar_bisect()
       ;;
 
     -a|--auto-sqlite-run)
-      # match files ending in one of
-      #     .db, .sdb, .sqlite, .db3, .s3db, .sqlite3, .sl3
-      # * First call _filedir to populate everything into ${COMPREPLY[]}
-      # * Then filter out by file ending
-      _filedir
-      mapfile -t COMPREPLY < <( for entry in "${COMPREPLY[@]}"; do
-          if [ -f "${entry}" ]; then
-            echo "${entry}" | egrep ".*\.(db|sdb|sqlite|db3|s3db|sqlite3|sl3)$";
-          else
-            echo "${entry}";
-          fi
-        done
-      )
+      _bar__sqlite_files
       return 0
       ;;
 
@@ -160,6 +166,30 @@ _bar_import()
   COMPREPLY=()
   cur="${COMP_WORDS[COMP_CWORD]}"
   prev="${COMP_WORDS[COMP_CWORD-1]}"
+  opts="-h --help
+    -a --append
+    -l --label
+    -r --run
+    -D --dbfile"
+
+  case "${prev}" in
+
+    -a|--append|-l|--label|-r|--run)
+      # no completion -- numbers and labels
+      return 0
+      ;;
+
+    -D|--dbfile)
+      _bar__sqlite_files
+      return 0
+      ;;
+
+  esac
+
+  COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+  _filedir # as positional arguments, we can specify files
+
+  return 0
 }
 
 _bar()
@@ -179,30 +209,12 @@ _bar()
 
   # subcommand subcompletion
   case "${subcommand}" in
-    help)
-      _bar_help
-      return
-      ;;
-    bisect)
-      _bar_bisect
-      return
-      ;;
-    init)
-      _bar_init
-      return
-      ;;
-    make)
-      _bar_make
-      return
-      ;;
-    update)
-      _bar_update
-      return
-      ;;
-    import)
-      _bar_import
-      return
-      ;;
+    help)   _bar_help   ;;
+    bisect) _bar_bisect ;;
+    init)   _bar_init   ;;
+    make)   _bar_make   ;;
+    update) _bar_update ;;
+    import) _bar_import ;;
   esac
 
   return 0
