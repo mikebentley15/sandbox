@@ -123,7 +123,8 @@ _bar_make()
 
     -j|--jobs|--exec-jobs|--make-args|-l|--label)
       # do no completion -- numbers, make arguments, and label
-      return 0;
+      return 0
+      ;;
 
   esac
 
@@ -137,6 +138,20 @@ _bar_update()
   COMPREPLY=()
   cur="${COMP_WORDS[COMP_CWORD]}"
   prev="${COMP_WORDS[COMP_CWORD-1]}"
+  opts="-h --help
+    -C --directory"
+
+  case "${prev}" in
+
+    -C|--directory)
+      _filedir -d
+      return 0
+      ;;
+
+  esac
+
+  COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+  return 0
 }
 
 _bar_import()
