@@ -2,19 +2,6 @@
 # bash completion for the bar command
 #
 
-_bar__match_directory()
-{
-  # TODO: what to do if there are no directories?
-  _filedir -d
-  mapfile -t COMPREPLY < <( for entry in "${COMPREPLY[@]}"; do
-      if [ -d "${entry}" ]; then
-        echo "${entry}";
-      fi
-    done
-  )
-  return 0
-}
-
 _bar_help()
 {
   local cur available_subcommands
@@ -46,7 +33,7 @@ _bar_bisect()
   case "${prev}" in
 
     -C|--directory)
-      _bar__match_directory
+      _filedir -d
       return
       ;;
 
@@ -103,6 +90,20 @@ _bar_init()
   COMPREPLY=()
   cur="${COMP_WORDS[COMP_CWORD]}"
   prev="${COMP_WORDS[COMP_CWORD-1]}"
+  opts="-h --help
+    -C --directory
+    --overwrite
+    -L --litmus-tests"
+
+  case "${prev}" in
+    -C|--directory)
+      _filedir -d
+      return 0
+      ;;
+  esac
+
+  COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+  return 0
 }
 
 _bar_make()
