@@ -1,25 +1,25 @@
 _foo()
 {
-  local cur prev opts
+  local cur prev opts actions
   COMPREPLY=()
   cur="${COMP_WORDS[COMP_CWORD]}"
   prev="${COMP_WORDS[COMP_CWORD-1]}"
-  opts="file hostname --help --verbose --version"
+  opts="--help --verbose --version"
+  actions="file hostname"
 
   case "${prev}" in
     file)
-      COMPREPLY=( $(compgen -f -- ${cur}) ) # match filenames
-      return 0
+      COMPREPLY=( $(compgen -f "${cur}") ) # match files
       ;;
     hostname)
-      COMPREPLY=( $(compgen -A hostname -- ${cur}) ) # match hostnames
-      return 0
+      COMPREPLY=( $(compgen -A hostname -- "${cur}") ) # match hostnames
       ;;
     *)
+      COMPREPLY=( $(compgen -W "${actions}" -- "${cur}") ) # match actions
       ;;
   esac
 
-  COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+  COMPREPLY+=( $(compgen -W "${opts}" -- "${cur}") ) # match options
   return 0
 }
 complete -F _foo foo
