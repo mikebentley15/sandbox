@@ -1,0 +1,216 @@
+#!/usr/bin/env python3
+#
+# parsing done according to:
+#
+#   https://chase-seibert.github.io/blog/2014/03/21/python-multilevel-argparse.html
+#
+'''
+Simple script to experiment with more complex command-line parsing,
+specifically with subcommands -- each subcommand having its own set of flags.
+
+To test this out, I copy the command-line arguments of FLiT without any
+functionality.
+'''
+
+import argparse
+import sys
+
+def _populate_parser_help(parser=None):
+    '''
+    Populate and return the ArgumentParser for the help subcommand.  If not
+    given, a new one is made.
+    '''
+    if parser is None:
+        parser = argparse.ArgumentParser()
+    parser.description = '''
+        Display help documentation for a specific subcommand.
+        '''
+    subparsers = parser.add_subparsers(
+        title='Subcommands',
+        dest='help_subcommand',
+        metavar='subcommand',
+        #description='Available commands',
+        #help='Help documentation for the subcommand group',
+        required=False)
+    subcommands = (
+        'bisect',
+        'init',
+        'make',
+        'update',
+        'import',
+        )
+    for subcommand in subcommands:
+        subparsers.add_parser(subcommand, help='')
+    return parser
+
+def _populate_parser_bisect(parser=None):
+    '''
+    Populate and return the ArgumentParser for the help subcommand.  If not
+    given, a new one is made.
+    '''
+    if parser is None:
+        parser = argparse.ArgumentParser()
+    parser.description = '''
+        Compiles the source code under both the ground-truth compilation and a
+        given problematic compilation.  This tool then finds the minimal set of
+        source files needed to be compiled under the problematic compilation
+        flags so that the same answer is given.  This allows you to narrow down
+        where the reproducibility problem lies.  The log of the procedure will
+        be kept in bisect.log.  Note that this file is overwritten if you call
+        flit bisect again.
+        '''
+    parser.add_argument('compilation', help='The problematic compilation to use.')
+    parser.add_argument('testcase', help='The testcase to use.')
+    parser.add_argument('-C', '--directory', help='The flit test directory')
+    parser.add_argument('-p', '--precision', default='double',
+                        choices=('float', 'double', 'long double'),
+                        help='Precision to use')
+    parser.add_argument('-a', '--auto-sqlite-run', metavar='SLITE_FILE',
+                        help='Automatically run bisect from the sqlite file')
+    parser.add_argument('--parallel', type=int,
+                        help='How many parallel bisects to run')
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='Verbose output')
+    parser.add_argument('-j', '--jobs', help='The number of parallel jobs')
+    parser.add_argument('-d', '--delete', action='store_true',
+                        help='Clean up as it goes')
+    parser.add_argument('-k', '--biggest', metavar='K', help='Bisect biggest mode')
+    parser.add_argument('--compile-only', action='store_true',
+                        help='Compile and exit')
+    parser.add_argument('--precompile-fpic', action='store_true',
+                        help='Precompile object files with -fPIC')
+    parser.add_argument('--skip-verification', action='store_true',
+                        help='Skip verification test run(s)')
+    parser.add_argument('-t', '--compiler-type',
+                        choices=('clang', 'gcc', 'intel', 'misc', 'auto'),
+                        default='auto', help='Compiler type of compilation')
+    return parser
+
+def _populate_parser_init(parser=None):
+    '''
+    Populate and return the ArgumentParser for the help subcommand.  If not
+    given, a new one is made.
+    '''
+    if parser is None:
+        parser = argparse.ArgumentParser()
+    parser.description = '''
+        Initializes a flit test dirctory for use.  It will initialize the
+        directory by copying the default configuration file into the given
+        directory.  If a configuration file already exists, this command does
+        nothing.  The config file is called flit-config.toml.
+        '''
+    parser.add_argument('-C', '--directory', help='The directory to initialize')
+    parser.add_argument('--overwrite', action='store_true', help='Overwrite files')
+    parser.add_argument('-L', '--litmus-tests', action='store_true',
+                        help='Copy over litmus tests too')
+    return parser
+
+def _populate_parser_make(parser=None):
+    '''
+    Populate and return the ArgumentParser for the help subcommand.  If not
+    given, a new one is made.
+    '''
+    if parser is None:
+        parser = argparse.ArgumentParser()
+    parser.description = '''
+        This command runs the full set of tests and adds the results to the
+        configured database.
+        '''
+    parser.add_argument('-j', '--jobs', type=int,
+                        help='Number of make parallel jobs')
+    parser.add_argument('--exec-jobs', type=int,
+                        help='Number of tests to run in parallel')
+    parser.add_argument('-q', '--quiet', action='store_true', help='Suppress output')
+    parser.add_argument('--make-args', help='Arguments to pass to make')
+    parser.add_argument('-l', '--label', help='label to attach to the run')
+    return parser
+
+def _populate_parser_update(parser=None):
+    '''
+    Populate and return the ArgumentParser for the help subcommand.  If not
+    given, a new one is made.
+    '''
+    if parser is None:
+        parser = argparse.ArgumentParser()
+    parser.description = '''
+        Updates the Makefile based on flit-config.toml.  The Makefile is
+        autogenerated and should not be modified manually.  If there are thing
+        you want to replace or add, you can use custom.mk which is included at
+        the end of the Makefile.  So, you may add rules, add to variables, or
+        override variables.
+        '''
+    parser.add_argument('-C', '--directory', help='Directory to initialize')
+    return parser
+
+def _populate_parser_import(parser=None):
+    '''
+    Populate and return the ArgumentParser for the help subcommand.  If not
+    given, a new one is made.
+    '''
+    if parser is None:
+        parser = argparse.ArgumentParser()
+    parser.description = '''
+        Import flit results into the configured database.  The configured
+        database is found from the settings in flit-config.toml.  You can
+        import either exported results or results from manually running the
+        tests.  Note that importing the same thing twice will result in having
+        two copies of it in the database.
+        '''
+    parser.add_argument('importfile', nargs='+', help='Files to import')
+    parser.add_argument('-a', '--append', metavar='RUN_ID', type=int,
+                        help='Append to this run id')
+    parser.add_argument('-l', '--label', help='The run label')
+    parser.add_argument('-r', '--run', type=int,
+                        help='Run number from an sqlite import file')
+    parser.add_argument('-D', '--dbfile', help='Store in this database')
+    return parser
+
+def populate_parser(parser=None):
+    'Populate and return the ArgumentParser.  If not given, a new one is made.'
+    if parser is None:
+        parser = argparse.ArgumentParser(
+            description='''
+                The flit command-line tool allows for users to write
+                portability test cases.  One can test primarily for compiler
+                effects on reproducibility of floating-point algorithms.  That
+                at least is the main use case for this tool, although you may
+                come up with some other uses.
+                ''')
+    subparsers = parser.add_subparsers(
+        title='Subcommands',
+        dest='subcommand',
+        metavar='subcommand',
+        #description='Available bar subcommands',
+        #help='Help documentation for the subcommand group',
+        required=True)
+    _populate_parser_help(subparsers.add_parser(
+        'help', help='display help for a specific subcommand'))
+    _populate_parser_bisect(subparsers.add_parser(
+        'bisect',
+        help='Bisect compilation to identify problematic source code'))
+    _populate_parser_init(subparsers.add_parser(
+        'init', help='Initializes a flit test directory for use'))
+    _populate_parser_make(subparsers.add_parser(
+        'make', help='Runs the make and adds to the database'))
+    _populate_parser_update(subparsers.add_parser(
+        'update', help='Updates the Makefile based on flit-config.toml'))
+    _populate_parser_import(subparsers.add_parser(
+        'import', help='Import flit results into the configured database'))
+    return parser
+
+def main(arguments):
+    'Main logic here'
+    parser = populate_parser()
+    args = parser.parse_args(arguments)
+    if args.subcommand == 'help':
+        if args.help_subcommand:
+            parser.parse_args([args.help_subcommand, '--help'])
+        else:
+            parser.parse_args(['help', '--help'])
+    print(args)
+    return 0
+
+if __name__ == '__main__':
+    sys.exit(main(sys.argv[1:]))
+
+# vim: set ft=python:

@@ -1,0 +1,178 @@
+#
+# bash completion for the bar command
+#
+
+_bar__match_directory()
+{
+  # TODO: what to do if there are no directories?
+  _filedir -d
+  mapfile -t COMPREPLY < <( for entry in "${COMPREPLY[@]}"; do
+      if [ -d "${entry}" ]; then
+        echo "${entry}";
+      fi
+    done
+  )
+  return 0
+}
+
+_bar_help()
+{
+  local cur available_subcommands
+  available_subcommands="help bisect init make update import"
+  cur="${COMP_WORDS[COMP_CWORD]}"
+  COMPREPLY=( $(compgen -W "${available_subcommands}" -- ${cur}) )
+}
+
+_bar_bisect()
+{
+  local cur prev opts
+  COMPREPLY=()
+  cur="${COMP_WORDS[COMP_CWORD]}"
+  prev="${COMP_WORDS[COMP_CWORD-1]}"
+  opts="-h --help
+    -C --directory
+    -p --precision
+    -a --auto-sqlite-run
+    --parallel
+    -v --verbose
+    -j --jobs
+    -d --delete
+    -k --biggest
+    --compile-only
+    --precompile-fpic
+    --skip-verification
+    -t --compiler-type"
+
+  case "${prev}" in
+
+    -C|--directory)
+      _bar__match_directory
+      return
+      ;;
+
+    -p|--precision)
+      # Because one of the options has a space, we use the
+      #   "mapfile -t COMPREPLY"
+      # approach instead
+      #COMPREPLY=( $(compgen -W "float double \"long double\"" -- ${cur}) )
+      mapfile -t COMPREPLY < <( compgen -W "float double 'long\\ double'" -- "${cur}")
+      return 0
+      ;;
+
+    -a|--auto-sqlite-run)
+      # match files ending in one of
+      #     .db, .sdb, .sqlite, .db3, .s3db, .sqlite3, .sl3
+      # * First call _filedir to populate everything into ${COMPREPLY[]}
+      # * Then filter out by file ending
+      _filedir
+      mapfile -t COMPREPLY < <( for entry in "${COMPREPLY[@]}"; do
+          if [ -f "${entry}" ]; then
+            echo "${entry}" | egrep ".*\.(db|sdb|sqlite|db3|s3db|sqlite3|sl3)$";
+          else
+            echo "${entry}";
+          fi
+        done
+      )
+      return 0
+      ;;
+
+    --parallel|-j|--jobs|-k|--biggest)
+      # these take integers.  What options can we give?
+      return 0
+      ;;
+
+    -t|--compiler-type)
+      COMPREPLY=( $(compgen -W "clang gcc intel misc auto" -- "${cur}") )
+      return 0
+      ;;
+
+  esac
+
+  COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+
+  # TODO: help construct the compilation string
+  # TODO: If there has already been one positional argument, then give a list
+  #       of test names
+
+  return 0
+}
+
+_bar_init()
+{
+  local cur prev opts
+  COMPREPLY=()
+  cur="${COMP_WORDS[COMP_CWORD]}"
+  prev="${COMP_WORDS[COMP_CWORD-1]}"
+}
+
+_bar_make()
+{
+  local cur prev opts
+  COMPREPLY=()
+  cur="${COMP_WORDS[COMP_CWORD]}"
+  prev="${COMP_WORDS[COMP_CWORD-1]}"
+}
+
+_bar_update()
+{
+  local cur prev opts
+  COMPREPLY=()
+  cur="${COMP_WORDS[COMP_CWORD]}"
+  prev="${COMP_WORDS[COMP_CWORD-1]}"
+}
+
+_bar_import()
+{
+  local cur prev opts
+  COMPREPLY=()
+  cur="${COMP_WORDS[COMP_CWORD]}"
+  prev="${COMP_WORDS[COMP_CWORD-1]}"
+}
+
+_bar()
+{
+  local cur prev subcommand available_subcommands
+  COMPREPLY=()
+  cur="${COMP_WORDS[COMP_CWORD]}"
+  prev="${COMP_WORDS[COMP_CWORD-1]}"
+  subcommand="${COMP_WORDS[1]}"
+  available_subcommands="help bisect init make update import"
+
+  # subcommand completion
+  if [ ${COMP_CWORD} -le 1 ]; then
+    COMPREPLY=( $(compgen -W "${available_subcommands}" -- "${cur}") )
+    return 0
+  fi
+
+  # subcommand subcompletion
+  case "${subcommand}" in
+    help)
+      _bar_help
+      return
+      ;;
+    bisect)
+      _bar_bisect
+      return
+      ;;
+    init)
+      _bar_init
+      return
+      ;;
+    make)
+      _bar_make
+      return
+      ;;
+    update)
+      _bar_update
+      return
+      ;;
+    import)
+      _bar_import
+      return
+      ;;
+  esac
+
+  return 0
+}
+complete -o bashdefault -F _bar bar 2>/dev/null || \
+  complete -F _bar bar
