@@ -112,6 +112,23 @@ _bar_make()
   COMPREPLY=()
   cur="${COMP_WORDS[COMP_CWORD]}"
   prev="${COMP_WORDS[COMP_CWORD-1]}"
+  opts="-h --help
+    -j --jobs
+    --exec-jobs
+    -q --quiet
+    --make-args
+    -l --label"
+
+  case "${prev}" in
+
+    -j|--jobs|--exec-jobs|--make-args|-l|--label)
+      # do no completion -- numbers, make arguments, and label
+      return 0;
+
+  esac
+
+  COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+  return 0
 }
 
 _bar_update()
