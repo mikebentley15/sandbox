@@ -23,9 +23,14 @@ _bar__sqlite_files()
 _bar_help()
 {
   local cur available_subcommands
-  available_subcommands="help bisect init make update import"
+  available_subcommands="-h --help bisect init make update import"
   cur="${COMP_WORDS[COMP_CWORD]}"
-  COMPREPLY=( $(compgen -W "${available_subcommands}" -- ${cur}) )
+  if [ ${COMP_CWORD} -le 2 ]; then
+    COMPREPLY=( $(compgen -W "${available_subcommands}" -- ${cur}) )
+  else
+    COMPREPLY=( $(compgen -W "-h --help" -- ${cur}) )
+  fi
+  return 0
 }
 
 _bar_bisect()
@@ -81,7 +86,8 @@ _bar_bisect()
 
   esac
 
-  COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+  _filedir
+  COMPREPLY+=( $(compgen -W "${opts}" -- "${cur}") )
 
   # TODO: help construct the compilation string
   # TODO: If there has already been one positional argument, then give a list
@@ -199,7 +205,7 @@ _bar()
   cur="${COMP_WORDS[COMP_CWORD]}"
   prev="${COMP_WORDS[COMP_CWORD-1]}"
   subcommand="${COMP_WORDS[1]}"
-  available_subcommands="help bisect init make update import"
+  available_subcommands="help bisect init make update import -h --help"
 
   # subcommand completion
   if [ ${COMP_CWORD} -le 1 ]; then

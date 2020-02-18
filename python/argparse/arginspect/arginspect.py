@@ -1,4 +1,6 @@
+import abc
 import argparse
+import unittest
 
 from pprintable import PPrintable
 
@@ -232,6 +234,8 @@ class ParserInspector(PPrintable):
 
         self.option_strings = sum(
             [a.option_strings for a in self.option_actions], start=[])
+        self.subparser_choices = sum(
+            [list(a.choices) for a in self.subparser_actions], start=[])
 
     def _get_kwargs(self):
         return [(name, getattr(self, name)) for name in [
@@ -241,4 +245,61 @@ class ParserInspector(PPrintable):
             'subparser_actions',
             ]]
 
+class ArgParseTestBase(unittest.TestCase, metaclass=abc.ABCMeta):
 
+    @abc.abstractmethod
+    def bashcomplete(self, args):
+        '''
+        Return a list of completions from the current string of arguments.
+
+        This is an abstract method that must be implemented by derivative
+        classes.
+        '''
+        pass
+
+    def assertEqualCompletion(self, args, expected_completions, msg=None):
+        'Asserts that the expected completions are obtained'
+        actual = self.bashcomplete(args)
+        self.assertEqual(set(expected_completions), set(actual), msg=msg)
+
+    def assertCompletionContains(self, args, expected_subset, msg=None):
+        'Asserts that the expected completions are found in the actual'
+        actual = self.bashcomplete(args)
+        self.assertLessEqual(set(expected_subset), set(actual), msg=msg)
+
+    def assertEmptyAvailableOptions(self, parser, cli=''):
+        '''
+        Asserts that all options and subparser choices are present in the bash
+        completion for the given parser and the current cli.
+
+        Note: The cli is only given to specify which subparser we are currently
+        doing.  The parser given should match the subparser associated with the
+        cli string.
+        '''
+        inspector = ParserInspector(parser)
+
+        expected_completions = inspector.option_strings
+        if not inspector.position_actions:
+            expected_completions.extend(inspector.subparser_choices)
+
+        self.assertCompletionContains(
+            cli, expected_completions,
+            msg='args: {}'.format(repr(cli)))
+
+    def assertEachSubparserEmptyAvailableOptions(self, parser, cli=''):
+        '''
+        Asserts that all options and subparser choices are present for the
+        current parser and for all subparsers recursively.  This method calls
+        assertEmptyAvailableOptions() for the given parser and for all
+        subparsers recursively.
+        '''
+        inspector = ParserInspector(parser)
+
+        # test this parser level
+        self.assertEmptyAvailableOptions(parser, cli)
+
+        # test all subparsers recursively
+        for choice in inspector.subparser_choices:
+            subinspector = inspector.subparser_actions[0].choices[choice]
+            self.assertEachSubparserEmptyAvailableOptions(
+                subinspector.parser, cli='{} {} '.format(cli, choice))

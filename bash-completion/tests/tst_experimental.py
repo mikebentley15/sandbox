@@ -16,15 +16,6 @@ with open(os.path.join(SCRIPT_DIR, '..', 'bin', 'bar'), 'r') as fin:
     bar = util.load_module_from_string('bar', fin.read())
 del fin
 
-class TestArgparse_Bar(unittest.TestCase):
-    BAR_PROG = 'bar'
-    BAR_BASH_COMPLETION = os.path.join(SCRIPT_DIR, '..', 'completions', 'bar')
-
-    def assertEqualCompletion(self, args, expected_completions):
-        'Asserts that the expected completions are obtained'
-        actual = get_completion(self.BAR_BASH_COMPLETION, self.BAR_PROG, args)
-        self.assertEqual(set(expected_completions), set(actual))
-
 class TestArgparseIntrospection(unittest.TestCase):
 
     def populate_args(self, parser):
