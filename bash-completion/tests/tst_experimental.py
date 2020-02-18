@@ -3,11 +3,11 @@
 import argparse
 import collections
 import os
-import pprint
 import sys
 import unittest
 
 from completion import get_completion
+from pprintable import PPrintable
 import testutil as util
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -24,34 +24,6 @@ def is_position_action(action):
 
 def is_subparser_action(action):
     return isinstance(action, argparse._SubParsersAction)
-
-class PPrintable:
-    def pp(self):
-        pprint.pprint(self)
-
-    def __str__(self):
-        return pprint.pformat(self)
-
-    def __repr__(self):
-        return type(self).__name__ + '(' + \
-            ', '.join(name + ': ' + repr(val) for name, val in self._get_kwargs()) + \
-            ')'
-
-    def _get_kwargs(self):
-        return sorted(self.__dict__.items())
-
-def _pprint_pprintable(printer, obj, stream, indent, allowance, context, level):
-    args = obj._get_kwargs()
-    write = stream.write
-    write(obj.__class__.__name__)
-    write('{')
-    if args:
-        write('\n' + (indent + printer._indent_per_level) * ' ')
-        printer._format_dict_items(args, stream, indent, allowance+1, context,
-                                   level)
-    write('}')
-
-pprint.PrettyPrinter._dispatch[PPrintable.__repr__] = _pprint_pprintable
 
 class ActionInspector(PPrintable):
     '''
