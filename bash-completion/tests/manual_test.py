@@ -3,9 +3,10 @@
 import argparse
 
 import arginspect
+import tst_experimental
 
 def main():
-    test = arginspect.TestArgparseIntrospection()
+    test = tst_experimental.TestArgparseIntrospection()
     p = test.populate_args(argparse.ArgumentParser())
     sub = p.add_subparsers()
     test.populate_args(sub.add_parser('a'))
