@@ -41,7 +41,6 @@ RUN hg clone https://bitbucket.org/osrf/gzweb $GZWEB_WS && \
 RUN cd $GZWEB_WS && \
     . /usr/share/gazebo/setup.sh && \
     . $NVM_DIR/nvm.sh && \
-    #export CPPFLAGS="$CPPFLAGS -DV8_IMMINENT_DEPRICATION_WARNINGS"
     xvfb-run -s "-screen 0 1280x1024x24" ./deploy.sh -m -t -c && \
     npm audit fix
 

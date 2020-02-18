@@ -2,15 +2,15 @@
 
 import argparse
 
-import tst_experimental
+import arginspect
 
 def main():
-    test = tst_experimental.TestArgparseIntrospection()
+    test = arginspect.TestArgparseIntrospection()
     p = test.populate_args(argparse.ArgumentParser())
     sub = p.add_subparsers()
     test.populate_args(sub.add_parser('a'))
     test.populate_args(sub.add_parser('b'))
-    i = tst_experimental.ParserInspector(p)
+    i = arginspect.ParserInspector(p)
     print(i)
 
 if __name__ == '__main__':
