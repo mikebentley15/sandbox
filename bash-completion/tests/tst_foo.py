@@ -1,12 +1,14 @@
-from unittest import TestCase
+#!/usr/bin/env python3
+
 import os
+import unittest
 
 from completion import get_completion
 import testutil as util
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
-class FooCompletionTest(TestCase):
+class FooCompletionTest(unittest.TestCase):
     FOO_PROG = 'foo'
     FOO_BASH_COMPLETION = os.path.join(SCRIPT_DIR, '..', 'completions', 'foo')
 
@@ -44,3 +46,6 @@ class FooCompletionTest(TestCase):
                     'file ',
                     ['--help', '--version', '--verbose'] + list(fnames))
                 self.assertEqualCompletion('file file2', ['file2.txt'])
+
+if __name__ == '__main__':
+    unittest.main()
