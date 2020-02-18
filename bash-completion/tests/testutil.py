@@ -2,8 +2,10 @@
 
 from contextlib import contextmanager
 from pathlib import Path
+import importlib.util
 import os
 import shutil
+import sys
 import tempfile
 
 def touch(filename):
@@ -87,4 +89,19 @@ def tempdir(*args, **kwargs):
         except FileNotFoundError:
             pass
 
+def load_module_from_string(name, contents):
+    'Load and return a python module from a string'
+    spec = importlib.util.spec_from_loader(name, loader=None)
+    module = importlib.util.module_from_spec(spec)
+    exec(contents, module.__dict__)
+    sys.modules[name] = module
+    return module
 
+def load_module_from_file(name, filepath):
+    'Load and return a python module from a filepath'
+    spec = importlib.util.spec_from_file_location(name, filepath)
+    print(spec)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    sys.modules[name] = module
+    return module

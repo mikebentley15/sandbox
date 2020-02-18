@@ -12,10 +12,9 @@ from pprintable import PPrintable
 import testutil as util
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
-
-sys.path.append(os.path.join(SCRIPT_DIR, '..', 'bin'))
-import bar
-sys.path.pop()
+with open(os.path.join(SCRIPT_DIR, '..', 'bin', 'bar'), 'r') as fin:
+    bar = util.load_module_from_string('bar', fin.read())
+del fin
 
 class TestArgparse_Bar(unittest.TestCase):
     BAR_PROG = 'bar'
