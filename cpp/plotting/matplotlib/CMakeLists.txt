@@ -14,7 +14,9 @@ set(SOURCES
   ex04.cpp
   ex05.cpp
   ex06.cpp
+  ex07.cpp
   cubic_spline.cpp
+  make_image.cpp
   )
 
 foreach(source ${SOURCES})

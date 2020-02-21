@@ -1,5 +1,3 @@
-#include "CubicSpline.h"
-
 #include <matplotlibcpp.h>
 
 #include <iterator>
