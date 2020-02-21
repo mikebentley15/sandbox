@@ -9,6 +9,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 set(SOURCES
   harmonic_oscillator.cpp
+  phase_lattice.cpp
   )
 
 foreach(source ${SOURCES})
