@@ -13,6 +13,7 @@ find_package(ament_cmake REQUIRED)
 find_package(interactive_markers REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(visualization_msgs REQUIRED)
+find_package(Eigen3 3.3 REQUIRED)
 
 add_executable(basic_shapes src/basic_shapes.cpp)
 ament_target_dependencies(basic_shapes rclcpp visualization_msgs)
@@ -27,7 +28,12 @@ install(TARGETS points_and_lines DESTINATION lib/${PROJECT_NAME})
 # ament_target_dependencies(interactive_simple_marker rclcpp interactive_markers)
 # install(TARGETS interactive_simple_marker DESTINATION lib/${PROJECT_NAME})
 
-# add_executable(view_tendon src/view_tendon.cpp)
-# install(TARGETS view_tendon DESTINATION lib/${PROJECT_NAME})
+add_executable(view_tendon src/view_tendon.cpp)
+ament_target_dependencies(view_tendon rclcpp visualization_msgs)
+target_include_directories(view_tendon PUBLIC
+  include
+  ${EIGEN3_INCLUDE_DIRS}
+  )
+install(TARGETS view_tendon DESTINATION lib/${PROJECT_NAME})
 
 ament_package()

@@ -1,8 +1,9 @@
 #include <collision/CapsuleSequence.h>
 
-#include <ros/ros.h>
-#include <visualization_msgs/Marker.h>
-#include <visualization_msgs/MarkerArray.h>
+#include <rclcpp/rclcpp.hpp>
+#include <visualization_msgs/msg/marker.hpp>
+#include <visualization_msgs/msg/marker_array.hpp>
+#include <rcl_interfaces/msg/parameter_descriptor.hpp>
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
@@ -15,13 +16,117 @@ namespace E = Eigen;
 using Vec = E::Vector3d;
 using Mat = E::Matrix3d;
 using Quaternion = E::Quaterniond;
+using collision::CapsuleSequence;
+
+using namespace std::chrono_literals;
+using visualization_msgs::msg::Marker;
+using visualization_msgs::msg::MarkerArray;
+using ParamDesc = rcl_interfaces::msg::ParameterDescriptor;
 
 inline Quaternion find_quat_from_zaxis(const Vec &A) {
   return Quaternion::FromTwoVectors(Vec{0, 0, 1}, A);
 }
 
+class ViewTendonPublisher : public rclcpp::Node {
+public:
+  ViewTendonPublisher(const CapsuleSequence &seq)
+    : rclcpp::Node("view_tendon")
+    , _seq(seq)
+  {
+    initialize_parameters();
+    _publisher = this->create_publisher<MarkerArray>(
+        "visualization_marker_array", 10);
+
+    auto timer_callback = [this]() -> void {
+      MarkerArray robot;
+
+      // initialize segment
+      Marker segment;
+      segment.header.frame_id = "/my_frame";
+      segment.header.stamp = this->now();
+      segment.ns = "view_tendon";
+      segment.type = Marker::CYLINDER;
+      segment.action = Marker::ADD;
+      segment.scale.x = this->_seq.r;
+      segment.scale.y = this->_seq.r;
+      segment.color.g = 1.0;
+      segment.color.a = 1.0;
+
+      if (this->rotate_points()) {
+        this->_current_point_rotation = this->_current_rotation;
+      }
+      if (this->rotate_cylinders()) {
+        this->_current_cylinder_rotation = this->_current_rotation;
+      }
+
+      // Populate marker array
+      for (size_t i = 0; i < this->_seq.size(); i++) {
+        auto capsule = this->_seq[i];
+        auto quat = find_quat_from_zaxis(capsule.b - capsule.a);
+        quat = this->_current_cylinder_rotation * quat;
+        capsule.a = this->_current_point_rotation * capsule.a;
+        capsule.b = this->_current_point_rotation * capsule.b;
+
+        segment.id = i + 1;
+        segment.scale.z = (capsule.b - capsule.a).norm();
+        segment.pose.position.x = capsule.a[0];
+        segment.pose.position.y = capsule.a[1];
+        segment.pose.position.z = capsule.a[2];
+        segment.pose.orientation.x = quat.x();
+        segment.pose.orientation.y = quat.y();
+        segment.pose.orientation.z = quat.z();
+        segment.pose.orientation.w = quat.w();
+
+        robot.markers.push_back(segment);
+      }
+      this->_publisher->publish(robot);
+
+      if (this->rotate_points() || this->rotate_cylinders()) {
+        this->_current_rotation *= this->_frame_rotation;
+      }
+    };
+
+    _timer = this->create_wall_timer(33ms, timer_callback);
+  }
+
+  bool rotate_points() const {
+    return this->get_parameter("rotate_points").as_bool();
+  }
+
+  bool rotate_cylinders() const {
+    return this->get_parameter("rotate_cylinders").as_bool();
+  }
+
+  //bool rotate_points() const { return true; }
+  //bool rotate_cylinders() const { return true; }
+
+private:
+  void initialize_parameters() {
+    ParamDesc rotate_points_description;
+    rotate_points_description.description =
+      "Turn on/off the rotation of points";
+    this->declare_parameter("rotate_points", false, rotate_points_description);
+
+    ParamDesc rotate_cylinders_description;
+    rotate_cylinders_description.description =
+      "Turn on/off the rotation of cylinders";
+    this->declare_parameter("rotate_cylinders", false,
+                            rotate_cylinders_description);
+
+    // TODO: add rotation rate in radians per second
+  }
+
+private:
+  const CapsuleSequence &_seq;
+  rclcpp::Publisher<MarkerArray>::SharedPtr _publisher;
+  rclcpp::TimerBase::SharedPtr _timer;
+  Quaternion _frame_rotation{E::AngleAxisd(0.02*M_PI, Vec::UnitZ())};
+  Quaternion _current_rotation{1, 0, 0, 0};
+  Quaternion _current_point_rotation{1, 0, 0, 0};
+  Quaternion _current_cylinder_rotation{1, 0, 0, 0};
+};
+
 int main(int argCount, char* argList[]) {
-  bool rotate = true;
   collision::CapsuleSequence sequence {{
     {0,                      0,                      0                    },
     {0.00013282379244664586, 8.8542686704915893e-05, 0.0048183362822623761},
@@ -66,84 +171,8 @@ int main(int argCount, char* argList[]) {
     {0.037896267549349043,  -0.10421790770166464,    0.12533401771210487  },
     }, 0.01};
 
-  ros::init(argCount, argList, "view_tendon");
-  ros::NodeHandle n;
-  //ros::Publisher marker_pub =
-  //  n.advertise<visualization_msgs::Marker>("visualization_marker", 10);
-  ros::Publisher markerarray_pub =
-    n.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 10);
-
-  ros::Rate r(30);
-
-  Quaternion frame_rotation(E::AngleAxisd(0.02*M_PI, Vec::UnitZ()));
-  Quaternion current_rotation;
-  current_rotation.setIdentity();
-
-  while (ros::ok()) {
-    //visualization_msgs::Marker line_strip;
-
-    //line_strip.header.frame_id = "/my_frame";
-    //line_strip.header.stamp = ros::Time::now();
-    //line_strip.ns = "view_tendon";
-    //line_strip.type = visualization_msgs::Marker::LINE_STRIP;
-    //line_strip.action = visualization_msgs::Marker::ADD;
-    //line_strip.pose.orientation.w = 1.0;  // nonzero part of quat orientation
-    //line_strip.id = 0;                    // unique id in namespace
-    //line_strip.scale.x = sequence.r;      // line width
-    //line_strip.color.b = 1.0;             // blue
-    //line_strip.color.a = 1.0;             // opaque
-
-    //for (auto &p : sequence.points) {
-    //  geometry_msgs::Point new_point;
-    //  new_point.x = p[0];
-    //  new_point.y = p[1];
-    //  new_point.z = p[2];
-    //  line_strip.points.push_back(new_point);
-    //}
-
-    //marker_pub.publish(line_strip);
-
-    visualization_msgs::MarkerArray robot;
-    for (size_t i = 0; i < sequence.size(); i++) {
-      auto capsule = sequence[i];
-      visualization_msgs::Marker robot_segment;
-      robot_segment.header.frame_id = "/my_frame";
-      robot_segment.header.stamp = ros::Time::now();
-      robot_segment.ns = "view_tendon";
-      robot_segment.type = visualization_msgs::Marker::CYLINDER;
-      robot_segment.action = visualization_msgs::Marker::ADD;
-      robot_segment.pose.orientation.w = 1.0;
-      robot_segment.id = i + 1;
-      robot_segment.scale.x = capsule.r;
-      robot_segment.scale.y = capsule.r;
-      robot_segment.scale.z = (capsule.b - capsule.a).norm();
-      robot_segment.color.r = 0.0;
-      robot_segment.color.g = 1.0; // green color
-      robot_segment.color.b = 0.0;
-      robot_segment.color.a = 0.5; // semi-transparent
-
-      auto quat = find_quat_from_zaxis(capsule.b - capsule.a);
-      if (rotate) {
-        quat = current_rotation * quat;
-        capsule.a = current_rotation * capsule.a;
-      }
-      robot_segment.pose.position.x = capsule.a[0];
-      robot_segment.pose.position.y = capsule.a[1];
-      robot_segment.pose.position.z = capsule.a[2];
-      robot_segment.pose.orientation.x = quat.x();
-      robot_segment.pose.orientation.y = quat.y();
-      robot_segment.pose.orientation.z = quat.z();
-      robot_segment.pose.orientation.w = quat.w();
-      robot_segment.lifetime = ros::Duration();
-
-      robot.markers.push_back(robot_segment);
-    }
-    markerarray_pub.publish(robot);
-
-    r.sleep();
-    current_rotation *= frame_rotation;
-  }
-
+  rclcpp::init(argCount, argList);
+  rclcpp::spin(std::make_shared<ViewTendonPublisher>(sequence));
+  rclcpp::shutdown();
   return 0;
 }
-

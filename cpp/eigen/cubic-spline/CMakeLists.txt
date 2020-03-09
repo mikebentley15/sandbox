@@ -24,5 +24,6 @@ foreach(source ${SOURCES})
   target_link_libraries(${target}
     Python3::Python
     Python3::NumPy
-    Eigen3::Eigen)
+    Eigen3::Eigen
+    )
 endforeach(source)
