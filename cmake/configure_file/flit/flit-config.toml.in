@@ -1,0 +1,57 @@
+[run]
+enable_mpi = false
+
+[dev_build]
+compiler_name = @compiler_name@
+optimization_level = '-O2'
+switches = '-funsafe-math-optimizations'
+
+[ground_truth]
+compiler_name = @compiler_name@
+optimization_level = '-O0'
+switches = ''
+
+[[compiler]]
+binary = @compiler_binary@
+name = @compiler_name@
+type = @compiler_type@
+fixed_compile_flags = @compiler_fixed_flags@
+fixed_link_flags = @compiler_fixed_ldflags@
+optimization_levels = @compiler_optimization_levels@
+switches_list = @compiler_switches_list@
+
+# I want to make the above match the below after replacement
+#
+# [[compiler]]
+# binary = 'clang++'
+# name = 'clang++'
+# type = 'clang'
+# fixed_compile_flags = '-gxx-name=/usr/local/bin/g++-8'
+# fixed_link_flags = '-use-ld=gold -gxx-name=/usr/local/bin/g++-8'
+# optimization_levels = [
+#   '-O0',
+#   '-O1',
+#   '-O2',
+#   '-O3',
+# ]
+# switches_list = [
+#   '-fassociative-math',
+#   '-fexcess-precision=fast',
+#   '-fexcess-precision=standard',
+#   '-ffinite-math-only',
+#   '-ffloat-store',
+#   '-ffp-contract=on',
+#   '-fmerge-all-constants',
+#   '-fno-trapping-math',
+#   '-freciprocal-math',
+#   '-frounding-math',
+#   '-fsignaling-nans',
+#   '-fsingle-precision-constant',
+#   '-funsafe-math-optimizations',
+#   '-march=core-avx2',
+#   '-mavx',
+#   '-mavx2 -mfma',
+#   '-mfpmath=sse -mtune=native',
+#   ''
+# ]
+

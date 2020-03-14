@@ -1,0 +1,81 @@
+[run]
+enable_mpi = false
+
+[dev_build]
+compiler_name = 'clang++'
+optimization_level = '-O2'
+switches = '-funsafe-math-optimizations'
+
+[ground_truth]
+compiler_name = 'clang++'
+optimization_level = '-O0'
+switches = ''
+
+[[compiler]]
+binary = 'clang++'
+name = 'clang++'
+type = 'clang'
+fixed_compile_flags = '-gxx-name=/usr/local/bin/g++-8'
+fixed_link_flags = '-use-ld=gold -gxx-name=/usr/local/bin/g++-8'
+optimization_levels = [
+  '-O0',
+  '-O1',
+  '-O2',
+  '-O3'
+]
+switches_list = [
+  '-fassociative-math',
+  '-fexcess-precision=fast',
+  '-fexcess-precision=standard',
+  '-ffinite-math-only',
+  '-ffloat-store',
+  '-ffp-contract=on',
+  '-fmerge-all-constants',
+  '-fno-trapping-math',
+  '-freciprocal-math',
+  '-frounding-math',
+  '-fsignaling-nans',
+  '-fsingle-precision-constant',
+  '-funsafe-math-optimizations',
+  '-march=core-avx2',
+  '-mavx',
+  '-mavx2 -mfma',
+  '-mfpmath=sse -mtune=native',
+  ''
+]
+
+# I want to make the above match the below after replacement
+#
+# [[compiler]]
+# binary = 'clang++'
+# name = 'clang++'
+# type = 'clang'
+# fixed_compile_flags = '-gxx-name=/usr/local/bin/g++-8'
+# fixed_link_flags = '-use-ld=gold -gxx-name=/usr/local/bin/g++-8'
+# optimization_levels = [
+#   '-O0',
+#   '-O1',
+#   '-O2',
+#   '-O3',
+# ]
+# switches_list = [
+#   '-fassociative-math',
+#   '-fexcess-precision=fast',
+#   '-fexcess-precision=standard',
+#   '-ffinite-math-only',
+#   '-ffloat-store',
+#   '-ffp-contract=on',
+#   '-fmerge-all-constants',
+#   '-fno-trapping-math',
+#   '-freciprocal-math',
+#   '-frounding-math',
+#   '-fsignaling-nans',
+#   '-fsingle-precision-constant',
+#   '-funsafe-math-optimizations',
+#   '-march=core-avx2',
+#   '-mavx',
+#   '-mavx2 -mfma',
+#   '-mfpmath=sse -mtune=native',
+#   ''
+# ]
+
