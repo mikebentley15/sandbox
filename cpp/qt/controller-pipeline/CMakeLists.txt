@@ -25,4 +25,5 @@ add_executable(controller_pipeline
   src/Registrar.h
   src/main.cpp
 )
+set_property(TARGET controller_pipeline PROPERTY CXX_STANDARD 14)
 target_link_libraries(controller_pipeline Qt5::Core Qt5::Gui)

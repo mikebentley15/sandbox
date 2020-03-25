@@ -18,6 +18,7 @@ public slots:
   void log_registered_pose(QDateTime time, QVector3D position,
                            QQuaternion quat, int sensor);
   void log_belief(QVector3D position, QQuaternion quat);
+  void log_quit();
 };
 
 #endif // LOGGER_H

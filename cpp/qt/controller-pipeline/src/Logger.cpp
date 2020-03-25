@@ -30,3 +30,8 @@ void Logger::log_belief(QVector3D position, QQuaternion quat)
   qDebug() << "Logger::log_belief("
            << position << ", " << quat << ")";
 }
+
+void Logger::log_quit()
+{
+  qDebug() << "Logger::log_quit()";
+}
