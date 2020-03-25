@@ -42,7 +42,17 @@ int main(int argCount, char *argList[]) {
   QObject::connect(&registrar, &Registrar::new_registered_pose,
                    &logger, &Logger::log_registered_pose);
 
+  // connect everything else
+  QObject::connect(&controller, &Controller::robot_command,
+                   &registrar, &Registrar::add_robot_pose);
+  QObject::connect(&reader, &FakeReader::new_sensor_reading,
+                   &registrar, &Registrar::add_sensor_reading);
+  QObject::connect(&registrar, &Registrar::new_registered_pose,
+                   &filter, &LocalizingFilter::filter_reading);
+
   // 1 second of running
   QTimer::singleShot(1000, &app, &QCoreApplication::quit);
+
+  qDebug() << "Starting application";
   return app.exec();
 }
