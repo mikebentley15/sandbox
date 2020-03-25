@@ -1,20 +1,29 @@
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
 
-#include <QObject>
 #include <QDateTime>
-#include <QVector3D>
+#include <QObject>
 #include <QQuaternion>
+#include <QTimer>
+#include <QVector3D>
+
+#include <memory>
 
 class Controller : public QObject {
   Q_OBJECT
 
 public:
-  Controller(QObject *parent = nullptr) : QObject(parent) {}
+  Controller(QObject *parent = nullptr);
 
 signals:
   void robot_command(QDateTime time, QVector3D position,
                      QQuaternion orientation);
+
+private slots:
+  void create_next_command();
+
+private:
+  std::unique_ptr<QTimer> _timer;
 };
 
 #endif // CONTROLLER_H

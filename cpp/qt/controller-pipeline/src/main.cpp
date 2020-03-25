@@ -16,8 +16,8 @@ void timestampMessageHandler(QtMsgType type, const QMessageLogContext &context,
                              const QString &msg)
 {
   QByteArray localMsg = msg.toLocal8Bit();
-  std::cerr << QTime::currentTime().toString().toStdString() << ": "
-            << msg.toStdString() << std::endl;
+  std::cerr << QTime::currentTime().toString(Qt::ISODateWithMs).toStdString()
+            << ": " << msg.toStdString() << std::endl;
 }
 
 int main(int argCount, char *argList[]) {

@@ -19,6 +19,10 @@ public slots:
 signals:
   void new_registered_pose(QDateTime time, QVector3D position,
                            QQuaternion quat, int sensor);
+
+private:
+  QVector3D _last_pos{};
+  QQuaternion _last_quat{};
 };
 
 #endif // REGISTRAR_H
