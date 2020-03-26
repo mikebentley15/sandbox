@@ -15,6 +15,8 @@ int main(int argCount, char* argList[]) {
   // Put sender and receiver in different threads
   QThread s_thread;
   QThread r_thread;
+  s_thread.setObjectName(" sending ");
+  r_thread.setObjectName("receiving");
   QObject::connect(&app, &QCoreApplication::aboutToQuit,
                    &s_thread, &QThread::quit);
   QObject::connect(&app, &QCoreApplication::aboutToQuit,
@@ -33,13 +35,13 @@ int main(int argCount, char* argList[]) {
   QObject::connect(&s, &Sender::send_1,
     [](int a, int b, int c, int d, int e) -> void {
       qDebug() << current_thread_id() << ":"
-               << "send_1   ("
+               << "send_1     ("
                << a << "," << b << "," << c << "," << d << "," << e
                << ")";
     });
   QObject::connect(&s, &Sender::send_2,
     [](const Derived &d) -> void {
-      d.print_me(std::string(current_thread_id()) + " : send_2:");
+      d.print_me(std::string(current_thread_id()) + " : send_2:   ");
     });
 
   // connect the sender to the receiver
@@ -66,7 +68,8 @@ int main(int argCount, char* argList[]) {
   QObject::connect(&t2, &QTimer::timeout,
     [&s]() -> void {
       static Derived d{};
-      d.age += 1;
+      d.age += 1;      // husband is moving forward in time
+      d.wife_age -= 1; // wife is moving backward in time
       emit s.send_2(d);
     });
 

@@ -17,7 +17,7 @@ public:
 public slots:
   void receive_1(int a, int b) {
     qDebug() << current_thread_id() << ":"
-             << "receive_1(" << a << "," << b << ")";
+             << "receive_1  (" << a << "," << b << ")";
   }
 
   void receive_2(const Base &b) {

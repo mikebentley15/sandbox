@@ -12,7 +12,9 @@ inline const char* current_thread_id() {
   static thread_local std::string id;
   if (id.empty()) {
     std::ostringstream out;
-    out << "QThread(" << QThread::currentThreadId() << ")";
+    QThread* current = QThread::currentThread();
+    out << "QThread(" << current->objectName().toStdString() << ", "
+        << QThread::currentThreadId() << ")";
     id = out.str();
   }
   return id.c_str();
