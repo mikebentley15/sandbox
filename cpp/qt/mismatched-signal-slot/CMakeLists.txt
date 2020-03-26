@@ -13,8 +13,9 @@ endif()
 find_package(Qt5 COMPONENTS Core Gui REQUIRED)
 
 add_executable(mismatched_signal_slot
-  src/Sender.h
+  src/MessageTypes.h
   src/Receiver.h
+  src/Sender.h
   src/main.cpp
 )
 set_property(TARGET mismatched_signal_slot PROPERTY CXX_STANDARD 14)
