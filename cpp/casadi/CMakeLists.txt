@@ -17,3 +17,15 @@ find_package(casadi 3.5 MODULE)
 add_executable(ex01 apps/ex01.cpp)
 target_link_libraries(ex01 PUBLIC casadi)
 set_property(TARGET ex01 PROPERTY CXX_STANDARD 11)
+
+add_executable(ex02 apps/ex02.cpp)
+target_link_libraries(ex02 PUBLIC casadi)
+set_property(TARGET ex02 PROPERTY CXX_STANDARD 11)
+
+add_executable(ex03 apps/ex03.cpp)
+target_link_libraries(ex03 PUBLIC casadi)
+set_property(TARGET ex03 PROPERTY CXX_STANDARD 11)
+
+add_executable(ex04 apps/ex04.cpp)
+target_link_libraries(ex04 PUBLIC casadi)
+set_property(TARGET ex04 PROPERTY CXX_STANDARD 11)

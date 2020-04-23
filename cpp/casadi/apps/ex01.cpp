@@ -2,6 +2,10 @@
 
 #include <vector>
 
+// automatic differentiation of
+//   x in R^5
+//   f(x) = || x ||
+
 int main() {
   using namespace casadi;
 
