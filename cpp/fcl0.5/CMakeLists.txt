@@ -5,7 +5,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 message("CMAKE_MODULE_PATH = ${CMAKE_MODULE_PATH}")
 
 
-find_package(fcl 0.5)
+find_package(fcl 0.5 EXACT REQUIRED)
 
 add_executable(mesh_collision mesh_collision.cpp)
 target_include_directories(mesh_collision PUBLIC ${FCL_INCLUDE_DIRS})
