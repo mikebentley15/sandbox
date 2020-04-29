@@ -1,9 +1,8 @@
 cmake_minimum_required(VERSION 3.5)
 project(fcl_sandbox LANGUAGES CXX)
 
-set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 message("CMAKE_MODULE_PATH = ${CMAKE_MODULE_PATH}")
-
 
 find_package(fcl 0.5 EXACT REQUIRED)
 
