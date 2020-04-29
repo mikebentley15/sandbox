@@ -1,13 +1,18 @@
 #include "Mesh.h"
 
-#include <fcl/BVH/BVH_model.h>  // for meshes
+#include <fcl/collision.h>      // for checkCollision
+#include <fcl/BV/OBB.h>
 
 #include <iomanip>
 #include <iostream>
 
-template <typename BV_A, typename BV_B>
-bool collides(const fcl::BVHModel<BV_A> &a, const fcl::BVHModel<BV_B> &b) {
-  return true;
+bool collides(const std::shared_ptr<fcl::CollisionObject> &a,
+              const std::shared_ptr<fcl::CollisionObject> &b)
+{
+  fcl::CollisionRequest request; // default request
+  fcl::CollisionResult result;
+  fcl::collide(a.get(), b.get(), request, result);
+  return result.isCollision();
 }
 
 int main(int argCount, char* argList[]) {
@@ -16,8 +21,8 @@ int main(int argCount, char* argList[]) {
     return 1;
   }
 
-  auto A = Mesh::from_stl(argList[1]).to_fcl<fcl::AABB>(); // first as axis-aligned
-  auto B = Mesh::from_stl(argList[2]).to_fcl<fcl::OBB>();  // second as oriented
+  auto A = Mesh::from_stl(argList[1]).to_fcl_object<fcl::OBB>();
+  auto B = Mesh::from_stl(argList[2]).to_fcl_object<fcl::OBB>();
 
   std::cout << "collides: " << std::boolalpha << collides(A, B) << "\n";
 
