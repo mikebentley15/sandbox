@@ -6,12 +6,85 @@
 #include <QtCore/QObject>
 #include <QtCore/QTimer>
 
+#include <unordered_map>
+#include <string>
 #include <vector>
+
+// // A one to one mapping that can be referenced either from key->value or
+// // value->key.  Both types are zero-based index types
+// //
+// // The set_mapping() operation will actually do a swap to ensure a one-to-one
+// // mapping.
+// //
+// // Initializes to map 0 - (N-1) to 0 - (N-1), i.e., the identity mapping
+// template <int N>
+// class IndexMapper {
+// public:
+//   IndexMapper() {
+//     for (int i = 0; i < N; i++) {
+//       _val_to_key[i] = i;
+//       _key_to_val[i] = i;
+//     }
+//   }
+//
+//   int size() const { return N; }
+//
+//   // TODO: add ability to iterate over (key, value) pairs.
+//
+//   int get_val(int key) const { return _key_to_val[key]; }
+//   int get_key(int val) const { return _val_to_key[val]; }
+//
+//   void set_mapping(int key, int val) {
+//     if (_key_to_val[key] == val) {
+//       return;
+//     }
+//     if (key >= N || val >= N) {
+//       throw std::out_of_range("key or val too big for IndexMapper");
+//     }
+//
+//     // suppose this situation:
+//     //   0 -> 3
+//     //   1 -> 2
+//     //   2 -> 1
+//     //   3 -> 0
+//     // then I call set_mapping(1, 0).  I want it to then look like
+//     //   0 -> 3
+//     //   1 -> 0
+//     //   2 -> 1
+//     //   3 -> 2
+//     int oldval = _key_to_val[key];
+//     int oldkey = _val_to_key[val];
+//     _key_to_val[key]    = val;
+//     _val_to_key[val]    = key;
+//     _key_to_val[oldkey] = oldval;
+//     _val_to_key[oldval] = oldkey;
+//   }
+//
+// private:
+//   int _val_to_key[N];
+//   int _key_to_val[N];
+// };
+
 
 class GamepadManager;
 
 class Gamepad : public QObject {
   Q_OBJECT
+
+private:
+
+  // TODO: add ability to remap buttons
+  //using NotifySignalPtr = void (Gamepad::*)();
+
+  //struct Button {
+  //  std::string name;
+  //  NotifySignalPtr pressed_signal;
+  //  NotifySignalPtr released_signal;
+  //};
+
+  //static Button buttons[] = {
+  //  {"hello", nullptr, nullptr},
+  //};
 
 public:
   int id() const { return _id; };
@@ -28,7 +101,40 @@ signals:
   void trigger_released(int trigger);
   void stick_direction_changed(int stick, int direction);
 
-  // TODO: add signals like button_a() and so forth
+  void dpad_up_pressed();
+  void dpad_up_released();
+  void dpad_down_pressed();
+  void dpad_down_released();
+  void dpad_left_pressed();
+  void dpad_left_released();
+  void dpad_right_pressed();
+  void dpad_right_released();
+  void start_pressed();
+  void start_released();
+  void select_pressed();
+  void select_released();
+  void L1_pressed();
+  void L1_released();
+  void R1_pressed();
+  void R1_released();
+  void L2_pressed();
+  void L2_released();
+  void R2_pressed();
+  void R2_released();
+  void L3_pressed();
+  void L3_released();
+  void R3_pressed();
+  void R3_released();
+  void X_pressed();
+  void X_released();
+  void Y_pressed();
+  void Y_released();
+  void A_pressed();
+  void A_released();
+  void B_pressed();
+  void B_released();
+  void left_joystick_changed(double x, double y);
+  void right_joystick_changed(double x, double y);
 
 private:
   // Private constructor that only GamepadManager can call
@@ -36,7 +142,16 @@ private:
     : QObject(parent)
     , _id(id)
     , _is_connected(false)
-  {}
+  {
+    connect(this, &Gamepad::button_pressed,
+            this, &Gamepad::emit_specific_button_pressed);
+    connect(this, &Gamepad::button_released,
+            this, &Gamepad::emit_specific_button_released);
+    connect(this, &Gamepad::trigger_pressed,
+            this, &Gamepad::emit_specific_trigger_pressed);
+    connect(this, &Gamepad::trigger_released,
+            this, &Gamepad::emit_specific_trigger_released);
+  }
 
   void mark_connected()    { _is_connected = true; }
   void mark_disconnected() { _is_connected = false; }
@@ -45,6 +160,62 @@ private slots:
   // TODO: emit signals for things like button_a() and so forth
   // TODO: implement a mapping for button integer to button type
   // TODO: allow the user to modify the mapping
+
+  void emit_specific_button_pressed(int button) {
+    switch (static_cast<GAMEPAD_BUTTON>(button)) {
+      case BUTTON_DPAD_UP:        emit dpad_up_pressed();    break;
+      case BUTTON_DPAD_DOWN:      emit dpad_down_pressed();  break;
+      case BUTTON_DPAD_LEFT:      emit dpad_left_pressed();  break;
+      case BUTTON_DPAD_RIGHT:     emit dpad_right_pressed(); break;
+      case BUTTON_START:          emit start_pressed();      break;
+      case BUTTON_BACK:           emit select_pressed();     break;
+      case BUTTON_LEFT_THUMB:     emit L3_pressed();         break;
+      case BUTTON_RIGHT_THUMB:    emit R3_pressed();         break;
+      case BUTTON_LEFT_SHOULDER:  emit L1_pressed();         break;
+      case BUTTON_RIGHT_SHOULDER: emit R1_pressed();         break;
+      case BUTTON_A:              emit A_pressed();          break;
+      case BUTTON_B:              emit B_pressed();          break;
+      case BUTTON_X:              emit X_pressed();          break;
+      case BUTTON_Y:              emit Y_pressed();          break;
+      default: break; // do nothing
+    }
+  }
+
+  void emit_specific_button_released(int button) {
+    switch (static_cast<GAMEPAD_BUTTON>(button)) {
+      case BUTTON_DPAD_UP:        emit dpad_up_released();    break;
+      case BUTTON_DPAD_DOWN:      emit dpad_down_released();  break;
+      case BUTTON_DPAD_LEFT:      emit dpad_left_released();  break;
+      case BUTTON_DPAD_RIGHT:     emit dpad_right_released(); break;
+      case BUTTON_START:          emit start_released();      break;
+      case BUTTON_BACK:           emit select_released();     break;
+      case BUTTON_LEFT_THUMB:     emit L3_released();         break;
+      case BUTTON_RIGHT_THUMB:    emit R3_released();         break;
+      case BUTTON_LEFT_SHOULDER:  emit L1_released();         break;
+      case BUTTON_RIGHT_SHOULDER: emit R1_released();         break;
+      case BUTTON_A:              emit A_released();          break;
+      case BUTTON_B:              emit B_released();          break;
+      case BUTTON_X:              emit X_released();          break;
+      case BUTTON_Y:              emit Y_released();          break;
+      default: break; // do nothing
+    }
+  }
+
+  void emit_specific_trigger_pressed(int trigger) {
+    switch (static_cast<GAMEPAD_TRIGGER>(trigger)) {
+      case TRIGGER_LEFT:  emit L2_pressed(); break;
+      case TRIGGER_RIGHT: emit R2_pressed(); break;
+      default: break; // do nothing
+    }
+  }
+
+  void emit_specific_trigger_released(int trigger) {
+    switch (static_cast<GAMEPAD_TRIGGER>(trigger)) {
+      case TRIGGER_LEFT:  emit L2_released(); break;
+      case TRIGGER_RIGHT: emit R2_released(); break;
+      default: break; // do nothing
+    }
+  }
 
 private:
   const int _id;       // gamepad index
@@ -65,53 +236,7 @@ private:
 class GamepadManager : public QObject {
   Q_OBJECT
 
-  //Q_PROPERTY(int deviceId READ deviceId WRITE setDeviceId NOTIFY deviceIdChanged)
-  //Q_PROPERTY(bool connected READ isConnected NOTIFY connectedChanged)
-  //Q_PROPERTY(QString name READ name NOTIFY nameChanged)
-  //Q_PROPERTY(double axisLeftX READ axisLeftX NOTIFY axisLeftXChanged)
-  //Q_PROPERTY(double axisLeftY READ axisLeftY NOTIFY axisLeftYChanged)
-  //Q_PROPERTY(double axisRightX READ axisRightX NOTIFY axisRightXChanged)
-  //Q_PROPERTY(double axisRightY READ axisRightY NOTIFY axisRightYChanged)
-  //Q_PROPERTY(bool buttonA READ buttonA NOTIFY buttonAChanged)
-  //Q_PROPERTY(bool buttonB READ buttonB NOTIFY buttonBChanged)
-  //Q_PROPERTY(bool buttonX READ buttonX NOTIFY buttonXChanged)
-  //Q_PROPERTY(bool buttonY READ buttonY NOTIFY buttonYChanged)
-  //Q_PROPERTY(bool buttonL1 READ buttonL1 NOTIFY buttonL1Changed)
-  //Q_PROPERTY(bool buttonR1 READ buttonR1 NOTIFY buttonR1Changed)
-  //Q_PROPERTY(double buttonL2 READ buttonL2 NOTIFY buttonL2Changed)
-  //Q_PROPERTY(double buttonR2 READ buttonR2 NOTIFY buttonR2Changed)
-  //Q_PROPERTY(bool buttonSelect READ buttonSelect NOTIFY buttonSelectChanged)
-  //Q_PROPERTY(bool buttonStart READ buttonStart NOTIFY buttonStartChanged)
-  //Q_PROPERTY(bool buttonL3 READ buttonL3 NOTIFY buttonL3Changed)
-  //Q_PROPERTY(bool buttonR3 READ buttonR3 NOTIFY buttonR3Changed)
-  //Q_PROPERTY(bool buttonUp READ buttonUp NOTIFY buttonUpChanged)
-  //Q_PROPERTY(bool buttonDown READ buttonDown NOTIFY buttonDownChanged)
-  //Q_PROPERTY(bool buttonLeft READ buttonLeft NOTIFY buttonLeftChanged)
-  //Q_PROPERTY(bool buttonRight READ buttonRight NOTIFY buttonRightChanged)
-  //Q_PROPERTY(bool buttonCenter READ buttonCenter NOTIFY buttonCenterChanged)
-  //Q_PROPERTY(bool buttonGuide READ buttonGuide NOTIFY buttonGuideChanged)
-
   Q_PROPERTY(unsigned poll_interval READ poll_interval WRITE poll_interval)
-
-public:
-//  static const char* button_names[] = {
-//    "d-pad up",
-//    "d-pad down",
-//    "d-pad left",
-//    "d-pad right",
-//    "start",
-//    "back",
-//    "left thumb",
-//    "right thumb",
-//    "left shoulder",
-//    "right shoulder",
-//    "???",
-//    "???",
-//    "A",
-//    "B",
-//    "X",
-//    "Y"
-//  };
 
 public:
   GamepadManager(QObject *parent = nullptr)
@@ -136,10 +261,11 @@ public:
   }
 
   // gamepad getters
-  Gamepad* operator[](size_t i)             { return _gamepads[i];    }
-  Gamepad* at(size_t i)                     { return _gamepads.at(i); }
-  const Gamepad* operator[](size_t i) const { return _gamepads[i];    }
-  const Gamepad* at(size_t i)         const { return _gamepads.at(i); }
+  size_t size()                             { return _gamepads.size(); }
+  Gamepad* operator[](size_t i)             { return _gamepads[i];     }
+  Gamepad* at(size_t i)                     { return _gamepads.at(i);  }
+  const Gamepad* operator[](size_t i) const { return _gamepads[i];     }
+  const Gamepad* at(size_t i)         const { return _gamepads.at(i);  }
 
   // poll_millisec getter and setter
   unsigned int poll_interval() const        { return _timer->interval(); }

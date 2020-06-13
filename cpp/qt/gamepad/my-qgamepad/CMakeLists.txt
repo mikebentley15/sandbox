@@ -17,3 +17,4 @@ add_executable(gamepad-logger
 
 target_link_libraries(gamepad-logger Qt5::Core ${UDEV_LIBRARIES})
 target_include_directories(gamepad-logger PUBLIC ${UDEV_INCLUDE_DIRS})
+set_property(TARGET gamepad-logger PROPERTY CXX_STANDARD 17)
