@@ -87,10 +87,68 @@ private:
   //};
 
 public:
-  int id() const { return _id; };
-  bool is_connected() const { return _is_connected; }
+  using FloatPair = std::pair<float, float>;
+  using IntPair = std::pair<int, int>;
 
-  // TODO: add getters for each button state
+  int id() const { return static_cast<int>(_id); };
+  bool is_connected() const { return _is_connected; }
+  bool is_button_pressed(int button) const {
+    return GamepadButtonDown(_id, static_cast<GAMEPAD_BUTTON>(button));
+  }
+  bool is_trigger_pressed(int trigger) const {
+    return GamepadTriggerDown(_id, static_cast<GAMEPAD_TRIGGER>(trigger));
+  }
+  bool is_dpad_up_pressed() const { return is_button_pressed(BUTTON_DPAD_UP); }
+  bool is_dpad_down_pressed() const { return is_button_pressed(BUTTON_DPAD_DOWN); }
+  bool is_dpad_left_pressed() const { return is_button_pressed(BUTTON_DPAD_LEFT); }
+  bool is_dpad_right_pressed() const { return is_button_pressed(BUTTON_DPAD_RIGHT); }
+  bool is_start_pressed() const { return is_button_pressed(BUTTON_START); }
+  bool is_select_pressed() const { return is_button_pressed(BUTTON_BACK); }
+  bool is_L1_pressed() const { return is_button_pressed(BUTTON_LEFT_SHOULDER); }
+  bool is_R1_pressed() const { return is_button_pressed(BUTTON_RIGHT_SHOULDER); }
+  bool is_L2_pressed() const { return is_trigger_pressed(TRIGGER_LEFT); }
+  bool is_R2_pressed() const { return is_trigger_pressed(TRIGGER_RIGHT); }
+  bool is_L3_pressed() const { return is_button_pressed(BUTTON_LEFT_THUMB); }
+  bool is_R3_pressed() const { return is_button_pressed(BUTTON_RIGHT_THUMB); }
+  bool is_X_pressed() const { return is_button_pressed(BUTTON_X); }
+  bool is_Y_pressed() const { return is_button_pressed(BUTTON_Y); }
+  bool is_A_pressed() const { return is_button_pressed(BUTTON_A); }
+  bool is_B_pressed() const { return is_button_pressed(BUTTON_B); }
+
+  float L2_trigger_value() const { return GamepadTriggerLength(_id, TRIGGER_LEFT); }
+  float R2_trigger_value() const { return GamepadTriggerLength(_id, TRIGGER_RIGHT); }
+  int L2_trigger_raw() const { return _l2_raw; } // TODO: upate with GamepadTriggerValue
+  int R2_trigger_raw() const { return _r2_raw; }
+
+  FloatPair left_joy_xy() const {
+    float x, y;
+    GamepadStickNormXY(_id, STICK_LEFT, &x, &y);
+    return {x, y};
+  }
+
+  // pair of rotation (radians) and magnitude (max 1.0)
+  FloatPair left_joy_rotmag() const {
+    return {
+      GamepadStickAngle(_id, STICK_LEFT),
+      GamepadStickLength(_id, STICK_LEFT)
+    };
+  }
+
+  FloatPair right_joy_xy() const {
+    float x, y;
+    GamepadStickNormXY(_id, STICK_RIGHT, &x, &y);
+    return {x, y};
+  }
+
+  FloatPair right_joy_rotmag() const {
+    return {
+      GamepadStickAngle(_id, STICK_RIGHT),
+      GamepadStickLength(_id, STICK_RIGHT)
+    };
+  }
+
+  IntPair left_joy_raw() const { return {_left_joy_x, _left_joy_y}; } // TODO: update with GamepadStickXY
+  IntPair right_joy_raw() const { return {_right_joy_x, _right_joy_y}; }
 
 signals:
   void connected();
@@ -133,15 +191,23 @@ signals:
   void A_released();
   void B_pressed();
   void B_released();
-  void left_joystick_changed(double x, double y);
-  void right_joystick_changed(double x, double y);
+  void L2_value_changed(float val);
+  void R2_value_changed(float val);
+  void left_joystick_changed (float rotation, float magnitude);
+  void right_joystick_changed(float rotation, float magnitude);
 
 private:
   // Private constructor that only GamepadManager can call
   Gamepad(QObject *parent, int id)
     : QObject(parent)
-    , _id(id)
+    , _id(static_cast<GAMEPAD_DEVICE>(id))
     , _is_connected(false)
+    , _l2_raw(0)
+    , _r2_raw(0)
+    , _left_joy_x(0)
+    , _left_joy_y(0)
+    , _right_joy_x(0)
+    , _right_joy_y(0)
   {
     connect(this, &Gamepad::button_pressed,
             this, &Gamepad::emit_specific_button_pressed);
@@ -151,6 +217,13 @@ private:
             this, &Gamepad::emit_specific_trigger_pressed);
     connect(this, &Gamepad::trigger_released,
             this, &Gamepad::emit_specific_trigger_released);
+    connect(this, &Gamepad::connected,
+        [this]() {
+          update_trigger_value(TRIGGER_LEFT, 0);
+          update_trigger_value(TRIGGER_RIGHT, 0);
+          update_joystick_value(STICK_LEFT, 0, 0);
+          update_joystick_value(STICK_RIGHT, 0, 0);
+        });
   }
 
   void mark_connected()    { _is_connected = true; }
@@ -217,9 +290,61 @@ private slots:
     }
   }
 
+  void update_trigger_value(int trigger, int value) {
+    switch (trigger) {
+      case TRIGGER_LEFT:
+        // TODO: do I want to be less sensitive?
+        if (value != _l2_raw) {
+          emit L2_value_changed(L2_trigger_value());
+        }
+        _l2_raw = value;
+        break;
+
+      case TRIGGER_RIGHT:
+        if (value != _r2_raw) {
+          emit R2_value_changed(R2_trigger_value());
+        }
+        _r2_raw = value;
+        break;
+
+      default: break; // do nothing
+    }
+  }
+
+  void update_joystick_value(int stick, int x, int y) {
+    switch (stick) {
+      case STICK_LEFT:
+        // TODO: do I want to be less sensitive?
+        if (x != _left_joy_x || y != _left_joy_y) {
+          auto [rotation, magnitude] = left_joy_rotmag();
+          emit left_joystick_changed(rotation, magnitude);
+        }
+        _left_joy_x = x;
+        _left_joy_y = y;
+        break;
+
+      case STICK_RIGHT:
+        if (x != _right_joy_x || y != _right_joy_y) {
+          auto [rotation, magnitude] = right_joy_rotmag();
+          emit right_joystick_changed(rotation, magnitude);
+        }
+        _right_joy_x = x;
+        _right_joy_y = y;
+        break;
+
+      default: break; // do nothing
+    }
+  }
+
 private:
-  const int _id;       // gamepad index
-  bool _is_connected;  // cached connection result to allow event detection
+  const GAMEPAD_DEVICE _id; // gamepad index
+  bool _is_connected;       // cached connection result to allow event detection
+  int _l2_raw;              // left trigger raw value last time
+  int _r2_raw;              // right trigger raw value last time
+  int _left_joy_x;          // left x joystick raw value last time
+  int _left_joy_y;          // left y joystick raw value last time
+  int _right_joy_x;         // right x joystick raw value last time
+  int _right_joy_y;         // right y joystick raw value last time
 
 private:
   friend class GamepadManager;
@@ -344,7 +469,17 @@ private:
         }
       }
 
-      // TODO: check for a change in stick position and length
+      // update trigger depth and joystick position
+      gamepad->update_trigger_value(TRIGGER_LEFT,
+          GamepadTriggerValue(device, TRIGGER_LEFT));
+      gamepad->update_trigger_value(TRIGGER_RIGHT,
+          GamepadTriggerValue(device, TRIGGER_RIGHT));
+
+      int x, y;
+      GamepadStickXY(device, STICK_LEFT, &x, &y);
+      gamepad->update_joystick_value(STICK_LEFT, x, y);
+      GamepadStickXY(device, STICK_RIGHT, &x, &y);
+      gamepad->update_joystick_value(STICK_RIGHT, x, y);
     }
   }
 

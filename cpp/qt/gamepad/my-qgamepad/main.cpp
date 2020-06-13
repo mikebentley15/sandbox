@@ -42,6 +42,13 @@ private:
     return log_fn;
   }
 
+  auto mklogfn_1d(const std::string name) const {
+    auto log_fn = [name](double a) {
+      std::cout << name << "(" << a << ")\n";
+    };
+    return log_fn;
+  }
+
   auto mklogfn_2d(const std::string name) const {
     auto log_fn = [name](double a, double b) {
       std::cout << name << "(" << a << ", " << b << ")\n";
@@ -146,6 +153,10 @@ private:
                      mklogfn_0(name + ".B_pressed"));
     QObject::connect(gamepad, &Gamepad::B_released,
                      mklogfn_0(name + ".B_released"));
+    QObject::connect(gamepad, &Gamepad::L2_value_changed,
+                    mklogfn_1d(name + ".L2_value_changed"));
+    QObject::connect(gamepad, &Gamepad::R2_value_changed,
+                    mklogfn_1d(name + ".R2_value_changed"));
     QObject::connect(gamepad, &Gamepad::left_joystick_changed,
                     mklogfn_2d(name + ".left_joystick_changed"));
     QObject::connect(gamepad, &Gamepad::right_joystick_changed,
