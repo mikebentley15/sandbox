@@ -14,6 +14,7 @@ find_package(interactive_markers REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(Eigen3 3.3 REQUIRED)
+find_package(Boost REQUIRED COMPONENTS filesystem)
 
 add_executable(basic_shapes src/basic_shapes.cpp)
 ament_target_dependencies(basic_shapes rclcpp visualization_msgs)
@@ -22,6 +23,16 @@ install(TARGETS basic_shapes DESTINATION lib/${PROJECT_NAME})
 add_executable(points_and_lines src/points_and_lines.cpp)
 ament_target_dependencies(points_and_lines rclcpp visualization_msgs)
 install(TARGETS points_and_lines DESTINATION lib/${PROJECT_NAME})
+
+add_executable(mesh_marker src/mesh_marker.cpp src/Mesh.cpp)
+ament_target_dependencies(mesh_marker rclcpp visualization_msgs)
+target_link_libraries(mesh_marker Boost::filesystem)
+install(TARGETS mesh_marker DESTINATION lib/${PROJECT_NAME})
+
+add_executable(triangle_mesh_marker src/triangle_mesh_marker.cpp src/Mesh.cpp)
+ament_target_dependencies(triangle_mesh_marker rclcpp visualization_msgs)
+target_link_libraries(triangle_mesh_marker Boost::filesystem)
+install(TARGETS triangle_mesh_marker DESTINATION lib/${PROJECT_NAME})
 
 # not yet working
 # add_executable(interactive_simple_marker src/interactive_simple_marker.cpp)
