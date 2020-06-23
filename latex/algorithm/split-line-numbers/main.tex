@@ -1,0 +1,86 @@
+\documentclass{article}
+
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{amsmath}
+
+\newcommand{\bw}{\textbf{w}}
+
+\begin{document}
+\begin{algorithm}
+  \caption{Bayesian Sparsity Inference with Domain Restriction}
+  \label{alg:bo}
+  \begin{minipage}{.95\columnwidth}
+    \begin{algorithmic}[1]
+      \Procedure{CONDENSA}{$\overline{\bw}, \epsilon, T_{1}, T_{2}$}
+        \State{
+         AcqFn
+            $\gets$
+              \texttt{DR-UCB}
+        }
+        \State{
+        AcqFn.LvlSet
+            $\gets$
+            $\mathcal{A}(\overline{\bw}) - \epsilon$
+        }
+        \State{
+        AcqFn.Bounds
+            $\gets$
+            $(0,1)$
+        }
+       
+        \State{
+        $s_{acc}
+            \gets$
+            \texttt{BAYESOPT}($L-C$, AcqFn, $T_1$)
+        }
+       
+        \State{
+        AcqFn
+            $\gets$
+            \texttt{GP-UCB}
+        }
+       
+        \State{
+        AcqFn.Bounds
+            $\gets$
+            $(0, s_{acc})$
+        }
+        \State{$s^{*} \gets$ \texttt{BAYESOPT}($f$, AcqFn, $T_2$)}
+        \State{\Return $s^*$}
+      \EndProcedure
+      \algstore{Condensa}
+    \end{algorithmic}
+  \end{minipage}
+
+  \vspace{0.3em} \noindent \hrulefill \\[0.3em]
+  %
+  \begin{minipage}{.95\columnwidth}
+    \begin{algorithmic}[1]
+      \algrestore{Condensa}
+      \Procedure{BayesOpt}{$\mathcal{B}_f$, AcqFn, $T$}
+        \State \texttt{GP} $\leftarrow$ \texttt{GP-Regressor.initialize()}
+        \For{$t \gets 0, 1, 2, \ldots$ . $T-1$}
+          \State{$s_t \gets$ $\texttt{argmax}_s\text{AcqFn}(s|D_{1:t-1})$}
+          \State{$y_t \gets \mathcal{B}_f(s_t)$}
+          \If{AcqFn = \text{DR-UCB}}
+                \If{$s_t > s_{t-1}$ \textbf{and} $y_t \ge$ AcqFn.LvlSet}
+                        \State{AcqFn.Bounds = $(s_t,1)$}
+               \Else{}
+                  \State{\textbf{continue}}
+                \EndIf
+        %   \State{
+        %         \If{$s_t > s_{t-1}$ \textbf{and} $y_t \ge$ AcqFn.LevelSet}
+        %         \State{AcqFn.bounds = $(s_t,1)$}
+        %         \EndIf
+        %   }
+          \EndIf
+        \State{$D_{1:t} \gets \{D_{1:t-1}, (s_t, y_t)\}$}
+        \State{\texttt{GP.Update}($D_{1:t}$)}
+        \EndFor
+        \State{\Return $s_{T-1}$}
+      \EndProcedure
+    \end{algorithmic}
+  \end{minipage}
+\end{algorithm}
+\end{document}
