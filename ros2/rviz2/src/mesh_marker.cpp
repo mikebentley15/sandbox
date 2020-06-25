@@ -16,10 +16,12 @@ using builtin_interfaces::msg::Duration;
 
 class MeshPublisher : public rclcpp::Node {
 public:
-  MeshPublisher() : Node("mesh_publisher") {
+  MeshPublisher(const std::string &filepath)
+    : Node("mesh_publisher")
+  {
     _publisher = this->create_publisher<Marker>("visualization_marker", 5);
-    _mesh = Mesh::from_stl("/home/bentley/ros_ws/src/ll4ma_scene_generator/"
-                           "data/meshes/mustard.stl");
+    std::cout << "Loading file '" << filepath << "'\n";
+    _mesh = Mesh::from_stl(filepath);
     init_marker();
     auto timer_callback = [this]() -> void {
       _marker.header.stamp = this->now();
@@ -59,8 +61,27 @@ private:
 };
 
 int main(int argCount, char* argList[]) {
+  std::string usage = "Usage: " + std::string(argList[0]) +
+                      " [mesh-filepath]\n";
   rclcpp::init(argCount, argList);
-  rclcpp::spin(std::make_shared<MeshPublisher>());
+
+  std::string filepath;
+  if (argCount < 2) {
+    filepath = "/home/bentley/ros_ws/src/ll4ma_scene_generator/data/meshes/"
+               "mustard.stl";
+  } else if (argCount == 2) {
+    std::string arg(argList[1]);
+    if (arg == "-h" || arg == "--help") {
+      std::cout << usage;
+      return 0;
+    }
+    filepath = std::string(argList[1]);
+  } else {
+    std::cerr << usage;
+    return 1;
+  }
+
+  rclcpp::spin(std::make_shared<MeshPublisher>(filepath));
   rclcpp::shutdown();
   return 0;
 }
