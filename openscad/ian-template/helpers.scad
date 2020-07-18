@@ -1,6 +1,6 @@
-/*******************************************************************************/
-/* Handy Functions                                                             */
-/*******************************************************************************/
+/******************************************************************************/
+/* Handy Functions                                                            */
+/******************************************************************************/
 
 // Aliases for translate
 module mov_x(d)            { translate(v=[ d,  0,  0]) children(); }
@@ -109,6 +109,12 @@ function outer_radius(r, fn)    = r/cos(180/fn);
 function center_radius(r, fn)   = r * (1 + 1/cos(180/fn))/2;
 function outer_diameter(d, fn)  = outer_radius(d, fn);
 function center_diameter(d, fn) = center_radius(d, fn);
+module cylinder_outer(h, r, fn) {
+  cylinder(h=h, r=outer_radius(r, fn), $fn=fn);
+}
+module cylinder_center(h, r, fn) {
+  cylinder(h=h, r=center_radius(r, fn), $fn=fn);
+}
 
 // So that circles can be aligned to xy
 function round8(n) = ceil(round(n)/8)*8;
