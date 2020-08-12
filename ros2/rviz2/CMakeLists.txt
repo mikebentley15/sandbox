@@ -47,4 +47,15 @@ target_include_directories(view_tendon PUBLIC
   )
 install(TARGETS view_tendon DESTINATION lib/${PROJECT_NAME})
 
+add_executable(moving_camera_frame src/moving_camera_frame.cpp)
+ament_target_dependencies(
+  moving_camera_frame
+  rclcpp
+  visualization_msgs
+  tf2
+  tf2_geometry_msgs
+  tf2_ros
+  )
+install(TARGETS moving_camera_frame DESTINATION lib/${PROJECT_NAME})
+
 ament_package()
