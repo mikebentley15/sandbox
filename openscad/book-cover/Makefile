@@ -1,7 +1,7 @@
-SCAD_FILE       = tendon-backbone.scad
+SCAD_FILE       = book-cover.scad
 SCAD_INCLUDES   = helpers.scad
 MODELS          = $(SCAD_FILE:%.scad=%.stl)
-MODELS         += $(SCAD_FILE:%.scad=%-sideways.stl)
+MODELS         += $(SCAD_FILE:%.scad=%-back.stl)
 OPENSCAD_VARS   =
 DXF_SETTINGS    = "dxf_s: -polyaslines -splineaspolyline -splineprecision 20 -mm"
 
@@ -14,7 +14,7 @@ EPS            := $(SVG:%.svg=%.eps)
 .PHONY: all
 all: ${DXF} ${MODELS}
 
-%-sideways.stl: OPENSCAD_VARS+=-D standing=false
+%-back.stl: OPENSCAD_VARS+=-D enable_message=false
 
 %.stl: ${SCAD_FILE} ${SCAD_INCLUDES} Makefile
 	openscad -o $*.stl ${OPENSCAD_VARS} ${SCAD_FILE}
