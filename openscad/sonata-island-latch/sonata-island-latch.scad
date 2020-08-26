@@ -38,7 +38,7 @@ module tab_with_hole() {
           circle(r = 3);
         }
         // hole
-        mov_x(-8) circle(r = 1.5, center = true);
+        mov_x(-8) circle(r = 1.5);
       }
     }
 }
