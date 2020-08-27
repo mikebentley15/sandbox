@@ -19,17 +19,25 @@ rot_x(90)
 //
 
 module main_body() {
-  difference() {
-    linear_extrude(27, scale = [1, 20 / 3.2])
-      mov_y(1.6)
-      square([43.2, 3.2], center = true);
-    mov_xyz(-43.2 / 2 + 3.2, -5, 13.2) cube(43.2 - 2*3.2);
+  intersection() {
+    difference() {
+      linear_extrude(25.4, scale = [1, 18.56 / 3.2])
+        mov_y(1.6)
+        square([43.2, 3.2], center = true);
+      mov_xyz(-43.2 / 2 + 3.2, -5, 13.2) cube(43.2 - 2*3.2);
+    }
+    union() {
+      mirror([1, 0, 0]) mov_x(-5) tab(r = 5, h = 10);
+      mov_x(-5) tab(r = 5, h = 10);
+      mov_x(-25) cube([50, 11.7 - 2, 30]);
+      mov_x(-25) cube([50, 30, 18.4 - 0.5]);
+    }
   }
 }
 
 module tabs() {
-  tab();
-  mirror([1, 0, 0]) tab();
+  tab(r = 1.9, h = 5);
+  mirror([1, 0, 0]) tab(r = 1.9, h = 5);
 }
 
 module screw_holes() {
@@ -37,9 +45,9 @@ module screw_holes() {
   mirror([1, 0, 0]) screw_hole();
 }
 
-module tab() {
+module tab(r, h) {
   translate([43.2/2 + 5/2 - 0.4, 11.7 - 2, 18.4 + 2])
-    rot_y(90) cylinder(r = 2, h = 5, center = true);
+    rot_y(90) cylinder(r = r, h = h, center = true);
 }
 
 module screw_hole() {
