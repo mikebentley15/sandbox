@@ -1,19 +1,24 @@
-CC     = gcc
-CXX    = g++
+CC       := gcc
+CXX      := g++
+CXXFLAGS := -O3
 
-TARGETS := c_run cpp_run arraytypes
+TARGETS := c_run cpp_run arraytypes flatten_multiarray
 
 .PHONY: all
 all: $(TARGETS)
+$(TARGETS): Makefile
 
 c_run: runner.c
-	$(CC) -o $@ $<
+	$(CC) $(CFLAGS) -o $@ $<
 
 cpp_run: runner.cpp
-	$(CXX) -o $@ $<
+	$(CXX) $(CXXFLAGS) -o $@ $<
 
 arraytypes: arraytypes.cpp
-	$(CXX) -o $@ $<
+	$(CXX) $(CXXFLAGS) -o $@ $<
+
+flatten_multiarray: flatten_multiarray.cpp
+	$(CXX) $(CXXFLAGS) -o $@ $<
 
 .PHONY: clean
 clean:
