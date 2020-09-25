@@ -63,24 +63,28 @@ void try_voxel_type(const std::unique_ptr<VType> &v) {
   v2->add_sphere(0.5, 0.5, 0.1, 0.1);
   v3->add_sphere(0.7, 0.2, 0.2, 0.55);
 
+  std::cout << "v.nblocks():  " << v ->nblocks() << std::endl
+            << "v2.nblocks(): " << v2->nblocks() << std::endl
+            << "v3.nblocks(): " << v3->nblocks() << std::endl
+            << "v4.nblocks(): " << v4->nblocks() << std::endl;
   print_memory_usage();
 
-  std::cout << "v.collides(v):   " << v->collides(*v)   << "\n"
-               "v.collides(v2):  " << v->collides(*v2)  << "\n"
-               "v.collides(v3):  " << v->collides(*v3)  << "\n"
-               "v.collides(v4):  " << v->collides(*v4)  << "\n"
-               "v2.collides(v):  " << v2->collides(*v)  << "\n"
-               "v2.collides(v2): " << v2->collides(*v2) << "\n"
-               "v2.collides(v3): " << v2->collides(*v3) << "\n"
-               "v2.collides(v4): " << v2->collides(*v4) << "\n"
-               "v3.collides(v):  " << v3->collides(*v)  << "\n"
-               "v3.collides(v2): " << v3->collides(*v2) << "\n"
-               "v3.collides(v3): " << v3->collides(*v3) << "\n"
-               "v3.collides(v4): " << v3->collides(*v4) << "\n"
-               "v4.collides(v):  " << v4->collides(*v)  << "\n"
-               "v4.collides(v2): " << v4->collides(*v2) << "\n"
-               "v4.collides(v3): " << v4->collides(*v3) << "\n"
-               "v4.collides(v4): " << v4->collides(*v4) << "\n";
+  std::cout << "  v.collides(v):   " << v->collides(*v)   << "\n"
+               "  v.collides(v2):  " << v->collides(*v2)  << "\n"
+               "  v.collides(v3):  " << v->collides(*v3)  << "\n"
+               "  v.collides(v4):  " << v->collides(*v4)  << "\n"
+               "  v2.collides(v):  " << v2->collides(*v)  << "\n"
+               "  v2.collides(v2): " << v2->collides(*v2) << "\n"
+               "  v2.collides(v3): " << v2->collides(*v3) << "\n"
+               "  v2.collides(v4): " << v2->collides(*v4) << "\n"
+               "  v3.collides(v):  " << v3->collides(*v)  << "\n"
+               "  v3.collides(v2): " << v3->collides(*v2) << "\n"
+               "  v3.collides(v3): " << v3->collides(*v3) << "\n"
+               "  v3.collides(v4): " << v3->collides(*v4) << "\n"
+               "  v4.collides(v):  " << v4->collides(*v)  << "\n"
+               "  v4.collides(v2): " << v4->collides(*v2) << "\n"
+               "  v4.collides(v3): " << v4->collides(*v3) << "\n"
+               "  v4.collides(v4): " << v4->collides(*v4) << "\n";
 
   auto start = std::chrono::system_clock::now();
   int N = 80000000;

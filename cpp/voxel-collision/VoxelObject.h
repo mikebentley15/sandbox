@@ -11,6 +11,7 @@
 
 #include <cstddef> // for size_t
 #include <cstdint> // for uint64_t
+#include <cstring> // for std::memcpy()
 
 class VoxelObject {
 
@@ -101,6 +102,8 @@ public:
   double dbx() const { return _dx * 4; }
   double dby() const { return _dy * 4; }
   double dbz() const { return _dz * 4; }
+
+  size_t nblocks() const { return Nb; }
 
   uint64_t &block(size_t block_idx)       { return _data[block_idx]; }
   uint64_t  block(size_t block_idx) const { return _data[block_idx]; }

@@ -25,7 +25,7 @@ public:
   static const size_t Ny = _Ny;  // number of voxels in the y-direction
   static const size_t Nz = _Nz;  // number of voxels in the z-direction
 
-  static const size_t Nb  = N / 4;  // number of blocks
+  static const size_t Nb  = N / 64;  // number of blocks
   static const size_t Nbx = Nx / 4; // number of blocks in the x-direction
   static const size_t Nby = Ny / 4; // number of blocks in the y-direction
   static const size_t Nbz = Nz / 4; // number of blocks in the z-direction
@@ -87,6 +87,8 @@ public:
   double dbx() const { return _dx * 4; }
   double dby() const { return _dy * 4; }
   double dbz() const { return _dz * 4; }
+
+  size_t nblocks() const { return Nb; }
 
   uint64_t &block(size_t bx, size_t by, size_t bz) { return _data[bx][by][bz]; }
   uint64_t block(size_t bx, size_t by, size_t bz) const { return _data[bx][by][bz]; }
@@ -250,7 +252,7 @@ public:
     limit_check(other);
     const uint64_t *flat = &_data[0][0][0];
     const uint64_t *oflat = &(other._data[0][0][0]);
-    for (size_t b = 0; b < Nbx * Nby * Nbz; b++) {
+    for (size_t b = 0; b < nblocks(); b++) {
       if (flat[b] & oflat[b]) {
         return true;
       }

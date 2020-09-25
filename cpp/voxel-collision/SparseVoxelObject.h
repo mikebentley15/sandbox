@@ -91,6 +91,8 @@ public:
   double dby() const { return _dy * 4; }
   double dbz() const { return _dz * 4; }
 
+  size_t nblocks() const { return _data.size(); }
+
   uint64_t block(size_t idx) const {
     auto iter = _data.find(idx);
     if (iter != _data.end()) {
