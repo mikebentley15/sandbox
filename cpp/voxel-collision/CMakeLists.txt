@@ -1,0 +1,30 @@
+cmake_minimum_required(VERSION 3.5)
+project(voxel-collision VERSION 1.0.0 LANGUAGES CXX)
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+find_package(octomap REQUIRED)
+find_package(ompl REQUIRED)
+find_package(fcl 0.5 EXACT REQUIRED)
+
+add_executable(voxel-collision-example
+  main.cpp
+  collides.cpp
+  VoxelObject.h
+  SparseVoxelObject
+  CTVoxelObject.h
+  CTSparseVoxelObject.h
+  VoxelOctree.h
+  OctomapWrap.h
+  )
+set_property(TARGET voxel-collision-example PROPERTY CXX_STANDARD 17)
+target_link_libraries(voxel-collision-example
+  ${OCTOMAP_LIBRARIES}
+  ${OMPL_LIBRARIES}
+  ${FCL_LIBRARIES}
+  )
+target_include_directories(voxel-collision-example PRIVATE
+  ${OCTOMAP_INCLUDE_DIRS}
+  ${OMPL_INCLUDE_DIRS}
+  ${FCL_INCLUDE_DIRS}
+  )

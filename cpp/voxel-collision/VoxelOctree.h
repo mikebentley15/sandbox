@@ -1,51 +1,169 @@
-#ifndef CT_VOXEL_OBJECT_H
-#define CT_VOXEL_OBJECT_H
+#ifndef VOXEL_OCTREE_H
+#define VOXEL_OCTREE_H
 
 #include <iostream>
 #include <limits>    // for std::numeric_limits
+#include <map>       // for std::map
 #include <stack>     // for std::stack
 #include <stdexcept> // for std::length_error
 #include <tuple>     // for std::tuple
 #include <utility>   // for std::pair
-#include <memory>
 
 #include <cstddef> // for size_t
 #include <cstdint> // for uint64_t
-#include <cstring> // for memcpy()
 
-template <size_t _Nx, size_t _Ny, size_t _Nz>
-class CTVoxelObject {
-  static_assert(_Nx % 4 == 0, "CTVoxelObject: x dimension must be a multiple of 4");
-  static_assert(_Ny % 4 == 0, "CTVoxelObject: y dimension must be a multiple of 4");
-  static_assert(_Nz % 4 == 0, "CTVoxelObject: z dimension must be a multiple of 4");
+namespace detail {
+
+template <size_t _Nt> // Nt = voxels in each dimension
+struct TreeNode {
+  static_assert(_Nt % 2 == 0, "TreeNode: number of nodes must be even");
+
+  static const size_t Nt = _Nt;
+  static const size_t N = _Nt * _Nt * _Nt;
+
+  using Child = TreeNode<Nt/2>;
+  using ChildPtr = std::unique_ptr<Child>;
+
+  TreeNode() : _children() {}
+  TreeNode(const TreeNode<_Nt> &other) { // copy
+    for (int i = 0; i < 8; i++) {
+      auto &child = other._children[i];
+      if (child) {
+        _children[i] = std::make_unique<Child>(*child);
+      }
+    }
+  }
+
+  size_t nblocks() const {
+    size_t child_nblocks = 0;
+    for (auto &child : _children) {
+      if (child) {
+        child_nblocks += child->nblocks();
+      }
+    }
+    return child_nblocks;
+  }
+
+  uint64_t block(size_t bx, size_t by, size_t bz) const {
+    ChildPtr &child = _child(bx, by, bz);
+    if (child) {
+      return child->block(bx / 2, by / 2, bz / 2);
+    }
+    return 0;
+  }
+
+  void set_block(size_t bx, size_t by, size_t bz, uint64_t value) {
+    ChildPtr &child = _child(bx, by, bz);
+    if (!child) {
+      child = std::make_unique<Child>();
+    }
+    child->set_block(bx / 2, by / 2, bz / 2, value);
+  }
+
+  uint64_t union_block(size_t bx, size_t by, size_t bz, uint64_t value) {
+    ChildPtr &child = _child(bx, by, bz);
+    if (!child) {
+      child = std::make_unique<Child>();
+    }
+    return child->union_block(bx / 2, by / 2, bz / 2, value);
+  }
+
+  uint64_t intersect_block(size_t bx, size_t by, size_t bz, uint64_t value) {
+    ChildPtr &child = _child(bx, by, bz);
+    if (child) {
+      return child->intersect_block(bx, by, bz, value);
+    }
+    return 0;
+  }
+
+  bool collides(const TreeNode<Nt> &other) const {
+    for (int i = 0; i < 8; i++) {
+      if (_children[i] && other._children[i]
+          && _children[i]->collides(*other._children[i]))
+      {
+        return true;
+      }
+    }
+    return false;
+  }
+
+protected:
+  const ChildPtr& _child(size_t bx, size_t by, size_t bz) const {
+    return _children[(bz%2) + 2 * ((by%2) + 2 * (bx%2))];
+  }
+
+  ChildPtr& _child(size_t bx, size_t by, size_t bz) {
+    return _children[(bz%2) + 2 * ((by%2) + 2 * (bx%2))];
+  }
+
+protected:
+  std::array<ChildPtr, 8> _children {};
+};
+
+// leaf node
+template <> struct TreeNode<4> {
+  static const size_t Nt = 4;
+  static const size_t N = 64;
+  size_t nblocks() const { return 1; }
+  uint64_t block(size_t, size_t, size_t) const { return _data; }
+  uint64_t union_block(size_t, size_t, size_t, uint64_t value) {
+    auto prev = _data;
+    _data |= value;
+    return prev;
+  }
+  uint64_t intersect_block(size_t, size_t, size_t, uint64_t value) {
+    auto prev = _data;
+    _data &= value;
+    return prev;
+  }
+  void set_block(size_t, size_t, size_t, uint64_t value) { _data = value; }
+  bool collides(const TreeNode<4> &other) const { return _data & other._data; }
+protected:
+  uint64_t _data;
+};
+
+} // end of namespace detail
+
+// discretizations need to match for all dimensions
+// and it needs to be a power of 2 bigger than 4
+template <size_t _N>
+class VoxelOctree {
 
 public:
-  static const size_t N  = _Nx * _Ny * _Nz;  // number of voxels
-  static const size_t Nx = _Nx;  // number of voxels in the x-direction
-  static const size_t Ny = _Ny;  // number of voxels in the y-direction
-  static const size_t Nz = _Nz;  // number of voxels in the z-direction
+  static const size_t Nx = _N;            // number of voxels in the x-direction
+  static const size_t Ny = Nx;            // number of voxels in the y-direction
+  static const size_t Nz = Nx;            // number of voxels in the z-direction
+  static const size_t N  = Nx*Ny*Nz;      // number of voxels
 
-  static const size_t Nb  = N / 64;  // number of blocks
-  static const size_t Nbx = Nx / 4; // number of blocks in the x-direction
-  static const size_t Nby = Ny / 4; // number of blocks in the y-direction
-  static const size_t Nbz = Nz / 4; // number of blocks in the z-direction
+  static const size_t Nbx = _N / 4;       // number of blocks in the x-direction
+  static const size_t Nby = Nbx;          // number of blocks in the y-direction
+  static const size_t Nbz = Nbx;          // number of blocks in the z-direction
+  static const size_t Nb  = Nbx*Nby*Nbz;  // number of blocks
 
+  using BlockType = uint64_t;
+
+protected:
 public:
-  CTVoxelObject() : _data() {
+  VoxelOctree() : _data(new detail::TreeNode<_N>()) {
     set_xlim(0.0, 1.0);
     set_ylim(0.0, 1.0);
     set_zlim(0.0, 1.0);
   }
-
-  CTVoxelObject(const CTVoxelObject<_Nx, _Ny, _Nz> &other) // copy
-    : _data()
+  VoxelOctree(const VoxelOctree<_N> &other) // copy
+    : _data(new detail::TreeNode<_N>(*(other._data)))
     , _xmin(other._xmin), _xmax(other._xmax)
     , _ymin(other._ymin), _ymax(other._ymax)
     , _zmin(other._zmin), _zmax(other._zmax)
     , _dx(other._dx), _dy(other._dy), _dz(other._dz)
-  {
-    std::memcpy(_data, other._data, sizeof(_data));
-  }
+  {}
+
+  VoxelOctree(VoxelOctree<_N> &&other)  // move
+    : _data(std::move(other._data))
+    , _xmin(other._xmin), _xmax(other._xmax)
+    , _ymin(other._ymin), _ymax(other._ymax)
+    , _zmin(other._zmin), _zmax(other._zmax)
+    , _dx(other._dx), _dy(other._dy), _dz(other._dz)
+  {}
 
   void set_xlim(double xmin, double xmax) {
     if (xmin >= xmax) {
@@ -88,36 +206,42 @@ public:
   double dby() const { return _dy * 4; }
   double dbz() const { return _dz * 4; }
 
-  size_t nblocks() const { return Nb; }
+  size_t nblocks() const { return _data->nblocks(); }
 
-  uint64_t &block(size_t bx, size_t by, size_t bz) { return _data[bx][by][bz]; }
-  uint64_t block(size_t bx, size_t by, size_t bz) const { return _data[bx][by][bz]; }
-  void set_block(size_t bx, size_t by, size_t bz, uint64_t val) {
-    return _data[bx][by][bz] = val;
+  uint64_t block(size_t bx, size_t by, size_t bz) const {
+    return _data->block(bx, by, bz);
+  }
+
+  void set_block(size_t bx, size_t by, size_t bz, uint64_t value) {
+    _data->set_block(bx, by, bz, value);
+  }
+
+  // returns old block type before unioning with value
+  uint64_t union_block(size_t bx, size_t by, size_t bz, uint64_t value) {
+    return _data->union_block(bx, by, bz, value);
+  }
+
+  uint64_t intersect_block(size_t bx, size_t by, size_t bz, uint64_t value) {
+    return _data->intersect_block(bx, by, bz, value);
   }
 
   bool cell(size_t ix, size_t iy, size_t iz) const {
     auto b = block(ix / 4, iy / 4, iz / 4);
-    return b & bitmask(ix % 4, iy % 4, iz % 4);
+    return b && (b & bitmask(ix % 4, iy % 4, iz % 4));
   }
 
   // sets the cell's value
   // returns true if the cell's value changed
   bool set_cell(size_t ix, size_t iy, size_t iz, bool value = true) {
-    auto &b = block(ix / 4, iy / 4, iz / 4);
     auto mask = bitmask(ix % 4, iy % 4, iz % 4);
-    bool is_set = b & mask;
+    uint64_t oldval;
     if (value) {
-      b |= mask;
+      oldval = _data->union_block(ix / 4, iy / 4, iz / 4, mask);
+      return oldval & mask;
     } else {
-      b &= ~mask;
+      oldval = _data->intersect_block(ix / 4, iy / 4, iz / 4, ~mask);
+      return oldval & ~mask;
     }
-    return is_set != value;
-  }
-
-  uint64_t& find_block(double x, double y, double z) {
-    auto [bx, by, bz] = find_block_idx(x, y, z);
-    return block(bx, by, bz);
   }
 
   uint64_t find_block(double x, double y, double z) const {
@@ -200,7 +324,7 @@ public:
       for (size_t by = 0; by < Nby; by++) {
         for (size_t bz = 0; bz < Nbz; bz++) {
           // check this block
-          uint64_t &b = _data[bx][by][bz];
+          uint64_t b = 0;
           for (uint_fast8_t i = 0; i < 4; i++) {
             for (uint_fast8_t j = 0; j < 4; j++) {
               for (uint_fast8_t k = 0; k < 4; k++) {
@@ -210,6 +334,7 @@ public:
               }
             }
           }
+          if (b) { union_block(bx, by, bz, b); }
         }
       }
     }
@@ -217,10 +342,10 @@ public:
     //// do a growing algorithm with a frontier and a visited
     //using IdxType = std::tuple<size_t, size_t, size_t>;
     //std::stack<IdxType> frontier;
-    //auto visited = std::make_unique<CTVoxelObject<Nx, Ny, Nz>>();
+    //auto visited = std::make_unique<VoxelObject<Nx, Ny, Nz>>();
 
     //auto check_push = [&frontier, &visited](size_t _ix, size_t _iy, size_t _iz) {
-    //  if (!visited->cell(_ix, _iy, _iz) && _ix < _Nx && _iy < _Ny && _iz < _Nz) {
+    //  if (!visited->cell(_ix, _iy, _iz) && _ix < Nx && _iy < Ny && _iz < Nz) {
     //    //std::cout << "  add_sphere(): pushing: "
     //    //          << _ix << ", " << _iy << ", " << _iz << std::endl;
     //    frontier.push(IdxType{_ix, _iy, _iz});
@@ -248,25 +373,13 @@ public:
     // TODO: implement
   }
 
-  bool collides(const CTVoxelObject<Nx, Ny, Nz> &other) const {
-    limit_check(other);
-    //const uint64_t *flat = &_data[0][0][0];
-    //const uint64_t *oflat = &(other._data[0][0][0]);
-    //for (size_t b = 0; b < nblocks(); b++) {
-    //  if (flat[b] & oflat[b]) {
-    //    return true;
-    //  }
-    //}
-    for (size_t bx = 0; bx < Nbx; bx++) {
-      for (size_t by = 0; by < Nby; by++) {
-        for (size_t bz = 0; bz < Nbz; bz++) {
-          if (this->_data[bx][by][bz] & other._data[bx][by][bz]) {
-            return true;
-          }
-        }
-      }
-    }
-    return false;
+  bool collides_check(const VoxelOctree<_N> &other) const {
+    limit_check(other); // significantly slows down collision checking
+    return collides(other);
+  }
+
+  bool collides(const VoxelOctree<_N> &other) const {
+    return _data->collides(*(other._data));
   }
 
 protected:
@@ -288,7 +401,7 @@ protected:
     }
   }
 
-  void limit_check(const CTVoxelObject<Nx, Ny, Nz> &other) const {
+  void limit_check(const VoxelOctree &other) const {
     double eps = std::numeric_limits<double>::epsilon();
     auto dbl_eq_check = [eps](const std::string &name, double val1, double val2) {
       if (std::abs(val1 - val2) >= eps) {
@@ -304,7 +417,7 @@ protected:
   }
 
 private:
-  uint64_t _data[Nbx][Nby][Nbz]; // voxel data
+  std::unique_ptr<detail::TreeNode<_N>> _data; // sparse voxel tree data
   double _xmin;
   double _xmax;
   double _ymin;
@@ -316,4 +429,6 @@ private:
   double _dz;
 };
 
-#endif // CT_VOXEL_OBJECT_H
+
+#endif // VOXEL_OCTREE_H
+

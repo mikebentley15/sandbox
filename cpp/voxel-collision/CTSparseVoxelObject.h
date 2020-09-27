@@ -1,51 +1,55 @@
-#ifndef CT_VOXEL_OBJECT_H
-#define CT_VOXEL_OBJECT_H
+#ifndef CT_SPARSE_VOXEL_OBJECT_H
+#define CT_SPARSE_VOXEL_OBJECT_H
 
 #include <iostream>
 #include <limits>    // for std::numeric_limits
+#include <map>       // for std::map
 #include <stack>     // for std::stack
 #include <stdexcept> // for std::length_error
 #include <tuple>     // for std::tuple
 #include <utility>   // for std::pair
-#include <memory>
 
 #include <cstddef> // for size_t
 #include <cstdint> // for uint64_t
-#include <cstring> // for memcpy()
 
 template <size_t _Nx, size_t _Ny, size_t _Nz>
-class CTVoxelObject {
-  static_assert(_Nx % 4 == 0, "CTVoxelObject: x dimension must be a multiple of 4");
-  static_assert(_Ny % 4 == 0, "CTVoxelObject: y dimension must be a multiple of 4");
-  static_assert(_Nz % 4 == 0, "CTVoxelObject: z dimension must be a multiple of 4");
+class CTSparseVoxelObject {
+  static_assert(_Nx % 4 == 0, "CTSparseVoxelObject: x dimension must be a multiple of 4");
+  static_assert(_Ny % 4 == 0, "CTSparseVoxelObject: y dimension must be a multiple of 4");
+  static_assert(_Nz % 4 == 0, "CTSparseVoxelObject: z dimension must be a multiple of 4");
 
 public:
-  static const size_t N  = _Nx * _Ny * _Nz;  // number of voxels
   static const size_t Nx = _Nx;  // number of voxels in the x-direction
   static const size_t Ny = _Ny;  // number of voxels in the y-direction
   static const size_t Nz = _Nz;  // number of voxels in the z-direction
 
-  static const size_t Nb  = N / 64;  // number of blocks
   static const size_t Nbx = Nx / 4; // number of blocks in the x-direction
   static const size_t Nby = Ny / 4; // number of blocks in the y-direction
   static const size_t Nbz = Nz / 4; // number of blocks in the z-direction
+  static const size_t Nb  = Nbx * Nby * Nbz;
 
 public:
-  CTVoxelObject() : _data() {
+  CTSparseVoxelObject() : _data() {
     set_xlim(0.0, 1.0);
     set_ylim(0.0, 1.0);
     set_zlim(0.0, 1.0);
   }
 
-  CTVoxelObject(const CTVoxelObject<_Nx, _Ny, _Nz> &other) // copy
-    : _data()
+  CTSparseVoxelObject(const CTSparseVoxelObject &other)  // copy
+    : _data(other._data)
     , _xmin(other._xmin), _xmax(other._xmax)
     , _ymin(other._ymin), _ymax(other._ymax)
     , _zmin(other._zmin), _zmax(other._zmax)
     , _dx(other._dx), _dy(other._dy), _dz(other._dz)
-  {
-    std::memcpy(_data, other._data, sizeof(_data));
-  }
+  {}
+
+  CTSparseVoxelObject(CTSparseVoxelObject &&other)  // move
+    : _data(std::move(other._data))
+    , _xmin(other._xmin), _xmax(other._xmax)
+    , _ymin(other._ymin), _ymax(other._ymax)
+    , _zmin(other._zmin), _zmax(other._zmax)
+    , _dx(other._dx), _dy(other._dy), _dz(other._dz)
+  {}
 
   void set_xlim(double xmin, double xmax) {
     if (xmin >= xmax) {
@@ -88,23 +92,38 @@ public:
   double dby() const { return _dy * 4; }
   double dbz() const { return _dz * 4; }
 
-  size_t nblocks() const { return Nb; }
+  size_t nblocks() const { return _data.size(); }
 
-  uint64_t &block(size_t bx, size_t by, size_t bz) { return _data[bx][by][bz]; }
-  uint64_t block(size_t bx, size_t by, size_t bz) const { return _data[bx][by][bz]; }
-  void set_block(size_t bx, size_t by, size_t bz, uint64_t val) {
-    return _data[bx][by][bz] = val;
+  uint64_t block(size_t idx) const {
+    auto iter = _data.find(idx);
+    if (iter != _data.end()) {
+      return iter->second;
+    }
+    return 0;
+  }
+
+  uint64_t block(size_t bx, size_t by, size_t bz) const {
+    return block(block_idx(bx, by, bz));
+  }
+
+  void set_block(size_t idx, uint64_t value) {
+    _data[idx] = value;
+  }
+
+  void set_block(size_t bx, size_t by, size_t bz, uint64_t value) {
+    set_block(block_idx(bx, by, bz), value);
   }
 
   bool cell(size_t ix, size_t iy, size_t iz) const {
     auto b = block(ix / 4, iy / 4, iz / 4);
-    return b & bitmask(ix % 4, iy % 4, iz % 4);
+    return b && (b & bitmask(ix % 4, iy % 4, iz % 4));
   }
 
   // sets the cell's value
   // returns true if the cell's value changed
   bool set_cell(size_t ix, size_t iy, size_t iz, bool value = true) {
-    auto &b = block(ix / 4, iy / 4, iz / 4);
+    auto idx = block_idx(ix / 4, iy / 4, iz / 4);
+    auto &b = _data[idx];
     auto mask = bitmask(ix % 4, iy % 4, iz % 4);
     bool is_set = b & mask;
     if (value) {
@@ -115,22 +134,17 @@ public:
     return is_set != value;
   }
 
-  uint64_t& find_block(double x, double y, double z) {
-    auto [bx, by, bz] = find_block_idx(x, y, z);
-    return block(bx, by, bz);
-  }
-
   uint64_t find_block(double x, double y, double z) const {
-    auto [bx, by, bz] = find_block_idx(x, y, z);
-    return block(bx, by, bz);
+    auto idx = find_block_idx(x, y, z);
+    return block(idx);
   }
 
-  std::tuple<size_t, size_t, size_t> find_block_idx(double x, double y, double z) const {
+  size_t find_block_idx(double x, double y, double z) const {
     domain_check(x, y, z);
     size_t ix = size_t((x - _xmin) / _dx);
     size_t iy = size_t((y - _ymin) / _dy);
     size_t iz = size_t((z - _zmin) / _dz);
-    return {ix / 4, iy / 4, iz / 4};
+    return block_idx(ix / 4, iy / 4, iz / 4);
   }
 
   std::tuple<size_t, size_t, size_t> find_cell(double x, double y, double z) const {
@@ -200,7 +214,7 @@ public:
       for (size_t by = 0; by < Nby; by++) {
         for (size_t bz = 0; bz < Nbz; bz++) {
           // check this block
-          uint64_t &b = _data[bx][by][bz];
+          uint64_t b = 0;
           for (uint_fast8_t i = 0; i < 4; i++) {
             for (uint_fast8_t j = 0; j < 4; j++) {
               for (uint_fast8_t k = 0; k < 4; k++) {
@@ -210,6 +224,7 @@ public:
               }
             }
           }
+          if (b) { _data[block_idx(bx, by, bz)] |= b; }
         }
       }
     }
@@ -217,7 +232,7 @@ public:
     //// do a growing algorithm with a frontier and a visited
     //using IdxType = std::tuple<size_t, size_t, size_t>;
     //std::stack<IdxType> frontier;
-    //auto visited = std::make_unique<CTVoxelObject<Nx, Ny, Nz>>();
+    //auto visited = std::make_unique<VoxelObject<Nx, Ny, Nz>>();
 
     //auto check_push = [&frontier, &visited](size_t _ix, size_t _iy, size_t _iz) {
     //  if (!visited->cell(_ix, _iy, _iz) && _ix < _Nx && _iy < _Ny && _iz < _Nz) {
@@ -248,28 +263,33 @@ public:
     // TODO: implement
   }
 
-  bool collides(const CTVoxelObject<Nx, Ny, Nz> &other) const {
-    limit_check(other);
-    //const uint64_t *flat = &_data[0][0][0];
-    //const uint64_t *oflat = &(other._data[0][0][0]);
-    //for (size_t b = 0; b < nblocks(); b++) {
-    //  if (flat[b] & oflat[b]) {
-    //    return true;
-    //  }
-    //}
-    for (size_t bx = 0; bx < Nbx; bx++) {
-      for (size_t by = 0; by < Nby; by++) {
-        for (size_t bz = 0; bz < Nbz; bz++) {
-          if (this->_data[bx][by][bz] & other._data[bx][by][bz]) {
-            return true;
-          }
+  bool collides_check(const CTSparseVoxelObject<Nx, Ny, Nz> &other) const {
+    limit_check(other); // significantly slows down collision checking
+    return collides(other);
+  }
+
+  bool collides(const CTSparseVoxelObject<Nx, Ny, Nz> &other) const {
+    auto ita = _data.begin();
+    auto itb = other._data.begin();
+    while (ita != _data.end() && itb != other._data.end()) {
+      if (ita->first == itb->first) {
+        if (ita->second & itb->second) {
+          return true;
         }
+      } else if (ita->first < itb->first) {
+        ita++;
+      } else {
+        itb++;
       }
     }
     return false;
   }
 
 protected:
+  size_t block_idx(size_t bx, size_t by, size_t bz) {
+    return bz + Nz*(by + Ny*bx);
+  }
+
   // one in the given place, zeros everywhere else
   // for x, y, z within a block (each should be 0 <= x < 4)
   uint64_t bitmask(uint_fast8_t x, uint_fast8_t y, uint_fast8_t z) const {
@@ -288,7 +308,7 @@ protected:
     }
   }
 
-  void limit_check(const CTVoxelObject<Nx, Ny, Nz> &other) const {
+  void limit_check(const CTSparseVoxelObject<Nx, Ny, Nz> &other) const {
     double eps = std::numeric_limits<double>::epsilon();
     auto dbl_eq_check = [eps](const std::string &name, double val1, double val2) {
       if (std::abs(val1 - val2) >= eps) {
@@ -304,7 +324,7 @@ protected:
   }
 
 private:
-  uint64_t _data[Nbx][Nby][Nbz]; // voxel data
+  std::map<size_t, uint64_t> _data; // sparse voxel data
   double _xmin;
   double _xmax;
   double _ymin;
@@ -316,4 +336,5 @@ private:
   double _dz;
 };
 
-#endif // CT_VOXEL_OBJECT_H
+#endif // CT_SPARSE_VOXEL_OBJECT_H
+

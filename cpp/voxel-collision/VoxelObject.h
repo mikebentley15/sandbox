@@ -24,7 +24,7 @@ public:
   const size_t Nbx;  // number of blocks in the x-direction
   const size_t Nby;  // number of blocks in the y-direction
   const size_t Nbz;  // number of blocks in the z-direction
-  const size_t Nb;
+  const size_t Nb;   // number of blocks
 
 public:
   VoxelObject(size_t _Nx, size_t _Ny, size_t _Nz)
