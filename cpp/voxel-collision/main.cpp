@@ -16,6 +16,10 @@
 
 #include <unistd.h>
 
+constexpr uint64_t bitmask(uint_fast8_t x, uint_fast8_t y, uint_fast8_t z) {
+  return uint64_t(1) << (x*16 + y*4 + z);
+}
+
 void memory_usage(double &vm_usage, double &resident_set) {
   vm_usage = 0.0;
   resident_set = 0.0;
@@ -50,6 +54,18 @@ void print_memory_usage() {
             << "Resident Set Size: " << rss << " KiB" << std::endl;
 }
 
+// return the total seconds to execute the function N times
+template <typename Func>
+double time_func(int N, Func &&f) {
+  auto start = std::chrono::system_clock::now();
+  for (int i = 0; i < N; i++) {
+    f();
+  }
+  auto end = std::chrono::system_clock::now();
+  std::chrono::duration<double> elapsed_secs = end - start;
+  return elapsed_secs.count();
+}
+
 template <typename VType>
 void try_voxel_type(const std::string &name, const std::unique_ptr<VType> &v, int N = 1000) {
   std::cout << "\n"
@@ -77,33 +93,53 @@ void try_voxel_type(const std::string &name, const std::unique_ptr<VType> &v, in
             << "v4.nblocks(): " << v4->nblocks() << std::endl;
   print_memory_usage();
 
-  std::cout << "  v1.collides(v1): " << collides(*v1, *v1) << std::endl
-            << "  v1.collides(v2): " << collides(*v1, *v2) << std::endl
-            << "  v1.collides(v3): " << collides(*v1, *v3) << std::endl
-            << "  v1.collides(v4): " << collides(*v1, *v4) << std::endl
-            << "  v2.collides(v1): " << collides(*v2, *v1) << std::endl
-            << "  v2.collides(v2): " << collides(*v2, *v2) << std::endl
-            << "  v2.collides(v3): " << collides(*v2, *v3) << std::endl
-            << "  v2.collides(v4): " << collides(*v2, *v4) << std::endl
-            << "  v3.collides(v1): " << collides(*v3, *v1) << std::endl
-            << "  v3.collides(v2): " << collides(*v3, *v2) << std::endl
-            << "  v3.collides(v3): " << collides(*v3, *v3) << std::endl
-            << "  v3.collides(v4): " << collides(*v3, *v4) << std::endl
-            << "  v4.collides(v1): " << collides(*v4, *v1) << std::endl
-            << "  v4.collides(v2): " << collides(*v4, *v2) << std::endl
-            << "  v4.collides(v3): " << collides(*v4, *v3) << std::endl
-            << "  v4.collides(v4): " << collides(*v4, *v4) << std::endl;
+  //std::cout << "  v1.collides(v1): " << collides(*v1, *v1) << std::endl
+  //          << "  v1.collides(v2): " << collides(*v1, *v2) << std::endl
+  //          << "  v1.collides(v3): " << collides(*v1, *v3) << std::endl
+  //          << "  v1.collides(v4): " << collides(*v1, *v4) << std::endl
+  //          << "  v2.collides(v1): " << collides(*v2, *v1) << std::endl
+  //          << "  v2.collides(v2): " << collides(*v2, *v2) << std::endl
+  //          << "  v2.collides(v3): " << collides(*v2, *v3) << std::endl
+  //          << "  v2.collides(v4): " << collides(*v2, *v4) << std::endl
+  //          << "  v3.collides(v1): " << collides(*v3, *v1) << std::endl
+  //          << "  v3.collides(v2): " << collides(*v3, *v2) << std::endl
+  //          << "  v3.collides(v3): " << collides(*v3, *v3) << std::endl
+  //          << "  v3.collides(v4): " << collides(*v3, *v4) << std::endl
+  //          << "  v4.collides(v1): " << collides(*v4, *v1) << std::endl
+  //          << "  v4.collides(v2): " << collides(*v4, *v2) << std::endl
+  //          << "  v4.collides(v3): " << collides(*v4, *v3) << std::endl
+  //          << "  v4.collides(v4): " << collides(*v4, *v4) << std::endl;
 
-  auto start = std::chrono::system_clock::now();
-  for (int i = 0; i < N; i++) {
-    collides(*v1, *v2);
-  }
-  auto end = std::chrono::system_clock::now();
-  std::chrono::duration<double> elapsed_secs = end - start;
+  auto elapsed_secs = time_func(N, [&v1, &v2]() { collides(*v1, *v2); });
   std::cout << "collision checking collides(v1, v2) " << N << " times: "
-            << elapsed_secs.count() << " sec\n"
-            << "  runs in " << elapsed_secs.count() / N << " sec\n"
-            << "  runs at " << N / elapsed_secs.count() << " Hz\n";
+            << elapsed_secs << " sec\n"
+            << "  runs in " << elapsed_secs / N << " sec\n"
+            << "  runs at " << N / elapsed_secs << " Hz\n";
+
+  //v1->remove_interior();
+  //v2->remove_interior();
+  //v3->remove_interior();
+  //v4->remove_interior();
+  //remove_interior_slow(*v1);
+  //remove_interior_slow(*v2);
+  //remove_interior_slow(*v3);
+  //remove_interior_slow(*v4);
+  remove_interior_medium(*v1);
+  remove_interior_medium(*v2);
+  remove_interior_medium(*v3);
+  remove_interior_medium(*v4);
+  std::cout << "\n"
+            << "AFTER REMOVING INTERIOR\n";
+  std::cout << "  v1.nblocks(): " << v1->nblocks() << std::endl
+            << "  v2.nblocks(): " << v2->nblocks() << std::endl
+            << "  v3.nblocks(): " << v3->nblocks() << std::endl
+            << "  v4.nblocks(): " << v4->nblocks() << std::endl;
+  elapsed_secs = time_func(N, [&v1, &v2]() { collides(*v1, *v2); });
+  std::cout << "\n"
+            << "  collision checking collides(v1, v2) " << N << " times: "
+            << elapsed_secs << " sec\n"
+            << "    runs in " << elapsed_secs / N << " sec\n"
+            << "    runs at " << N / elapsed_secs << " Hz\n";
 }
 
 template <typename VType>
@@ -127,8 +163,8 @@ void print_voxel_object(const VType *v) {
   }
 }
 
-template <typename VType>
-void print_voxel_object_side_by_side(const VType *v1, const VType *v2) {
+template <typename V1Type, typename V2Type>
+void print_voxel_object_side_by_side(const V1Type *v1, const V2Type *v2) {
   int width = std::to_string(v1->Ny).size();
   for (size_t i = 0; i < v1->Nx; i++) {
     std::cout << "x = " << i << std::endl;
@@ -152,25 +188,109 @@ void print_voxel_object_side_by_side(const VType *v1, const VType *v2) {
   }
 }
 
+template <typename VoxelType>
+void remove_interior_slow(VoxelType &v) {
+  const VoxelType copy(v);
+  for (size_t ix = 0; ix < v.Nx; ix++) {
+    for (size_t iy = 0; iy < v.Ny; iy++) {
+      for (size_t iz = 0; iz < v.Nz; iz++) {
+        bool curr   = copy.cell(ix, iy, iz);
+        bool left   = (ix == 0)      || copy.cell(ix-1, iy, iz);
+        bool right  = (ix == v.Nx-1) || copy.cell(ix+1, iy, iz);
+        bool front  = (iy == 0)      || copy.cell(ix, iy-1, iz);
+        bool behind = (iy == v.Ny-1) || copy.cell(ix, iy+1, iz);
+        bool below  = (iz == 0)      || copy.cell(ix, iy, iz-1);
+        bool above  = (iz == v.Nz-1) || copy.cell(ix, iy, iz+1);
+        if (curr && left && right && front && behind && below && above) {
+          v.set_cell(ix, iy, iz, false);
+        }
+      }
+    }
+  }
+}
+
+template <typename VoxelType>
+void remove_interior_medium(VoxelType &v) {
+  const VoxelType copy(v);
+  const uint64_t full = ~uint64_t(0);
+  for (size_t bx = 0; bx < v.Nbx; bx++) {
+    for (size_t by = 0; by < v.Nby; by++) {
+      for (size_t bz = 0; bz < v.Nbz; bz++) {
+        const uint64_t old_b = copy.block(bx, by, bz);
+        if (!old_b) { continue; } // do not try if it's already all zeros.
+
+        const uint64_t left   = (bx <= 0)       ? full : copy.block(bx-1, by, bz);
+        const uint64_t right  = (bx >= v.Nbx-1) ? full : copy.block(bx+1, by, bz);
+        const uint64_t front  = (by <= 0)       ? full : copy.block(bx, by-1, bz);
+        const uint64_t behind = (by >= v.Nby-1) ? full : copy.block(bx, by+1, bz);
+        const uint64_t below  = (bz <= 0)       ? full : copy.block(bx, by, bz-1);
+        const uint64_t above  = (bz >= v.Nbz-1) ? full : copy.block(bx, by, bz+1);
+        uint64_t new_b = old_b;
+
+        auto is_interior =
+          [left, right, front, behind, below, above, old_b]
+          (unsigned ix, unsigned iy, unsigned iz) {
+            bool is_in = true;
+            uint64_t mask = bitmask(ix, iy, iz);
+
+            if (ix > 0) { mask |= bitmask(ix-1, iy, iz); }
+            else { is_in = (is_in && bool(left & bitmask(3, iy, iz))); }
+
+            if (ix < 3) { mask |= bitmask(ix+1, iy, iz); }
+            else { is_in = (is_in && bool(right & bitmask(0, iy, iz))); }
+
+            if (iy > 0) { mask |= bitmask(ix, iy-1, iz); }
+            else { is_in = (is_in && bool(front & bitmask(ix, 3, iz))); }
+
+            if (iy < 3) { mask |= bitmask(ix, iy+1, iz); }
+            else { is_in = (is_in && bool(behind & bitmask(ix, 0, iz))); }
+
+            if (iz > 0) { mask |= bitmask(ix, iy, iz-1); }
+            else { is_in = (is_in && bool(below & bitmask(ix, iy, 3))); }
+
+            if (iz < 3) { mask |= bitmask(ix, iy, iz+1); }
+            else { is_in = (is_in && bool(above & bitmask(ix, iy, 0))); }
+
+            is_in = (is_in && (mask == (old_b & mask)));
+            return is_in;
+          };
+
+        for (unsigned ix = 0; ix < 4; ix++) {
+          for (unsigned iy = 0; iy < 4; iy++) {
+            for (unsigned iz = 0; iz < 4; iz++) {
+              if (is_interior(ix, iy, iz)) {
+                new_b &= ~bitmask(ix, iy, iz);
+              }
+            }
+          }
+        }
+
+        // store this new block if it has any cells set
+        v.set_block(bx, by, bz, new_b);
+      }
+    }
+  }
+}
+
 int main() {
   std::cout << "Before\n";
   print_memory_usage();
 
-  //try_voxel_type("VoxelObject_512", std::make_unique<VoxelObject>(512, 512, 512), 500);
-  //try_voxel_type("VoxelObject_256", std::make_unique<VoxelObject>(256, 256, 256), 1000);
   //try_voxel_type("VoxelObject_128", std::make_unique<VoxelObject>(128, 128, 128), 10000);
-  //try_voxel_type("CTVoxelObject_512", std::make_unique<CTVoxelObject<512, 512, 512>>(), 300);
-  //try_voxel_type("CTVoxelObject_256", std::make_unique<CTVoxelObject<256, 256, 256>>(), 1000);
+  //try_voxel_type("VoxelObject_256", std::make_unique<VoxelObject>(256, 256, 256), 1000);
+  //try_voxel_type("VoxelObject_512", std::make_unique<VoxelObject>(512, 512, 512), 500);
   //try_voxel_type("CTVoxelObject_128", std::make_unique<CTVoxelObject<128, 128, 128>>(), 10000);
-  //try_voxel_type("SparseVoxelObject_512", std::make_unique<SparseVoxelObject>(512, 512, 512), 100);
-  //try_voxel_type("SparseVoxelObject_256", std::make_unique<SparseVoxelObject>(256, 256, 256), 100);
+  //try_voxel_type("CTVoxelObject_256", std::make_unique<CTVoxelObject<256, 256, 256>>(), 1000);
+  //try_voxel_type("CTVoxelObject_512", std::make_unique<CTVoxelObject<512, 512, 512>>(), 300);
   //try_voxel_type("SparseVoxelObject_128", std::make_unique<SparseVoxelObject>(128, 128, 128), 100);
-  //try_voxel_type("CTSparseVoxelObject_512", std::make_unique<CTSparseVoxelObject<512, 512, 512>>(), 100);
-  //try_voxel_type("CTSparseVoxelObject_256", std::make_unique<CTSparseVoxelObject<256, 256, 256>>(), 100);
+  //try_voxel_type("SparseVoxelObject_256", std::make_unique<SparseVoxelObject>(256, 256, 256), 100);
+  //try_voxel_type("SparseVoxelObject_512", std::make_unique<SparseVoxelObject>(512, 512, 512), 100);
   //try_voxel_type("CTSparseVoxelObject_128", std::make_unique<CTSparseVoxelObject<128, 128, 128>>(), 100);
-  //try_voxel_type("VoxelOctree_512", std::make_unique<VoxelOctree<512>>(), 500);
-  //try_voxel_type("VoxelOctree_256", std::make_unique<VoxelOctree<256>>(), 500);
+  //try_voxel_type("CTSparseVoxelObject_256", std::make_unique<CTSparseVoxelObject<256, 256, 256>>(), 100);
+  //try_voxel_type("CTSparseVoxelObject_512", std::make_unique<CTSparseVoxelObject<512, 512, 512>>(), 100);
   //try_voxel_type("VoxelOctree_128", std::make_unique<VoxelOctree<128>>(), 500);
+  //try_voxel_type("VoxelOctree_256", std::make_unique<VoxelOctree<256>>(), 500);
+  //try_voxel_type("VoxelOctree_512", std::make_unique<VoxelOctree<512>>(), 500);
   //try_voxel_type("OctomapWrap", std::make_unique<OctomapWrap>(1.0/4.0), 10);
   //try_voxel_type("OctomapWrap", std::make_unique<OctomapWrap>(1.0/8.0), 10);
   //try_voxel_type("OctomapWrap", std::make_unique<OctomapWrap>(1.0/16.0), 10);
@@ -180,32 +300,36 @@ int main() {
   //try_voxel_type("OctomapWrap", std::make_unique<OctomapWrap>(1.0/256.0), 10);
   //try_voxel_type("OctomapWrap", std::make_unique<OctomapWrap>(1.0/512.0), 10);
 
-  SparseVoxelObject v(20, 20, 32);
-  v.add_sphere(0.7, 0.2, 0.2, 0.55);
-  //print_voxel_object(&v);
+  //SparseVoxelObject v(20, 20, 32);
+  VoxelOctree<32> v1;
+  v1.add_sphere(0.7, 0.2, 0.2, 0.55);
 
   std::cout << "\n"
                "*****************\n"
                "\n"
                "After removing interior points\n"
             << std::endl;
-  auto v2 = v;
-  auto v3 = v;
-  v2.remove_interior_slow_1();
-  v3.remove_interior();
+  SparseVoxelObject v2(32, 32, 32);
+  v2.add_sphere(0.7, 0.2, 0.2, 0.55);
+  v2.add_sphere(0.1, 0.6, 0.6, 0.3);
+  //auto v2 = v1;
+  auto v3 = v1;
+  v3.add_sphere(0.1, 0.6, 0.6, 0.3);
+  remove_interior_medium(v2); //v2.remove_interior_slow_1();
+  v3.remove_interior(); //remove_interior_slow(v3);
   print_voxel_object_side_by_side(&v2, &v3);
 
   std::cout << "\n"
                "*****************\n"
                "\n"
-               "Full sphere block count:          " << v.nblocks() << "\n"
-               "Spherical shell block count (v2): " << v2.nblocks() << "\n"
+               "Full sphere block count:          " << v1.nblocks() << "\n"
+               //"Spherical shell block count (v2): " << v2.nblocks() << "\n"
                "Spherical shell block count (v3): " << v3.nblocks() << "\n";
 
-  std::cout << "\n\nAfter\n";
-  print_memory_usage();
+  //std::cout << "\n\nAfter\n";
+  //print_memory_usage();
 
-  std::cout << std::endl;
+  //std::cout << std::endl;
 
   return 0;
 }

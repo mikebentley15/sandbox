@@ -277,7 +277,7 @@ public:
   }
 
   void remove_interior_slow_1() {
-    SparseVoxelObject copy(*this);
+    const SparseVoxelObject copy(*this);
     for (size_t ix = 0; ix < Nx; ix++) {
       for (size_t iy = 0; iy < Ny; iy++) {
         for (size_t iz = 0; iz < Nz; iz++) {
