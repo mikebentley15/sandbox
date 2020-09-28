@@ -66,6 +66,15 @@ double time_func(int N, Func &&f) {
   return elapsed_secs.count();
 }
 
+template <typename Func>
+void print_timing(const std::string &name, int N, Func &&f, std::ostream& out = std::cout)
+{
+  auto elapsed_secs = time_func(N, f);
+  out << name << ": run " << N << " times: " << elapsed_secs << " sec\n"
+      << "  runs in " << elapsed_secs / N << " sec\n"
+      << "  runs at " << N / elapsed_secs << " Hz\n";
+}
+
 template <typename VType>
 void try_voxel_type(const std::string &name, const std::unique_ptr<VType> &v, int N = 1000) {
   std::cout << "\n"
@@ -110,36 +119,29 @@ void try_voxel_type(const std::string &name, const std::unique_ptr<VType> &v, in
   //          << "  v4.collides(v3): " << collides(*v4, *v3) << std::endl
   //          << "  v4.collides(v4): " << collides(*v4, *v4) << std::endl;
 
-  auto elapsed_secs = time_func(N, [&v1, &v2]() { collides(*v1, *v2); });
-  std::cout << "collision checking collides(v1, v2) " << N << " times: "
-            << elapsed_secs << " sec\n"
-            << "  runs in " << elapsed_secs / N << " sec\n"
-            << "  runs at " << N / elapsed_secs << " Hz\n";
+  print_timing("collision checking collides(v1, v2)", N,
+               [&v1, &v2]() { collides(*v1, *v2); }, std::cout);
 
-  //v1->remove_interior();
-  //v2->remove_interior();
-  //v3->remove_interior();
-  //v4->remove_interior();
+  v1->remove_interior();
+  v2->remove_interior();
+  v3->remove_interior();
+  v4->remove_interior();
   //remove_interior_slow(*v1);
   //remove_interior_slow(*v2);
   //remove_interior_slow(*v3);
   //remove_interior_slow(*v4);
-  remove_interior_medium(*v1);
-  remove_interior_medium(*v2);
-  remove_interior_medium(*v3);
-  remove_interior_medium(*v4);
+  //remove_interior_medium(*v1);
+  //remove_interior_medium(*v2);
+  //remove_interior_medium(*v3);
+  //remove_interior_medium(*v4);
   std::cout << "\n"
             << "AFTER REMOVING INTERIOR\n";
   std::cout << "  v1.nblocks(): " << v1->nblocks() << std::endl
             << "  v2.nblocks(): " << v2->nblocks() << std::endl
             << "  v3.nblocks(): " << v3->nblocks() << std::endl
             << "  v4.nblocks(): " << v4->nblocks() << std::endl;
-  elapsed_secs = time_func(N, [&v1, &v2]() { collides(*v1, *v2); });
-  std::cout << "\n"
-            << "  collision checking collides(v1, v2) " << N << " times: "
-            << elapsed_secs << " sec\n"
-            << "    runs in " << elapsed_secs / N << " sec\n"
-            << "    runs at " << N / elapsed_secs << " Hz\n";
+  print_timing("  collision checking collides(v1, v2)", N,
+               [&v1, &v2]() { collides(*v1, *v2); }, std::cout);
 }
 
 template <typename VType>
@@ -282,15 +284,15 @@ int main() {
   //try_voxel_type("CTVoxelObject_128", std::make_unique<CTVoxelObject<128, 128, 128>>(), 10000);
   //try_voxel_type("CTVoxelObject_256", std::make_unique<CTVoxelObject<256, 256, 256>>(), 1000);
   //try_voxel_type("CTVoxelObject_512", std::make_unique<CTVoxelObject<512, 512, 512>>(), 300);
-  //try_voxel_type("SparseVoxelObject_128", std::make_unique<SparseVoxelObject>(128, 128, 128), 100);
-  //try_voxel_type("SparseVoxelObject_256", std::make_unique<SparseVoxelObject>(256, 256, 256), 100);
-  //try_voxel_type("SparseVoxelObject_512", std::make_unique<SparseVoxelObject>(512, 512, 512), 100);
+  try_voxel_type("SparseVoxelObject_128", std::make_unique<SparseVoxelObject>(128, 128, 128), 3000);
+  try_voxel_type("SparseVoxelObject_256", std::make_unique<SparseVoxelObject>(256, 256, 256), 500);
+  try_voxel_type("SparseVoxelObject_512", std::make_unique<SparseVoxelObject>(512, 512, 512), 80);
   //try_voxel_type("CTSparseVoxelObject_128", std::make_unique<CTSparseVoxelObject<128, 128, 128>>(), 100);
   //try_voxel_type("CTSparseVoxelObject_256", std::make_unique<CTSparseVoxelObject<256, 256, 256>>(), 100);
   //try_voxel_type("CTSparseVoxelObject_512", std::make_unique<CTSparseVoxelObject<512, 512, 512>>(), 100);
-  //try_voxel_type("VoxelOctree_128", std::make_unique<VoxelOctree<128>>(), 500);
-  //try_voxel_type("VoxelOctree_256", std::make_unique<VoxelOctree<256>>(), 500);
-  //try_voxel_type("VoxelOctree_512", std::make_unique<VoxelOctree<512>>(), 500);
+  try_voxel_type("VoxelOctree_128", std::make_unique<VoxelOctree<128>>(), 50000);
+  try_voxel_type("VoxelOctree_256", std::make_unique<VoxelOctree<256>>(), 50000);
+  try_voxel_type("VoxelOctree_512", std::make_unique<VoxelOctree<512>>(), 50000);
   //try_voxel_type("OctomapWrap", std::make_unique<OctomapWrap>(1.0/4.0), 10);
   //try_voxel_type("OctomapWrap", std::make_unique<OctomapWrap>(1.0/8.0), 10);
   //try_voxel_type("OctomapWrap", std::make_unique<OctomapWrap>(1.0/16.0), 10);
@@ -300,31 +302,31 @@ int main() {
   //try_voxel_type("OctomapWrap", std::make_unique<OctomapWrap>(1.0/256.0), 10);
   //try_voxel_type("OctomapWrap", std::make_unique<OctomapWrap>(1.0/512.0), 10);
 
-  //SparseVoxelObject v(20, 20, 32);
-  VoxelOctree<32> v1;
-  v1.add_sphere(0.7, 0.2, 0.2, 0.55);
+  ////SparseVoxelObject v(20, 20, 32);
+  //VoxelOctree<32> v1;
+  //v1.add_sphere(0.7, 0.2, 0.2, 0.55);
 
-  std::cout << "\n"
-               "*****************\n"
-               "\n"
-               "After removing interior points\n"
-            << std::endl;
-  SparseVoxelObject v2(32, 32, 32);
-  v2.add_sphere(0.7, 0.2, 0.2, 0.55);
-  v2.add_sphere(0.1, 0.6, 0.6, 0.3);
-  //auto v2 = v1;
-  auto v3 = v1;
-  v3.add_sphere(0.1, 0.6, 0.6, 0.3);
-  remove_interior_medium(v2); //v2.remove_interior_slow_1();
-  v3.remove_interior(); //remove_interior_slow(v3);
-  print_voxel_object_side_by_side(&v2, &v3);
+  //std::cout << "\n"
+  //             "*****************\n"
+  //             "\n"
+  //             "After removing interior points\n"
+  //          << std::endl;
+  //SparseVoxelObject v2(32, 32, 32);
+  //v2.add_sphere(0.7, 0.2, 0.2, 0.55);
+  //v2.add_sphere(0.1, 0.6, 0.6, 0.3);
+  ////auto v2 = v1;
+  //auto v3 = v1;
+  //v3.add_sphere(0.1, 0.6, 0.6, 0.3);
+  //remove_interior_medium(v2); //v2.remove_interior_slow_1();
+  //v3.remove_interior(); //remove_interior_slow(v3);
+  //print_voxel_object_side_by_side(&v2, &v3);
 
-  std::cout << "\n"
-               "*****************\n"
-               "\n"
-               "Full sphere block count:          " << v1.nblocks() << "\n"
-               //"Spherical shell block count (v2): " << v2.nblocks() << "\n"
-               "Spherical shell block count (v3): " << v3.nblocks() << "\n";
+  //std::cout << "\n"
+  //             "*****************\n"
+  //             "\n"
+  //             "Full sphere block count:          " << v1.nblocks() << "\n"
+  //             //"Spherical shell block count (v2): " << v2.nblocks() << "\n"
+  //             "Spherical shell block count (v3): " << v3.nblocks() << "\n";
 
   //std::cout << "\n\nAfter\n";
   //print_memory_usage();

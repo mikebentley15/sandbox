@@ -14,6 +14,7 @@
 
 namespace detail {
   template <size_t _Nt> class TreeNode;
+  template <size_t _Nt> class TreeIter;
 } // end of namespace detail
 
 // discretizations need to match for all dimensions

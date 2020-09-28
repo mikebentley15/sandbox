@@ -333,7 +333,8 @@ void VoxelOctree<_N>::remove_interior() {
     // store this new block
     this->_data->set_block(bx, by, bz, new_b);
   };
-  copy->visit_leaves(visitor);
+  //copy->visit_leaves(visitor);
+  copy->visit_leaves_2(visitor);
 }
 
 template <size_t _N>
@@ -413,6 +414,13 @@ public:
   void visit_leaves(std::function<void(size_t, size_t, size_t, uint64_t)> visitor) const;
   void visit_leaves(std::function<void(size_t, size_t, size_t, uint64_t&)> visitor);
 
+  void visit_leaves_2(std::function<void(size_t, size_t, size_t, uint64_t)> visitor) const {
+    visit_leaves_2_impl(visitor, 0, 0, 0);
+  }
+
+  void visit_leaves_2_impl(
+      std::function<void(size_t, size_t, size_t, uint64_t)> visitor,
+      size_t dx, size_t dy, size_t dz) const;
 protected:
   size_t idx(size_t bx, size_t by, size_t bz) const {
     return (bz/child_Nbt) + 2*(by/child_Nbt) + 4*(bx/child_Nbt);
@@ -546,6 +554,23 @@ void TreeNode<_Nt>::visit_leaves(
   }
 }
 
+template <size_t _Nt>
+void TreeNode<_Nt>::visit_leaves_2_impl(
+    std::function<void(size_t, size_t, size_t, uint64_t)> visitor,
+    size_t dx, size_t dy, size_t dz) const
+{
+  for (size_t bx = 0; bx < Nbt; bx += child_Nbt) {
+    for (size_t by = 0; by < Nbt; by += child_Nbt) {
+      for (size_t bz = 0; bz < Nbt; bz += child_Nbt) {
+        auto &child = _children[idx(bx, by, bz)];
+        if (child) {
+          child->visit_leaves_2_impl(visitor, dx + bx, dy + by, dz + bz);
+        }
+      }
+    }
+  }
+}
+
 // leaf node
 template <> class TreeNode<4> {
 public:
@@ -573,6 +598,15 @@ public:
   }
   void visit_leaves(std::function<void(size_t, size_t, size_t, uint64_t&)> visitor) {
     visitor(0, 0, 0, _data);
+  }
+  void visit_leaves_2(std::function<void(size_t, size_t, size_t, uint64_t)> visitor) const {
+    visitor(0, 0, 0, _data);
+  }
+  void visit_leaves_2_impl(
+      std::function<void(size_t, size_t, size_t, uint64_t)> visitor,
+      size_t dx, size_t dy, size_t dz) const
+  {
+    visitor(dx, dy, dz, _data);
   }
 protected:
   uint64_t _data;
