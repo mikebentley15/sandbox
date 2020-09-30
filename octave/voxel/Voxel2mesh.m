@@ -185,10 +185,6 @@ for j=1:6
         % add new vertices and faces to FV
         FV.faces=[FV.faces; ff+size(FV.vertices, 1)];
         FV.vertices=[FV.vertices; vv];
-        
-        % add new vertices and faces to FV
-        FV.faces=[FV.faces; ff+size(FV.vertices, 1)];
-        FV.vertices=[FV.vertices; vv];
     end
     
     
