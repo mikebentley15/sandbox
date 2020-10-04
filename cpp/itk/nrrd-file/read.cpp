@@ -49,10 +49,5 @@ int main(int arg_count, char *arg_list[]) {
     std::cout << " (" << secs << " seconds)" << std::endl;
   }
 
-  //reader->Print(std::cout);
-  //writer->Print(std::cout);
-
-  return 0;
-
   return 0;
 }
