@@ -88,26 +88,36 @@ void try_voxel_type(const std::string &name, const std::unique_ptr<VType> &v, in
   // copies
   auto &v1 = v;
   auto v2 = std::make_unique<VType>(*v);
-  auto v3 = std::make_unique<VType>(*v);
-  auto v4 = std::make_unique<VType>(*v);
+  //auto v3 = std::make_unique<VType>(*v);
+  //auto v4 = std::make_unique<VType>(*v);
 
-  v1->add_point(0.1, 0.1, 0.1);
-  v1->add_sphere(0.5, 0.5, 0.5, 0.25);
-  v2->add_sphere(0.5, 0.5, 0.1, 0.1);
-  v3->add_sphere(0.7, 0.2, 0.2, 0.55);
+  //v1->add_point(0.1, 0.1, 0.1);
+  //v1->add_sphere(0.5, 0.5, 0.5, 0.25);
+  //v2->add_sphere(0.5, 0.5, 0.1, 0.1);
+  //v3->add_sphere(0.7, 0.2, 0.2, 0.55);
+
+  for (size_t bx = 0; bx < v1->Nbx; ++bx) {
+    for (size_t by = 0; by < v1->Nby; ++by) {
+      for (size_t bz = 0; bz < v1->Nbz; ++bz) {
+        // dense around each other, but non-overlapping
+        v1->set_block(bx, by, bz, 0x3c'3c'3c'3c'3c'3c'3c'3c);
+        v2->set_block(bx, by, bz, 0xc3'c3'c3'c3'c3'c3'c3'c3);
+      }
+    }
+  }
 
   std::cout << "v1.nblocks(): " << v1->nblocks() << std::endl
-            << "v2.nblocks(): " << v2->nblocks() << std::endl
-            << "v3.nblocks(): " << v3->nblocks() << std::endl
-            << "v4.nblocks(): " << v4->nblocks() << std::endl;
+            << "v2.nblocks(): " << v2->nblocks() << std::endl;
+  //          << "v3.nblocks(): " << v3->nblocks() << std::endl
+  //          << "v4.nblocks(): " << v4->nblocks() << std::endl;
   print_memory_usage();
 
-  //std::cout << "  v1.collides(v1): " << collides(*v1, *v1) << std::endl
-  //          << "  v1.collides(v2): " << collides(*v1, *v2) << std::endl
+  std::cout << "  v1.collides(v1): " << collides(*v1, *v1) << std::endl
+            << "  v1.collides(v2): " << collides(*v1, *v2) << std::endl
   //          << "  v1.collides(v3): " << collides(*v1, *v3) << std::endl
   //          << "  v1.collides(v4): " << collides(*v1, *v4) << std::endl
-  //          << "  v2.collides(v1): " << collides(*v2, *v1) << std::endl
-  //          << "  v2.collides(v2): " << collides(*v2, *v2) << std::endl
+            << "  v2.collides(v1): " << collides(*v2, *v1) << std::endl
+            << "  v2.collides(v2): " << collides(*v2, *v2) << std::endl
   //          << "  v2.collides(v3): " << collides(*v2, *v3) << std::endl
   //          << "  v2.collides(v4): " << collides(*v2, *v4) << std::endl
   //          << "  v3.collides(v1): " << collides(*v3, *v1) << std::endl
@@ -117,15 +127,16 @@ void try_voxel_type(const std::string &name, const std::unique_ptr<VType> &v, in
   //          << "  v4.collides(v1): " << collides(*v4, *v1) << std::endl
   //          << "  v4.collides(v2): " << collides(*v4, *v2) << std::endl
   //          << "  v4.collides(v3): " << collides(*v4, *v3) << std::endl
-  //          << "  v4.collides(v4): " << collides(*v4, *v4) << std::endl;
+  //          << "  v4.collides(v4): " << collides(*v4, *v4) << std::endl
+            << std::endl;
 
   print_timing("collision checking collides(v1, v2)", N,
                [&v1, &v2]() { collides(*v1, *v2); }, std::cout);
 
-  v1->remove_interior();
-  v2->remove_interior();
-  v3->remove_interior();
-  v4->remove_interior();
+  //v1->remove_interior();
+  //v2->remove_interior();
+  //v3->remove_interior();
+  //v4->remove_interior();
   //remove_interior_slow(*v1);
   //remove_interior_slow(*v2);
   //remove_interior_slow(*v3);
@@ -134,14 +145,15 @@ void try_voxel_type(const std::string &name, const std::unique_ptr<VType> &v, in
   //remove_interior_medium(*v2);
   //remove_interior_medium(*v3);
   //remove_interior_medium(*v4);
-  std::cout << "\n"
-            << "AFTER REMOVING INTERIOR\n";
-  std::cout << "  v1.nblocks(): " << v1->nblocks() << std::endl
-            << "  v2.nblocks(): " << v2->nblocks() << std::endl
-            << "  v3.nblocks(): " << v3->nblocks() << std::endl
-            << "  v4.nblocks(): " << v4->nblocks() << std::endl;
-  print_timing("  collision checking collides(v1, v2)", N,
-               [&v1, &v2]() { collides(*v1, *v2); }, std::cout);
+  //std::cout << "\n"
+  //          << "AFTER REMOVING INTERIOR\n";
+  //std::cout << "  v1.nblocks(): " << v1->nblocks() << std::endl
+  //          << "  v2.nblocks(): " << v2->nblocks() << std::endl
+  //          << "  v3.nblocks(): " << v3->nblocks() << std::endl
+  //          << "  v4.nblocks(): " << v4->nblocks() << std::endl
+  //          << std::endl;
+  //print_timing("  collision checking collides(v1, v2)", N,
+  //             [&v1, &v2]() { collides(*v1, *v2); }, std::cout);
 }
 
 template <typename VType>
@@ -284,15 +296,20 @@ int main() {
   //try_voxel_type("CTVoxelObject_128", std::make_unique<CTVoxelObject<128, 128, 128>>(), 10000);
   //try_voxel_type("CTVoxelObject_256", std::make_unique<CTVoxelObject<256, 256, 256>>(), 1000);
   //try_voxel_type("CTVoxelObject_512", std::make_unique<CTVoxelObject<512, 512, 512>>(), 300);
-  try_voxel_type("SparseVoxelObject_128", std::make_unique<SparseVoxelObject>(128, 128, 128), 3000);
-  try_voxel_type("SparseVoxelObject_256", std::make_unique<SparseVoxelObject>(256, 256, 256), 500);
-  try_voxel_type("SparseVoxelObject_512", std::make_unique<SparseVoxelObject>(512, 512, 512), 80);
+  //try_voxel_type("SparseVoxelObject_128", std::make_unique<SparseVoxelObject>(128, 128, 128), 3000);
+  //try_voxel_type("SparseVoxelObject_256", std::make_unique<SparseVoxelObject>(256, 256, 256), 500);
+  //try_voxel_type("SparseVoxelObject_512", std::make_unique<SparseVoxelObject>(512, 512, 512), 80);
   //try_voxel_type("CTSparseVoxelObject_128", std::make_unique<CTSparseVoxelObject<128, 128, 128>>(), 100);
   //try_voxel_type("CTSparseVoxelObject_256", std::make_unique<CTSparseVoxelObject<256, 256, 256>>(), 100);
   //try_voxel_type("CTSparseVoxelObject_512", std::make_unique<CTSparseVoxelObject<512, 512, 512>>(), 100);
-  try_voxel_type("VoxelOctree_128", std::make_unique<VoxelOctree<128>>(), 50000);
-  try_voxel_type("VoxelOctree_256", std::make_unique<VoxelOctree<256>>(), 50000);
-  try_voxel_type("VoxelOctree_512", std::make_unique<VoxelOctree<512>>(), 50000);
+  try_voxel_type("VoxelOctree_004", std::make_unique<VoxelOctree<  4>>(), 500);
+  try_voxel_type("VoxelOctree_008", std::make_unique<VoxelOctree<  8>>(), 500);
+  try_voxel_type("VoxelOctree_016", std::make_unique<VoxelOctree< 16>>(), 500);
+  try_voxel_type("VoxelOctree_032", std::make_unique<VoxelOctree< 32>>(), 500);
+  try_voxel_type("VoxelOctree_064", std::make_unique<VoxelOctree< 64>>(), 500);
+  try_voxel_type("VoxelOctree_128", std::make_unique<VoxelOctree<128>>(), 500);
+  try_voxel_type("VoxelOctree_256", std::make_unique<VoxelOctree<256>>(), 500);
+  try_voxel_type("VoxelOctree_512", std::make_unique<VoxelOctree<512>>(), 500);
   //try_voxel_type("OctomapWrap", std::make_unique<OctomapWrap>(1.0/4.0), 10);
   //try_voxel_type("OctomapWrap", std::make_unique<OctomapWrap>(1.0/8.0), 10);
   //try_voxel_type("OctomapWrap", std::make_unique<OctomapWrap>(1.0/16.0), 10);

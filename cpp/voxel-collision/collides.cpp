@@ -35,6 +35,11 @@ COLLIDES_IMPL(ctsv128)
 COLLIDES_IMPL(VoxelOctree<512>)
 COLLIDES_IMPL(VoxelOctree<256>)
 COLLIDES_IMPL(VoxelOctree<128>)
+COLLIDES_IMPL(VoxelOctree< 64>)
+COLLIDES_IMPL(VoxelOctree< 32>)
+COLLIDES_IMPL(VoxelOctree< 16>)
+COLLIDES_IMPL(VoxelOctree<  8>)
+COLLIDES_IMPL(VoxelOctree<  4>)
 COLLIDES_IMPL(OctomapWrap)
 
 #undef COLLIDES_IMPL

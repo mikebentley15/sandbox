@@ -22,6 +22,11 @@ bool collides (const CTSparseVoxelObject<128, 128, 128> &v1, const CTSparseVoxel
 bool collides (const VoxelOctree<512> &v1, const VoxelOctree<512> &v2);
 bool collides (const VoxelOctree<256> &v1, const VoxelOctree<256> &v2);
 bool collides (const VoxelOctree<128> &v1, const VoxelOctree<128> &v2);
+bool collides (const VoxelOctree< 64> &v1, const VoxelOctree< 64> &v2);
+bool collides (const VoxelOctree< 32> &v1, const VoxelOctree< 32> &v2);
+bool collides (const VoxelOctree< 16> &v1, const VoxelOctree< 16> &v2);
+bool collides (const VoxelOctree<  8> &v1, const VoxelOctree<  8> &v2);
+bool collides (const VoxelOctree<  4> &v1, const VoxelOctree<  4> &v2);
 bool collides (const OctomapWrap &v1, const OctomapWrap &v2);
 
 #endif // COLLIDES_H
