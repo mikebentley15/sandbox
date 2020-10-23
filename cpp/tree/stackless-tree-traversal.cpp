@@ -1,5 +1,3 @@
-#include <boost/stacktrace.hpp>
-
 #include <iostream>
 #include <memory>
 
