@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import os
 import re
 import sys
 import textwrap
@@ -28,9 +29,11 @@ def parse_args(arguments):
     parser = argparse.ArgumentParser(
         description="Convert Lucy's 3rd grade schedule to a LaTeX file")
     parser.add_argument('raw_text', help='Raw text of schedule from her teacher')
-    parser.add_argument('-o', '--output', default='lucy-schedule.tex',
+    parser.add_argument('-o', '--output', default=None,
                         help='output file')
     args = parser.parse_args(arguments)
+    if not args.output:
+        args.output = os.path.splitext(args.raw_text)[0] + '.tex'
     return args
 
 
