@@ -57,6 +57,9 @@ def main(arguments):
 
     print(f'Scored {num_correct}/{args.number}')
     print(f'Took {int(diff)//60} minutes and {int(diff)%60} seconds')
+    print()
+
+    input('Press "Enter" to quit')
 
     return 0
 
