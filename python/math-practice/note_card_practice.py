@@ -9,6 +9,7 @@ import argparse
 import csv
 import random
 import sys
+import time
 
 def populate_parser(parser=None):
     'Populate argument parser'
@@ -40,6 +41,8 @@ def main(arguments):
     reader = csv.DictReader(args.csv)
     cards = [NoteCard(row['question'], row['answer']) for row in reader]
 
+    num_correct = 0
+    start = time.perf_counter()
     for i in range(args.number):
         card = random.choice(cards)
         answer = input(f'{i+1}.  {card.question} ')
@@ -47,7 +50,13 @@ def main(arguments):
             print('  sorry, the correct answer is: ', card.answer)
         else:
             print('  correct!')
+            num_correct += 1
         print()
+    stop = time.perf_counter()
+    diff = stop - start
+
+    print(f'Scored {num_correct}/{args.number}')
+    print(f'Took {int(diff)//60} minutes and {int(diff)%60} seconds')
 
     return 0
 
