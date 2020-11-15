@@ -6,7 +6,7 @@ line_width = 0.45;
 // Layer height being used for the slice
 layer_height = 0.2;
 
-clearance = 0.4;
+clearance = 0.2;
 
 eps = 0.04;
 $fn = 200;
@@ -14,10 +14,11 @@ $fn = 200;
 
 /* [Model Settings] */
 
+type             = "L"; // ["R", "L"]
 frame_height     = 19.1;
 frame_width      = 19.5;
 thickness        = 3.8; // 2.8
-hole_diameter    = 6.2;
+hole_diameter    = 6.7;
 orig_base_length = 72.5;
 
 
@@ -27,7 +28,7 @@ orig_base_length = 72.5;
 // center of the fastning hole to the wall
 joint_x_dist = -frame_width / 2 - clearance * 2;
 joint_y_dist = 106.2; // not too precise
-joint_z_dist =  90.1;
+joint_z_dist =  86.5; // was 90.1
 
 
 /* [Externals] */
@@ -37,7 +38,7 @@ show_external = false;
 fastener_length        = 33.8;
 fastener_head_diameter = 12.8;
 fastener_head_height   = 1.7;
-fastener_body_diameter = 5.5;
+fastener_body_diameter = 6.4;
 
 
 joint = [joint_x_dist, joint_y_dist, joint_z_dist];
@@ -46,14 +47,24 @@ base_width  = frame_width + clearance + thickness;
 
 use <./helpers.scad>
 
-if (show_external) {
-  #crib_bar();
-  #fastener_1();
-  #fastener_2();
+if (type == "L") {
+  mirror([0, 1, 0]) right_piece();
+} else {
+  right_piece();
 }
 
-bottom_plate();
-side_plate();
+module right_piece() {
+  if (show_external) {
+    #crib_bar();
+    #fastener_1();
+    #fastener_2();
+  }
+
+  bottom_plate();
+  side_plate();
+  side_support();
+  mov_y(-4 * hole_diameter + thickness/2) side_support();
+}
 
 module bottom_plate() {
   W = base_width;
@@ -92,6 +103,22 @@ module side_plate() {
         mov_xy(joint_z_dist, joint_y_dist) circle(hole_diameter/2);
       }
     }
+}
+
+module side_support() {
+  T = thickness;
+  W = base_width;
+  L = base_length;
+  X = joint_x_dist;
+  Y = L - orig_base_length/2;
+  Z = joint_z_dist;
+  //translate([X-T+clearance, Y-T, -clearance]) linear_extrude(Z) square([W, T]);
+  hull() {
+    translate([X-T+clearance, Y-T, -T-clearance])
+      cube([W, T, T]);
+    translate([X-T+clearance, Y-T/2, Z-T])
+      cube([T, T/2, T]);
+  }
 }
 
 module crib_bar() {
