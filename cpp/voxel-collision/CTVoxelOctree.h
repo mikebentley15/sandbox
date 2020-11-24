@@ -1,5 +1,5 @@
-#ifndef VOXEL_OCTREE_H
-#define VOXEL_OCTREE_H
+#ifndef CT_VOXEL_OCTREE_H
+#define CT_VOXEL_OCTREE_H
 
 #include <iostream>
 #include <limits>    // for std::numeric_limits
@@ -14,7 +14,6 @@
 
 namespace detail {
   template <size_t _Nt> class TreeNode;
-  template <size_t _Nt> class TreeIter;
 } // end of namespace detail
 
 // discretizations need to match for all dimensions
@@ -107,4 +106,4 @@ private:
 
 #include "CTVoxelOctree.hxx"
 
-#endif // VOXEL_OCTREE_H
+#endif // CT_VOXEL_OCTREE_H

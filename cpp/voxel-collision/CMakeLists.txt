@@ -12,13 +12,15 @@ find_package(fcl 0.5 EXACT REQUIRED)
 add_executable(voxel-collision-example
   main.cpp
   collides.cpp
-  VoxelObject.h
-  SparseVoxelObject
-  CTVoxelObject.h
   CTSparseVoxelObject.h
+  CTVoxelObject.h
   CTVoxelOctree.h
   CTVoxelOctree.hxx
   OctomapWrap.h
+  SparseVoxelObject
+  VoxelObject.h
+  detail/TreeNode.h
+  detail/TreeNode.hxx
   )
 set_property(TARGET voxel-collision-example PROPERTY CXX_STANDARD 17)
 target_link_libraries(voxel-collision-example
