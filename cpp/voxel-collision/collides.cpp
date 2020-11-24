@@ -3,7 +3,7 @@
 #include "CTVoxelObject.h"
 #include "SparseVoxelObject.h"
 #include "VoxelObject.h"
-#include "VoxelOctree.h"
+#include "CTVoxelOctree.h"
 #include "OctomapWrap.h"
 
 namespace {
@@ -32,14 +32,14 @@ COLLIDES_IMPL(ctv128)
 COLLIDES_IMPL(ctsv512)
 COLLIDES_IMPL(ctsv256)
 COLLIDES_IMPL(ctsv128)
-COLLIDES_IMPL(VoxelOctree<512>)
-COLLIDES_IMPL(VoxelOctree<256>)
-COLLIDES_IMPL(VoxelOctree<128>)
-COLLIDES_IMPL(VoxelOctree< 64>)
-COLLIDES_IMPL(VoxelOctree< 32>)
-COLLIDES_IMPL(VoxelOctree< 16>)
-COLLIDES_IMPL(VoxelOctree<  8>)
-COLLIDES_IMPL(VoxelOctree<  4>)
+COLLIDES_IMPL(CTVoxelOctree<512>)
+COLLIDES_IMPL(CTVoxelOctree<256>)
+COLLIDES_IMPL(CTVoxelOctree<128>)
+COLLIDES_IMPL(CTVoxelOctree< 64>)
+COLLIDES_IMPL(CTVoxelOctree< 32>)
+COLLIDES_IMPL(CTVoxelOctree< 16>)
+COLLIDES_IMPL(CTVoxelOctree<  8>)
+COLLIDES_IMPL(CTVoxelOctree<  4>)
 COLLIDES_IMPL(OctomapWrap)
 
 #undef COLLIDES_IMPL

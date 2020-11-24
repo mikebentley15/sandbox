@@ -3,7 +3,7 @@
 #include "CTSparseVoxelObject.h"
 #include "CTVoxelObject.h"
 #include "SparseVoxelObject.h"
-#include "VoxelOctree.h"
+#include "CTVoxelOctree.h"
 #include "VoxelObject.h"
 #include "OctomapWrap.h"
 
@@ -302,14 +302,14 @@ int main() {
   //try_voxel_type("CTSparseVoxelObject_128", std::make_unique<CTSparseVoxelObject<128, 128, 128>>(), 100);
   //try_voxel_type("CTSparseVoxelObject_256", std::make_unique<CTSparseVoxelObject<256, 256, 256>>(), 100);
   //try_voxel_type("CTSparseVoxelObject_512", std::make_unique<CTSparseVoxelObject<512, 512, 512>>(), 100);
-  try_voxel_type("VoxelOctree_004", std::make_unique<VoxelOctree<  4>>(), 500);
-  try_voxel_type("VoxelOctree_008", std::make_unique<VoxelOctree<  8>>(), 500);
-  try_voxel_type("VoxelOctree_016", std::make_unique<VoxelOctree< 16>>(), 500);
-  try_voxel_type("VoxelOctree_032", std::make_unique<VoxelOctree< 32>>(), 500);
-  try_voxel_type("VoxelOctree_064", std::make_unique<VoxelOctree< 64>>(), 500);
-  try_voxel_type("VoxelOctree_128", std::make_unique<VoxelOctree<128>>(), 500);
-  try_voxel_type("VoxelOctree_256", std::make_unique<VoxelOctree<256>>(), 500);
-  try_voxel_type("VoxelOctree_512", std::make_unique<VoxelOctree<512>>(), 500);
+  try_voxel_type("VoxelOctree_004", std::make_unique<CTVoxelOctree<  4>>(), 500);
+  try_voxel_type("VoxelOctree_008", std::make_unique<CTVoxelOctree<  8>>(), 500);
+  try_voxel_type("VoxelOctree_016", std::make_unique<CTVoxelOctree< 16>>(), 500);
+  try_voxel_type("VoxelOctree_032", std::make_unique<CTVoxelOctree< 32>>(), 500);
+  try_voxel_type("VoxelOctree_064", std::make_unique<CTVoxelOctree< 64>>(), 500);
+  try_voxel_type("VoxelOctree_128", std::make_unique<CTVoxelOctree<128>>(), 500);
+  try_voxel_type("VoxelOctree_256", std::make_unique<CTVoxelOctree<256>>(), 500);
+  try_voxel_type("VoxelOctree_512", std::make_unique<CTVoxelOctree<512>>(), 500);
   //try_voxel_type("OctomapWrap", std::make_unique<OctomapWrap>(1.0/4.0), 10);
   //try_voxel_type("OctomapWrap", std::make_unique<OctomapWrap>(1.0/8.0), 10);
   //try_voxel_type("OctomapWrap", std::make_unique<OctomapWrap>(1.0/16.0), 10);
@@ -320,7 +320,7 @@ int main() {
   //try_voxel_type("OctomapWrap", std::make_unique<OctomapWrap>(1.0/512.0), 10);
 
   ////SparseVoxelObject v(20, 20, 32);
-  //VoxelOctree<32> v1;
+  //CTVoxelOctree<32> v1;
   //v1.add_sphere(0.7, 0.2, 0.2, 0.55);
 
   //std::cout << "\n"

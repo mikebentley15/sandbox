@@ -20,7 +20,7 @@ namespace detail {
 // discretizations need to match for all dimensions
 // and it needs to be a power of 2 bigger than 4
 template <size_t _N>
-class VoxelOctree {
+class CTVoxelOctree {
 
 public:
   static const size_t Nx = _N;            // number of voxels in the x-direction
@@ -37,9 +37,9 @@ public:
 
 protected:
 public:
-  VoxelOctree();
-  VoxelOctree(const VoxelOctree<_N> &other); // copy
-  VoxelOctree(VoxelOctree<_N> &&other);      // move
+  CTVoxelOctree();
+  CTVoxelOctree(const CTVoxelOctree<_N> &other); // copy
+  CTVoxelOctree(CTVoxelOctree<_N> &&other);      // move
 
   void set_xlim(double xmin, double xmax);
   void set_ylim(double ymin, double ymax);
@@ -81,8 +81,8 @@ public:
   void add_sphere(double x, double y, double z, double r);
   void remove_interior_slow_1();
   void remove_interior();
-  bool collides_check(const VoxelOctree<_N> &other) const;
-  bool collides(const VoxelOctree<_N> &other) const;
+  bool collides_check(const CTVoxelOctree<_N> &other) const;
+  bool collides(const CTVoxelOctree<_N> &other) const;
 
 protected:
   // one in the given place, zeros everywhere else
@@ -90,7 +90,7 @@ protected:
   uint64_t bitmask(uint_fast8_t x, uint_fast8_t y, uint_fast8_t z) const;
 
   void domain_check(double x, double y, double z) const;
-  void limit_check(const VoxelOctree &other) const;
+  void limit_check(const CTVoxelOctree &other) const;
 
 private:
   std::unique_ptr<detail::TreeNode<_N>> _data; // sparse voxel tree data
@@ -105,6 +105,6 @@ private:
   double _dz;
 };
 
-#include "VoxelOctree.hxx"
+#include "CTVoxelOctree.hxx"
 
 #endif // VOXEL_OCTREE_H

@@ -16,7 +16,8 @@ add_executable(voxel-collision-example
   SparseVoxelObject
   CTVoxelObject.h
   CTSparseVoxelObject.h
-  VoxelOctree.h
+  CTVoxelOctree.h
+  CTVoxelOctree.hxx
   OctomapWrap.h
   )
 set_property(TARGET voxel-collision-example PROPERTY CXX_STANDARD 17)
