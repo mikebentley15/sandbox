@@ -331,7 +331,7 @@ int main() {
     try_voxel_type("CTVoxelOctreeWrap_" #N, \
                    std::make_unique<CTVoxelOctreeWrap>(N), \
                    std::make_unique<CTVoxelOctreeWrap>(N), \
-                   K, tmpout); \
+                   K/10, tmpout); \
   } \
   std::cout << "\n-------- size " << N << " ---------------\n"; \
   try_voxel_type("CTVoxelOctreeWrap_" #N, \
@@ -354,6 +354,13 @@ int main() {
                  std::unique_ptr<AbstractVoxelOctree>(new DerivedVoxelOctree<N>()), \
                  std::unique_ptr<AbstractVoxelOctree>(new DerivedVoxelOctree<N>()), \
                  K, std::cout); \
+  { \
+    std::ostringstream tmpout; \
+    try_voxel_type("CTVoxelOctreeWrap_" #N, \
+                   std::make_unique<CTVoxelOctreeWrap>(N), \
+                   std::make_unique<CTVoxelOctreeWrap>(N), \
+                   K/10, tmpout); \
+  } \
 
   // I heuristically set K to make runtime be about one second
   //VOXEL_COMPARE(  4, 120000000);
