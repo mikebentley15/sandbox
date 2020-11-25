@@ -1,10 +1,12 @@
 #include "collides.h"
 #include "CTSparseVoxelObject.h"
 #include "CTVoxelObject.h"
+#include "CTVoxelOctree.h"
+#include "CTVoxelOctreeWrap.h"
+#include "OctomapWrap.h"
 #include "SparseVoxelObject.h"
 #include "VoxelObject.h"
-#include "CTVoxelOctree.h"
-#include "OctomapWrap.h"
+#include "VoxelOctree.h"
 
 namespace {
 
@@ -40,6 +42,8 @@ COLLIDES_IMPL(CTVoxelOctree< 32>)
 COLLIDES_IMPL(CTVoxelOctree< 16>)
 COLLIDES_IMPL(CTVoxelOctree<  8>)
 COLLIDES_IMPL(CTVoxelOctree<  4>)
+COLLIDES_IMPL(CTVoxelOctreeWrap)
 COLLIDES_IMPL(OctomapWrap)
+COLLIDES_IMPL(VoxelOctree)
 
 #undef COLLIDES_IMPL
