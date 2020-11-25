@@ -9,12 +9,14 @@
 #include "SparseVoxelObject.h"
 #include "VoxelObject.h"
 #include "VoxelOctree.h"
+#include "VoxelOctreeUnion.h"
 
 #include <chrono>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <memory>
+#include <sstream>
 #include <string>
 
 #include <unistd.h>
@@ -50,46 +52,59 @@ void memory_usage(double &vm_usage, double &resident_set) {
   resident_set = rss * page_size_kb;
 }
 
-void print_memory_usage() {
+void print_memory_usage(std::ostream &out) {
   double vm, rss;
   memory_usage(vm, rss);
-  std::cout << "Virtual Memory:    " << vm << " KiB\n"
-            << "Resident Set Size: " << rss << " KiB" << std::endl;
+  out << "Virtual Memory:    " << vm << " KiB\n"
+      << "Resident Set Size: " << rss << " KiB" << std::endl;
 }
 
 // return the total seconds to execute the function N times
 template <typename Func>
-double time_func(int N, Func &&f) {
-  auto start = std::chrono::system_clock::now();
-  for (int i = 0; i < N; i++) {
-    f();
+std::pair<double, double> time_func(int N, Func &&f, int K = 10) {
+  std::vector<double> timings;
+  double sum_x  = 0.0;
+  double sum_x2 = 0.0;
+  for (int k = 0; k < K; ++k) {
+    auto start = std::chrono::system_clock::now();
+    for (int i = 0; i < N; i++) {
+      f();
+    }
+    auto end = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed_secs = end - start;
+    sum_x += elapsed_secs.count();
+    sum_x2 += elapsed_secs.count() * elapsed_secs.count();
   }
-  auto end = std::chrono::system_clock::now();
-  std::chrono::duration<double> elapsed_secs = end - start;
-  return elapsed_secs.count();
+  double mean = sum_x / K;
+  double variance = sum_x2 / K - mean * mean;
+  double standard_deviation = std::sqrt(variance);
+  return {mean, standard_deviation};
 }
 
 template <typename Func>
-void print_timing(const std::string &name, int N, Func &&f, std::ostream& out = std::cout)
+void print_timing(const std::string &name, int N, Func &&f, std::ostream& out = std::cout, int K = 10)
 {
-  auto elapsed_secs = time_func(N, f);
-  out << name << ": run " << N << " times: " << elapsed_secs << " sec\n"
-      << "  runs in " << elapsed_secs / N << " sec\n"
-      << "  runs at " << N / elapsed_secs << " Hz\n";
+  auto [mean, stdev] = time_func(N, f, K);
+  out << name << ": run " << N << " times (" << K << " trials): " << mean
+        << " sec (+- " << stdev << " sec)\n"
+      << "  runs in " << mean / N << " sec (+- " << stdev / N << ")\n"
+      << "  runs at " << N / mean << " Hz\n";
 }
 
 template <typename VType>
 void try_voxel_type(const std::string &name,
                     const std::unique_ptr<VType> &v1,
                     const std::unique_ptr<VType> &v2,
-                    int N = 1000) {
-  std::cout << "\n"
-            << "---------------------------------------------------------\n"
-            << "  " << name << "\n"
-            << "\n"
-            << "v is size ("
-            << v1->Nx() << ", " << v1->Ny() << ", " << v1->Nz() << ")" << std::endl
-            << "sizeof(v): " << sizeof(*v1) << std::endl;
+                    int N = 1000,
+                    std::ostream &out = std::cout) {
+  out << "\n"
+      //<< "---------------------------------------------------------\n"
+      << "  " << name << "\n"
+      //<< "\n"
+      //<< "v is size ("
+      //<< v1->Nx() << ", " << v1->Ny() << ", " << v1->Nz() << ")" << std::endl
+      //<< "sizeof(v): " << sizeof(*v1) << std::endl
+      ;
 
   // copies
   //auto &v1 = v;
@@ -112,32 +127,33 @@ void try_voxel_type(const std::string &name,
     }
   }
 
-  std::cout << "v1.nblocks(): " << v1->nblocks() << std::endl
-            << "v2.nblocks(): " << v2->nblocks() << std::endl;
-  //          << "v3.nblocks(): " << v3->nblocks() << std::endl
-  //          << "v4.nblocks(): " << v4->nblocks() << std::endl;
-  print_memory_usage();
+  //out << "v1.nblocks(): " << v1->nblocks() << std::endl
+  //    << "v2.nblocks(): " << v2->nblocks() << std::endl
+  //    << "v3.nblocks(): " << v3->nblocks() << std::endl
+  //    << "v4.nblocks(): " << v4->nblocks() << std::endl
+  //    ;
+  //print_memory_usage(out);
 
-  std::cout << "  v1.collides(v1): " << collides(*v1, *v1) << std::endl
-            << "  v1.collides(v2): " << collides(*v1, *v2) << std::endl
-  //          << "  v1.collides(v3): " << collides(*v1, *v3) << std::endl
-  //          << "  v1.collides(v4): " << collides(*v1, *v4) << std::endl
-            << "  v2.collides(v1): " << collides(*v2, *v1) << std::endl
-            << "  v2.collides(v2): " << collides(*v2, *v2) << std::endl
-  //          << "  v2.collides(v3): " << collides(*v2, *v3) << std::endl
-  //          << "  v2.collides(v4): " << collides(*v2, *v4) << std::endl
-  //          << "  v3.collides(v1): " << collides(*v3, *v1) << std::endl
-  //          << "  v3.collides(v2): " << collides(*v3, *v2) << std::endl
-  //          << "  v3.collides(v3): " << collides(*v3, *v3) << std::endl
-  //          << "  v3.collides(v4): " << collides(*v3, *v4) << std::endl
-  //          << "  v4.collides(v1): " << collides(*v4, *v1) << std::endl
-  //          << "  v4.collides(v2): " << collides(*v4, *v2) << std::endl
-  //          << "  v4.collides(v3): " << collides(*v4, *v3) << std::endl
-  //          << "  v4.collides(v4): " << collides(*v4, *v4) << std::endl
-            << std::endl;
+  //out << "  v1.collides(v1): " << collides(*v1, *v1) << std::endl
+  //    << "  v1.collides(v2): " << collides(*v1, *v2) << std::endl
+  //    << "  v1.collides(v3): " << collides(*v1, *v3) << std::endl
+  //    << "  v1.collides(v4): " << collides(*v1, *v4) << std::endl
+  //    << "  v2.collides(v1): " << collides(*v2, *v1) << std::endl
+  //    << "  v2.collides(v2): " << collides(*v2, *v2) << std::endl
+  //    << "  v2.collides(v3): " << collides(*v2, *v3) << std::endl
+  //    << "  v2.collides(v4): " << collides(*v2, *v4) << std::endl
+  //    << "  v3.collides(v1): " << collides(*v3, *v1) << std::endl
+  //    << "  v3.collides(v2): " << collides(*v3, *v2) << std::endl
+  //    << "  v3.collides(v3): " << collides(*v3, *v3) << std::endl
+  //    << "  v3.collides(v4): " << collides(*v3, *v4) << std::endl
+  //    << "  v4.collides(v1): " << collides(*v4, *v1) << std::endl
+  //    << "  v4.collides(v2): " << collides(*v4, *v2) << std::endl
+  //    << "  v4.collides(v3): " << collides(*v4, *v3) << std::endl
+  //    << "  v4.collides(v4): " << collides(*v4, *v4) << std::endl
+  //    << std::endl;
 
   print_timing("collision checking collides(v1, v2)", N,
-               [&v1, &v2]() { collides(*v1, *v2); }, std::cout);
+               [&v1, &v2]() { collides(*v1, *v2); }, out, 100);
 
   //v1->remove_interior();
   //v2->remove_interior();
@@ -151,15 +167,15 @@ void try_voxel_type(const std::string &name,
   //remove_interior_medium(*v2);
   //remove_interior_medium(*v3);
   //remove_interior_medium(*v4);
-  //std::cout << "\n"
-  //          << "AFTER REMOVING INTERIOR\n";
-  //std::cout << "  v1.nblocks(): " << v1->nblocks() << std::endl
-  //          << "  v2.nblocks(): " << v2->nblocks() << std::endl
-  //          << "  v3.nblocks(): " << v3->nblocks() << std::endl
-  //          << "  v4.nblocks(): " << v4->nblocks() << std::endl
-  //          << std::endl;
+  //out << "\n"
+  //    << "AFTER REMOVING INTERIOR\n";
+  //out << "  v1.nblocks(): " << v1->nblocks() << std::endl
+  //    << "  v2.nblocks(): " << v2->nblocks() << std::endl
+  //    << "  v3.nblocks(): " << v3->nblocks() << std::endl
+  //    << "  v4.nblocks(): " << v4->nblocks() << std::endl
+  //    << std::endl;
   //print_timing("  collision checking collides(v1, v2)", N,
-  //             [&v1, &v2]() { collides(*v1, *v2); }, std::cout);
+  //             [&v1, &v2]() { collides(*v1, *v2); }, out);
 }
 
 template <typename VType>
@@ -294,7 +310,7 @@ void remove_interior_medium(VoxelType &v) {
 
 int main() {
   std::cout << "Before\n";
-  print_memory_usage();
+  print_memory_usage(std::cout);
 
   //try_voxel_type("VoxelObject_128", std::make_unique<VoxelObject>(128, 128, 128), 10000);
   //try_voxel_type("VoxelObject_256", std::make_unique<VoxelObject>(256, 256, 256), 1000);
@@ -310,31 +326,44 @@ int main() {
   //try_voxel_type("CTSparseVoxelObject_512", std::make_unique<CTSparseVoxelObject<512, 512, 512>>(), 100);
 
 #define VOXEL_COMPARE(N, K) \
-  try_voxel_type("CTVoxelOctree_" #N, \
-                 std::make_unique<CTVoxelOctree<N>>(), \
-                 std::make_unique<CTVoxelOctree<N>>(), \
-                 K); \
-  try_voxel_type("DerivedVoxelOctree_" #N, \
-                 std::unique_ptr<AbstractVoxelOctree>(new DerivedVoxelOctree<N>()), \
-                 std::unique_ptr<AbstractVoxelOctree>(new DerivedVoxelOctree<N>()), \
-                 K); \
+  { \
+    std::ostringstream tmpout; \
+    try_voxel_type("CTVoxelOctreeWrap_" #N, \
+                   std::make_unique<CTVoxelOctreeWrap>(N), \
+                   std::make_unique<CTVoxelOctreeWrap>(N), \
+                   K, tmpout); \
+  } \
+  std::cout << "\n-------- size " << N << " ---------------\n"; \
   try_voxel_type("CTVoxelOctreeWrap_" #N, \
                  std::make_unique<CTVoxelOctreeWrap>(N), \
                  std::make_unique<CTVoxelOctreeWrap>(N), \
-                 K); \
+                 K, std::cout); \
   try_voxel_type("VoxelOctree_" #N, \
                  std::make_unique<VoxelOctree>(N), \
                  std::make_unique<VoxelOctree>(N), \
-                 K);
+                 K, std::cout); \
+  try_voxel_type("CTVoxelOctree_" #N, \
+                 std::make_unique<CTVoxelOctree<N>>(), \
+                 std::make_unique<CTVoxelOctree<N>>(), \
+                 K, std::cout); \
+  try_voxel_type("VoxelOctreeUnion_" #N, \
+                 std::make_unique<VoxelOctreeUnion>(N), \
+                 std::make_unique<VoxelOctreeUnion>(N), \
+                 K, std::cout); \
+  try_voxel_type("DerivedVoxelOctree_" #N, \
+                 std::unique_ptr<AbstractVoxelOctree>(new DerivedVoxelOctree<N>()), \
+                 std::unique_ptr<AbstractVoxelOctree>(new DerivedVoxelOctree<N>()), \
+                 K, std::cout); \
 
-  VOXEL_COMPARE(  4, 500);
-  VOXEL_COMPARE(  8, 500);
-  VOXEL_COMPARE( 16, 500);
-  VOXEL_COMPARE( 32, 500);
-  VOXEL_COMPARE( 64, 500);
-  VOXEL_COMPARE(128, 500);
-  VOXEL_COMPARE(256, 300);
-  VOXEL_COMPARE(512, 100);
+  // I heuristically set K to make runtime be about one second
+  //VOXEL_COMPARE(  4, 120000000);
+  //VOXEL_COMPARE(  8,  40000000);
+  //VOXEL_COMPARE( 16,  10000000);
+  //VOXEL_COMPARE( 32,   1000000);
+  //VOXEL_COMPARE( 64,     70000);
+  //VOXEL_COMPARE(128,      3000);
+  VOXEL_COMPARE(256,       100);
+  VOXEL_COMPARE(512,        10);
 
 #undef VOXEL_COMPARE
 
@@ -374,7 +403,7 @@ int main() {
   //             "Spherical shell block count (v3): " << v3.nblocks() << "\n";
 
   //std::cout << "\n\nAfter\n";
-  //print_memory_usage();
+  //print_memory_usage(std::cout);
 
   //std::cout << std::endl;
 

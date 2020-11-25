@@ -23,8 +23,11 @@ public:
   using Child = TreeNode<child_Nt>;
   using ChildPtr = std::unique_ptr<Child>;
 
-  TreeNode() : _children() {}
+  TreeNode() = default;
   TreeNode(const TreeNode<_Nt> &other); // copy
+  TreeNode(TreeNode<_Nt> &&other) = default;
+  ~TreeNode() = default;
+
   size_t nblocks() const;
   bool is_empty() const;
   uint64_t block(size_t bx, size_t by, size_t bz) const;

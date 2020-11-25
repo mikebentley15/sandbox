@@ -8,6 +8,7 @@
 #include "SparseVoxelObject.h"
 #include "VoxelObject.h"
 #include "VoxelOctree.h"
+#include "VoxelOctreeUnion.h"
 
 namespace {
 
@@ -46,6 +47,7 @@ COLLIDES_IMPL(CTVoxelOctree<  4>)
 COLLIDES_IMPL(CTVoxelOctreeWrap)
 COLLIDES_IMPL(OctomapWrap)
 COLLIDES_IMPL(VoxelOctree)
+COLLIDES_IMPL(VoxelOctreeUnion)
 COLLIDES_IMPL(AbstractVoxelOctree)
 
 #undef COLLIDES_IMPL
