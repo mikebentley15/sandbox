@@ -20,6 +20,9 @@
 #include <string>
 
 #include <unistd.h>
+#include <cstdlib>
+
+namespace {
 
 constexpr uint64_t bitmask(uint_fast8_t x, uint_fast8_t y, uint_fast8_t z) {
   return uint64_t(1) << (x*16 + y*4 + z);
@@ -92,14 +95,15 @@ void print_timing(const std::string &name, int N, Func &&f, std::ostream& out = 
 }
 
 template <typename VType>
-void try_voxel_type(const std::string &name,
-                    const std::unique_ptr<VType> &v1,
-                    const std::unique_ptr<VType> &v2,
-                    int N = 1000,
-                    std::ostream &out = std::cout) {
+void profile_voxel_collision_worst_case(const std::string &name,
+                                        const std::unique_ptr<VType> &v1,
+                                        const std::unique_ptr<VType> &v2,
+                                        int N = 1000,
+                                        std::ostream &out = std::cout,
+                                        int K = 10)
+{
   out << "\n"
-      //<< "---------------------------------------------------------\n"
-      << "  " << name << "\n"
+      << name << "\n"
       //<< "\n"
       //<< "v is size ("
       //<< v1->Nx() << ", " << v1->Ny() << ", " << v1->Nz() << ")" << std::endl
@@ -152,8 +156,8 @@ void try_voxel_type(const std::string &name,
   //    << "  v4.collides(v4): " << collides(*v4, *v4) << std::endl
   //    << std::endl;
 
-  print_timing("collision checking collides(v1, v2)", N,
-               [&v1, &v2]() { collides(*v1, *v2); }, out, 100);
+  print_timing("- collides(v1, v2)", N,
+               [&v1, &v2]() { collides(*v1, *v2); }, out, K);
 
   //v1->remove_interior();
   //v2->remove_interior();
@@ -176,6 +180,29 @@ void try_voxel_type(const std::string &name,
   //    << std::endl;
   //print_timing("  collision checking collides(v1, v2)", N,
   //             [&v1, &v2]() { collides(*v1, *v2); }, out);
+}
+
+template <typename VType>
+void profile_sphere_voxelization(const std::string &name,
+                                 const std::unique_ptr<VType> &v,
+                                 int N = 1000,
+                                 std::ostream &out = std::cout,
+                                 int K = 10)
+{
+  out << "\n" << name << "\n";
+
+  print_timing("- v->add_sphere(0.5...)", N,
+               [&v]() { v->add_sphere(0.5, 0.5, 0.5, 0.5); }, out, K);
+
+  std::vector<double> p (v->Nx(), 0.0);
+  for (size_t i = 0; i < p.size(); ++i) { p[i] = v->dx()/3 + v->dx() * i; }
+
+  print_timing("- add diag points", N * 1000,
+               [&v, &p] {
+                 for (const auto &val : p) {
+                   v->add_point(val, val, val);
+                 }
+               }, out, K);
 }
 
 template <typename VType>
@@ -308,111 +335,157 @@ void remove_interior_medium(VoxelType &v) {
   }
 }
 
-int main() {
+enum class ProfileMode {
+  COLLISION,
+  VOXELIZATION,
+};
+
+ProfileMode parse_args(int arg_count, char* arg_list[]) {
+  if (arg_count > 1) {
+    if (std::string("-h") == arg_list[1] || std::string("--help") == arg_list[1]) {
+      std::cout
+        << "Usage:\n"
+        << "  " << arg_list[0] << " --help\n"
+        << "  " << arg_list[0] << " [--collision|--voxelization]\n"
+           "\n"
+           "Description:\n"
+           "\n"
+           "  Profiles different implementations of Voxel containers.\n"
+           "  --collision     profiles collision checking\n"
+           "  --voxelization  profiles voxelizing\n"
+           "\n";
+      std::exit(0);
+    } else if (std::string("--collision") == arg_list[1]) {
+      return ProfileMode::COLLISION;
+    } else if (std::string("--voxelization") == arg_list[1]) {
+      return ProfileMode::VOXELIZATION;
+    } else {
+      std::cerr << "Unrecognized argument: " << arg_list[1] << "\n"
+                   "  Use --help for more info\n";
+      std::exit(1);
+    }
+  }
+  return ProfileMode::COLLISION;
+}
+
+} // end of unnamed namespace
+
+int main(int arg_count, char* arg_list[]) {
   std::cout << "Before\n";
   print_memory_usage(std::cout);
 
-  //try_voxel_type("VoxelObject_128", std::make_unique<VoxelObject>(128, 128, 128), 10000);
-  //try_voxel_type("VoxelObject_256", std::make_unique<VoxelObject>(256, 256, 256), 1000);
-  //try_voxel_type("VoxelObject_512", std::make_unique<VoxelObject>(512, 512, 512), 500);
-  //try_voxel_type("CTVoxelObject_128", std::make_unique<CTVoxelObject<128, 128, 128>>(), 10000);
-  //try_voxel_type("CTVoxelObject_256", std::make_unique<CTVoxelObject<256, 256, 256>>(), 1000);
-  //try_voxel_type("CTVoxelObject_512", std::make_unique<CTVoxelObject<512, 512, 512>>(), 300);
-  //try_voxel_type("SparseVoxelObject_128", std::make_unique<SparseVoxelObject>(128, 128, 128), 3000);
-  //try_voxel_type("SparseVoxelObject_256", std::make_unique<SparseVoxelObject>(256, 256, 256), 500);
-  //try_voxel_type("SparseVoxelObject_512", std::make_unique<SparseVoxelObject>(512, 512, 512), 80);
-  //try_voxel_type("CTSparseVoxelObject_128", std::make_unique<CTSparseVoxelObject<128, 128, 128>>(), 100);
-  //try_voxel_type("CTSparseVoxelObject_256", std::make_unique<CTSparseVoxelObject<256, 256, 256>>(), 100);
-  //try_voxel_type("CTSparseVoxelObject_512", std::make_unique<CTSparseVoxelObject<512, 512, 512>>(), 100);
+  auto mode = parse_args(arg_count, arg_list);
 
-#define VOXEL_COMPARE(N, K) \
-  { \
-    std::ostringstream tmpout; \
-    try_voxel_type("CTVoxelOctreeWrap_" #N, \
-                   std::make_unique<CTVoxelOctreeWrap>(N), \
-                   std::make_unique<CTVoxelOctreeWrap>(N), \
-                   K/10, tmpout); \
-  } \
-  std::cout << "\n-------- size " << N << " ---------------\n"; \
-  try_voxel_type("CTVoxelOctreeWrap_" #N, \
-                 std::make_unique<CTVoxelOctreeWrap>(N), \
-                 std::make_unique<CTVoxelOctreeWrap>(N), \
-                 K, std::cout); \
-  try_voxel_type("VoxelOctree_" #N, \
-                 std::make_unique<VoxelOctree>(N), \
-                 std::make_unique<VoxelOctree>(N), \
-                 K, std::cout); \
-  try_voxel_type("CTVoxelOctree_" #N, \
-                 std::make_unique<CTVoxelOctree<N>>(), \
-                 std::make_unique<CTVoxelOctree<N>>(), \
-                 K, std::cout); \
-  try_voxel_type("VoxelOctreeUnion_" #N, \
-                 std::make_unique<VoxelOctreeUnion>(N), \
-                 std::make_unique<VoxelOctreeUnion>(N), \
-                 K, std::cout); \
-  try_voxel_type("DerivedVoxelOctree_" #N, \
-                 std::unique_ptr<AbstractVoxelOctree>(new DerivedVoxelOctree<N>()), \
-                 std::unique_ptr<AbstractVoxelOctree>(new DerivedVoxelOctree<N>()), \
-                 K, std::cout); \
-  { \
-    std::ostringstream tmpout; \
-    try_voxel_type("CTVoxelOctreeWrap_" #N, \
-                   std::make_unique<CTVoxelOctreeWrap>(N), \
-                   std::make_unique<CTVoxelOctreeWrap>(N), \
-                   K/10, tmpout); \
-  } \
+  if (mode == ProfileMode::COLLISION) {
 
-  // I heuristically set K to make runtime be about one second
-  //VOXEL_COMPARE(  4, 120000000);
-  //VOXEL_COMPARE(  8,  40000000);
-  //VOXEL_COMPARE( 16,  10000000);
-  //VOXEL_COMPARE( 32,   1000000);
-  //VOXEL_COMPARE( 64,     70000);
-  //VOXEL_COMPARE(128,      3000);
-  VOXEL_COMPARE(256,       100);
-  VOXEL_COMPARE(512,        10);
+    #define PROFILE_COLLISION(N, K, M) \
+    { \
+      std::ostringstream tmpout; \
+      profile_voxel_collision_worst_case( \
+          "CTVoxelOctreeWrap_" #N, \
+          std::make_unique<CTVoxelOctreeWrap>(N), \
+          std::make_unique<CTVoxelOctreeWrap>(N), \
+          K/10, tmpout, M); \
+    } \
+    std::cout << "\n-------- size " << N << " ---------------\n"; \
+    profile_voxel_collision_worst_case( \
+        "VoxelOctree_" #N, \
+        std::make_unique<VoxelOctree>(N), \
+        std::make_unique<VoxelOctree>(N), \
+        K, std::cout, M); \
+    profile_voxel_collision_worst_case( \
+        "DerivedVoxelOctree_" #N, \
+        std::unique_ptr<AbstractVoxelOctree>(new DerivedVoxelOctree<N>()), \
+        std::unique_ptr<AbstractVoxelOctree>(new DerivedVoxelOctree<N>()), \
+        K, std::cout, M); \
+    profile_voxel_collision_worst_case( \
+        "CTVoxelOctree_" #N, \
+        std::make_unique<CTVoxelOctree<N>>(), \
+        std::make_unique<CTVoxelOctree<N>>(), \
+        K, std::cout, M); \
+    profile_voxel_collision_worst_case( \
+        "CTVoxelOctreeWrap_" #N, \
+        std::make_unique<CTVoxelOctreeWrap>(N), \
+        std::make_unique<CTVoxelOctreeWrap>(N), \
+        K, std::cout, M); \
+    profile_voxel_collision_worst_case( \
+        "VoxelOctreeUnion_" #N, \
+        std::make_unique<VoxelOctreeUnion>(N), \
+        std::make_unique<VoxelOctreeUnion>(N), \
+        K, std::cout, M); \
+    { \
+      std::ostringstream tmpout; \
+      profile_voxel_collision_worst_case( \
+          "CTVoxelOctreeWrap_" #N, \
+          std::make_unique<CTVoxelOctreeWrap>(N), \
+          std::make_unique<CTVoxelOctreeWrap>(N), \
+          K/10, tmpout, M); \
+    } \
 
-#undef VOXEL_COMPARE
+    // I heuristically set K to make runtime be about one second
+    //PROFILE_COLLISION(  4, 120000000, 10);
+    //PROFILE_COLLISION(  8,  40000000, 10);
+    //PROFILE_COLLISION( 16,  10000000, 10);
+    //PROFILE_COLLISION( 32,   1000000, 10);
+    //PROFILE_COLLISION( 64,     70000, 10);
+    //PROFILE_COLLISION(128,      3000, 10);
+    PROFILE_COLLISION(256,       100, 10);
+    PROFILE_COLLISION(512,        10, 10);
 
-  //try_voxel_type("OctomapWrap", std::make_unique<OctomapWrap>(1.0/4.0), 10);
-  //try_voxel_type("OctomapWrap", std::make_unique<OctomapWrap>(1.0/8.0), 10);
-  //try_voxel_type("OctomapWrap", std::make_unique<OctomapWrap>(1.0/16.0), 10);
-  //try_voxel_type("OctomapWrap", std::make_unique<OctomapWrap>(1.0/32.0), 10);
-  //try_voxel_type("OctomapWrap", std::make_unique<OctomapWrap>(1.0/64.0), 10);
-  //try_voxel_type("OctomapWrap", std::make_unique<OctomapWrap>(1.0/128.0), 10);
-  //try_voxel_type("OctomapWrap", std::make_unique<OctomapWrap>(1.0/256.0), 10);
-  //try_voxel_type("OctomapWrap", std::make_unique<OctomapWrap>(1.0/512.0), 10);
+    #undef PROFILE_COLLISION
 
-  ////SparseVoxelObject v(20, 20, 32);
-  //CTVoxelOctree<32> v1;
-  //v1.add_sphere(0.7, 0.2, 0.2, 0.55);
+  } else if (mode == ProfileMode::VOXELIZATION) {
+    
+    #define PROFILE_VOXELIZATION(N, K, M) \
+    { \
+      std::ostringstream tmpout; \
+      profile_sphere_voxelization( \
+          "CTVoxelOctreeWrap_" #N, \
+          std::make_unique<CTVoxelOctreeWrap>(N), \
+          K/10, tmpout, M); \
+    } \
+    std::cout << "\n-------- size " << N << " ---------------\n"; \
+    profile_sphere_voxelization( \
+        "DerivedVoxelOctree_" #N, \
+        std::unique_ptr<AbstractVoxelOctree>(new DerivedVoxelOctree<N>()), \
+        K, std::cout, M); \
+    profile_sphere_voxelization( \
+        "VoxelOctree_" #N, \
+        std::make_unique<VoxelOctree>(N), \
+        K, std::cout, M); \
+    profile_sphere_voxelization( \
+        "CTVoxelOctree_" #N, \
+        std::make_unique<CTVoxelOctree<N>>(), \
+        K, std::cout, M); \
+    profile_sphere_voxelization( \
+        "CTVoxelOctreeWrap_" #N, \
+        std::make_unique<CTVoxelOctreeWrap>(N), \
+        K, std::cout, M); \
+    profile_sphere_voxelization( \
+        "VoxelOctreeUnion_" #N, \
+        std::make_unique<VoxelOctreeUnion>(N), \
+        K, std::cout, M); \
+    { \
+      std::ostringstream tmpout; \
+      profile_sphere_voxelization( \
+          "CTVoxelOctreeWrap_" #N, \
+          std::make_unique<CTVoxelOctreeWrap>(N), \
+          K/10, tmpout, M); \
+    } \
 
-  //std::cout << "\n"
-  //             "*****************\n"
-  //             "\n"
-  //             "After removing interior points\n"
-  //          << std::endl;
-  //SparseVoxelObject v2(32, 32, 32);
-  //v2.add_sphere(0.7, 0.2, 0.2, 0.55);
-  //v2.add_sphere(0.1, 0.6, 0.6, 0.3);
-  ////auto v2 = v1;
-  //auto v3 = v1;
-  //v3.add_sphere(0.1, 0.6, 0.6, 0.3);
-  //remove_interior_medium(v2); //v2.remove_interior_slow_1();
-  //v3.remove_interior(); //remove_interior_slow(v3);
-  //print_voxel_object_side_by_side(&v2, &v3);
+    // I heuristically set K to make runtime be about one second
+    //PROFILE_VOXELIZATION(  4, 120000000, 10);
+    //PROFILE_VOXELIZATION(  8,  40000000, 10);
+    //PROFILE_VOXELIZATION( 16,  10000000, 10);
+    //PROFILE_VOXELIZATION( 32,   1000000, 10);
+    //PROFILE_VOXELIZATION( 64,     70000, 10);
+    //PROFILE_VOXELIZATION(128,      3000, 10);
+    PROFILE_VOXELIZATION(256,       100, 10);
+    PROFILE_VOXELIZATION(512,        10, 10);
 
-  //std::cout << "\n"
-  //             "*****************\n"
-  //             "\n"
-  //             "Full sphere block count:          " << v1.nblocks() << "\n"
-  //             //"Spherical shell block count (v2): " << v2.nblocks() << "\n"
-  //             "Spherical shell block count (v3): " << v3.nblocks() << "\n";
+    #undef PROFILE_VOXELIZATION
 
-  //std::cout << "\n\nAfter\n";
-  //print_memory_usage(std::cout);
-
-  //std::cout << std::endl;
+  }
 
   return 0;
 }

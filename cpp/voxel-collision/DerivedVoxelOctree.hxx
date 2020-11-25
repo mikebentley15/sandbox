@@ -7,7 +7,11 @@ template <size_t _N>
 DerivedVoxelOctree<_N>::DerivedVoxelOctree()
   : AbstractVoxelOctree()
   , _data(new detail::TreeNode<_N>())
-{}
+{
+  _dx = (_xmax - _xmin) / Nx();
+  _dy = (_ymax - _ymin) / Ny();
+  _dz = (_zmax - _zmin) / Nz();
+}
 
 template <size_t _N>
 DerivedVoxelOctree<_N>::DerivedVoxelOctree(const DerivedVoxelOctree<_N> &other)
