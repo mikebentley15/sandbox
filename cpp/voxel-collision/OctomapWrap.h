@@ -12,12 +12,12 @@
 
 class OctomapWrap {
 public:
-  size_t Nx = 0;
-  size_t Ny = 0;
-  size_t Nz = 0;
+  size_t Nx() const { return _Nx; }
+  size_t Ny() const { return _Ny; }
+  size_t Nz() const { return _Nz; }
 
   OctomapWrap(double resolution)
-    : Nx(1/resolution), Ny(1/resolution), Nz(1/resolution)
+    : _Nx(1/resolution), _Ny(1/resolution), _Nz(1/resolution)
     , _data(new octomap::OcTree(resolution))
     , _collision_object(new fcl::OcTree(_data))
   {
@@ -29,7 +29,7 @@ public:
   }
 
   OctomapWrap(const OctomapWrap &other)
-    : Nx(other.Nx), Ny(other.Ny), Nz(other.Nz)
+    : _Nx(other._Nx), _Ny(other._Ny), _Nz(other._Nz)
     , _data(new octomap::OcTree(*other._data))
     , _collision_object(new fcl::OcTree(_data))
   {
@@ -39,7 +39,7 @@ public:
   }
 
   OctomapWrap(OctomapWrap &&other) // move
-    : Nx(other.Nx), Ny(other.Ny), Nz(other.Nz)
+    : _Nx(other._Nx), _Ny(other._Ny), _Nz(other._Nz)
     , _data(std::move(other._data))
     , _collision_object(std::move(other._collision_object))
   {}
@@ -88,18 +88,18 @@ public:
       };
 
     // just check all of them
-    //for (size_t ix = 0; ix < Nx; ix++) {
-    //  for (size_t iy = 0; iy < Ny; iy++) {
-    //    for (size_t iz = 0; iz < Nz; iz++) {
+    //for (size_t ix = 0; ix < _Nx; ix++) {
+    //  for (size_t iy = 0; iy < _Ny; iy++) {
+    //    for (size_t iz = 0; iz < _Nz; iz++) {
     //      if (voxel_ctr_is_in_sphere(ix, iy, iz)) {
     //        this->set_cell(ix, iy, iz);
     //      }
     //    }
     //  }
     //}
-    for (size_t ix = 0; ix < Nx; ix++) {
-      for (size_t iy = 0; iy < Ny; iy++) {
-        for (size_t iz = 0; iz < Nz; iz++) {
+    for (size_t ix = 0; ix < _Nx; ix++) {
+      for (size_t iy = 0; iy < _Ny; iy++) {
+        for (size_t iz = 0; iz < _Nz; iz++) {
           auto p = idx_to_voxel_center(ix, iy, iz);
           _data->updateNode(p, is_in_sphere(p.x(), p.y(), p.z()));
         }
@@ -109,10 +109,10 @@ public:
     //// do a growing algorithm with a frontier and a visited
     //using IdxType = std::tuple<size_t, size_t, size_t>;
     //std::stack<IdxType> frontier;
-    //auto visited = std::make_unique<VoxelObject<Nx, Ny, Nz>>();
+    //auto visited = std::make_unique<VoxelObject<_Nx, _Ny, _Nz>>();
 
     //auto check_push = [&frontier, &visited](size_t _ix, size_t _iy, size_t _iz) {
-    //  if (!visited->cell(_ix, _iy, _iz) && _ix < Nx && _iy < Ny && _iz < Nz) {
+    //  if (!visited->cell(_ix, _iy, _iz) && _ix < _Nx && _iy < _Ny && _iz < _Nz) {
     //    //std::cout << "  add_sphere(): pushing: "
     //    //          << _ix << ", " << _iy << ", " << _iz << std::endl;
     //    frontier.push(IdxType{_ix, _iy, _iz});
@@ -159,7 +159,7 @@ public:
     max.x() = xmax;
     _data->setBBXMin(min);
     _data->setBBXMax(max);
-    Nx = (xmax - xmin) / dx();
+    _Nx = (xmax - xmin) / dx();
   }
 
   void set_ylim(double ymin, double ymax) {
@@ -172,7 +172,7 @@ public:
     max.y() = ymax;
     _data->setBBXMin(min);
     _data->setBBXMax(max);
-    Ny = (ymax - ymin) / dy();
+    _Ny = (ymax - ymin) / dy();
   }
 
   void set_zlim(double zmin, double zmax) {
@@ -185,7 +185,7 @@ public:
     max.z() = zmax;
     _data->setBBXMin(min);
     _data->setBBXMax(max);
-    Nz = (zmax - zmin) / dz();
+    _Nz = (zmax - zmin) / dz();
   }
 
   std::pair<double, double> xlim() const {
@@ -204,6 +204,9 @@ public:
   double dz() const { return _data->getResolution(); }
 
 private:
+  size_t _Nx = 0;
+  size_t _Ny = 0;
+  size_t _Nz = 0;
   std::shared_ptr<octomap::OcTree> _data;
   std::shared_ptr<fcl::OcTree> _collision_object;
 };

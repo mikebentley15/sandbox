@@ -12,12 +12,16 @@ find_package(fcl 0.5 EXACT REQUIRED)
 add_executable(voxel-collision-example
   main.cpp
   collides.cpp
+  AbstractVoxelOctree.cpp
+  AbstractVoxelOctree.h
   CTSparseVoxelObject.h
   CTVoxelObject.h
   CTVoxelOctree.h
   CTVoxelOctree.hxx
   CTVoxelOctreeWrap.h
   CTVoxelOctreeWrap.hxx
+  DerivedVoxelOctree.h
+  DerivedVoxelOctree.hxx
   OctomapWrap.h
   SparseVoxelObject
   VoxelObject.h

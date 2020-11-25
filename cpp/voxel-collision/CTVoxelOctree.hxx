@@ -40,7 +40,7 @@ void CTVoxelOctree<_N>::set_xlim(double xmin, double xmax) {
   }
   _xmin = xmin;
   _xmax = xmax;
-  _dx = (xmax - xmin) / Nx;
+  _dx = (xmax - xmin) / Nx();
 }
 
 template <size_t _N>
@@ -50,7 +50,7 @@ void CTVoxelOctree<_N>::set_ylim(double ymin, double ymax) {
   }
   _ymin = ymin;
   _ymax = ymax;
-  _dy = (ymax - ymin) / Ny;
+  _dy = (ymax - ymin) / Ny();
 }
 
 template <size_t _N>
@@ -60,7 +60,7 @@ void CTVoxelOctree<_N>::set_zlim(double zmin, double zmax) {
   }
   _zmin = zmin;
   _zmax = zmax;
-  _dz = (zmax - zmin) / Nz;
+  _dz = (zmax - zmin) / Nz();
 }
 
 template <size_t _N>
@@ -183,18 +183,18 @@ void CTVoxelOctree<_N>::add_sphere(double x, double y, double z, double r) {
     };
 
   // just check all of them
-  //for (size_t ix = 0; ix < Nx; ix++) {
-  //  for (size_t iy = 0; iy < Ny; iy++) {
-  //    for (size_t iz = 0; iz < Nz; iz++) {
+  //for (size_t ix = 0; ix < Nx(); ix++) {
+  //  for (size_t iy = 0; iy < Ny(); iy++) {
+  //    for (size_t iz = 0; iz < Nz(); iz++) {
   //      if (voxel_ctr_is_in_sphere(ix, iy, iz)) {
   //        this->set_cell(ix, iy, iz);
   //      }
   //    }
   //  }
   //}
-  for (size_t bx = 0; bx < Nbx; bx++) {
-    for (size_t by = 0; by < Nby; by++) {
-      for (size_t bz = 0; bz < Nbz; bz++) {
+  for (size_t bx = 0; bx < Nbx(); bx++) {
+    for (size_t by = 0; by < Nby(); by++) {
+      for (size_t bz = 0; bz < Nbz(); bz++) {
         // check this block
         uint64_t b = 0;
         for (uint_fast8_t i = 0; i < 4; i++) {
@@ -214,10 +214,10 @@ void CTVoxelOctree<_N>::add_sphere(double x, double y, double z, double r) {
   //// do a growing algorithm with a frontier and a visited
   //using IdxType = std::tuple<size_t, size_t, size_t>;
   //std::stack<IdxType> frontier;
-  //auto visited = std::make_unique<VoxelObject<Nx, Ny, Nz>>();
+  //auto visited = std::make_unique<VoxelObject<_N, _N, _N>>();
 
   //auto check_push = [&frontier, &visited](size_t _ix, size_t _iy, size_t _iz) {
-  //  if (!visited->cell(_ix, _iy, _iz) && _ix < Nx && _iy < Ny && _iz < Nz) {
+  //  if (!visited->cell(_ix, _iy, _iz) && _ix < _N && _iy < _N && _iz < _N) {
   //    //std::cout << "  add_sphere(): pushing: "
   //    //          << _ix << ", " << _iy << ", " << _iz << std::endl;
   //    frontier.push(IdxType{_ix, _iy, _iz});
@@ -247,16 +247,16 @@ void CTVoxelOctree<_N>::add_sphere(double x, double y, double z, double r) {
 template <size_t _N>
 void CTVoxelOctree<_N>::remove_interior_slow_1() {
   const CTVoxelOctree<_N> copy(*this);
-  for (size_t ix = 0; ix < Nx; ix++) {
-    for (size_t iy = 0; iy < Ny; iy++) {
-      for (size_t iz = 0; iz < Nz; iz++) {
+  for (size_t ix = 0; ix < Nx(); ix++) {
+    for (size_t iy = 0; iy < Ny(); iy++) {
+      for (size_t iz = 0; iz < Nz(); iz++) {
         bool curr   = copy.cell(ix, iy, iz);
-        bool left   = (ix == 0)    || copy.cell(ix-1, iy, iz);
-        bool right  = (ix == Nx-1) || copy.cell(ix+1, iy, iz);
-        bool front  = (iy == 0)    || copy.cell(ix, iy-1, iz);
-        bool behind = (iy == Ny-1) || copy.cell(ix, iy+1, iz);
-        bool below  = (iz == 0)    || copy.cell(ix, iy, iz-1);
-        bool above  = (iz == Nz-1) || copy.cell(ix, iy, iz+1);
+        bool left   = (ix == 0)      || copy.cell(ix-1, iy, iz);
+        bool right  = (ix == Nx()-1) || copy.cell(ix+1, iy, iz);
+        bool front  = (iy == 0)      || copy.cell(ix, iy-1, iz);
+        bool behind = (iy == Ny()-1) || copy.cell(ix, iy+1, iz);
+        bool below  = (iz == 0)      || copy.cell(ix, iy, iz-1);
+        bool above  = (iz == Nz()-1) || copy.cell(ix, iy, iz+1);
         if (curr && left && right && front && behind && below && above) {
           set_cell(ix, iy, iz, false);
         }
@@ -287,12 +287,12 @@ void CTVoxelOctree<_N>::remove_interior() {
 
     const uint64_t full = ~uint64_t(0);
     auto new_b = old_b;
-    const uint64_t left   = (bx <= 0)     ? full : copy->block(bx-1, by, bz);
-    const uint64_t right  = (bx >= Nbx-1) ? full : copy->block(bx+1, by, bz);
-    const uint64_t front  = (by <= 0)     ? full : copy->block(bx, by-1, bz);
-    const uint64_t behind = (by >= Nby-1) ? full : copy->block(bx, by+1, bz);
-    const uint64_t below  = (bz <= 0)     ? full : copy->block(bx, by, bz-1);
-    const uint64_t above  = (bz >= Nbz-1) ? full : copy->block(bx, by, bz+1);
+    const uint64_t left   = (bx <= 0)       ? full : copy->block(bx-1, by, bz);
+    const uint64_t right  = (bx >= Nbx()-1) ? full : copy->block(bx+1, by, bz);
+    const uint64_t front  = (by <= 0)       ? full : copy->block(bx, by-1, bz);
+    const uint64_t behind = (by >= Nby()-1) ? full : copy->block(bx, by+1, bz);
+    const uint64_t below  = (bz <= 0)       ? full : copy->block(bx, by, bz-1);
+    const uint64_t above  = (bz >= Nbz()-1) ? full : copy->block(bx, by, bz+1);
 
     auto is_interior =
       [left, right, front, behind, below, above, old_b, this]

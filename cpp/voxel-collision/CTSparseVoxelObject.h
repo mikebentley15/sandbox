@@ -19,14 +19,15 @@ class CTSparseVoxelObject {
   static_assert(_Nz % 4 == 0, "CTSparseVoxelObject: z dimension must be a multiple of 4");
 
 public:
-  static const size_t Nx = _Nx;  // number of voxels in the x-direction
-  static const size_t Ny = _Ny;  // number of voxels in the y-direction
-  static const size_t Nz = _Nz;  // number of voxels in the z-direction
+  static constexpr size_t Nx() { return _Nx; } // number of voxels in the x-direction
+  static constexpr size_t Ny() { return _Ny; } // number of voxels in the y-direction
+  static constexpr size_t Nz() { return _Nz; } // number of voxels in the z-direction
+  static constexpr size_t N()  { return Nx() * Ny() * Nz(); }
 
-  static const size_t Nbx = Nx / 4; // number of blocks in the x-direction
-  static const size_t Nby = Ny / 4; // number of blocks in the y-direction
-  static const size_t Nbz = Nz / 4; // number of blocks in the z-direction
-  static const size_t Nb  = Nbx * Nby * Nbz;
+  static constexpr size_t Nbx() { return Nx() / 4; } // number of blocks in the x-direction
+  static constexpr size_t Nby() { return Ny() / 4; } // number of blocks in the y-direction
+  static constexpr size_t Nbz() { return Nz() / 4; } // number of blocks in the z-direction
+  static constexpr size_t Nb()  { return Nbx() * Nby() * Nbz(); }
 
 public:
   CTSparseVoxelObject() : _data() {
@@ -57,7 +58,7 @@ public:
     }
     _xmin = xmin;
     _xmax = xmax;
-    _dx = (xmax - xmin) / Nx;
+    _dx = (xmax - xmin) / Nx();
   }
 
   void set_ylim(double ymin, double ymax) {
@@ -66,7 +67,7 @@ public:
     }
     _ymin = ymin;
     _ymax = ymax;
-    _dy = (ymax - ymin) / Ny;
+    _dy = (ymax - ymin) / Ny();
   }
 
   void set_zlim(double zmin, double zmax) {
@@ -75,7 +76,7 @@ public:
     }
     _zmin = zmin;
     _zmax = zmax;
-    _dz = (zmax - zmin) / Nz;
+    _dz = (zmax - zmin) / Nz();
   }
 
   std::pair<double, double> xlim() const { return {_xmin, _xmax}; }
@@ -201,18 +202,18 @@ public:
       };
 
     // just check all of them
-    //for (size_t ix = 0; ix < Nx; ix++) {
-    //  for (size_t iy = 0; iy < Ny; iy++) {
-    //    for (size_t iz = 0; iz < Nz; iz++) {
+    //for (size_t ix = 0; ix < Nx(); ix++) {
+    //  for (size_t iy = 0; iy < Ny(); iy++) {
+    //    for (size_t iz = 0; iz < Nz(); iz++) {
     //      if (voxel_ctr_is_in_sphere(ix, iy, iz)) {
     //        this->set_cell(ix, iy, iz);
     //      }
     //    }
     //  }
     //}
-    for (size_t bx = 0; bx < Nbx; bx++) {
-      for (size_t by = 0; by < Nby; by++) {
-        for (size_t bz = 0; bz < Nbz; bz++) {
+    for (size_t bx = 0; bx < Nbx(); bx++) {
+      for (size_t by = 0; by < Nby(); by++) {
+        for (size_t bz = 0; bz < Nbz(); bz++) {
           // check this block
           uint64_t b = 0;
           for (uint_fast8_t i = 0; i < 4; i++) {
@@ -232,7 +233,7 @@ public:
     //// do a growing algorithm with a frontier and a visited
     //using IdxType = std::tuple<size_t, size_t, size_t>;
     //std::stack<IdxType> frontier;
-    //auto visited = std::make_unique<VoxelObject<Nx, Ny, Nz>>();
+    //auto visited = std::make_unique<VoxelObject<_Nx, _Ny, _Nz>>();
 
     //auto check_push = [&frontier, &visited](size_t _ix, size_t _iy, size_t _iz) {
     //  if (!visited->cell(_ix, _iy, _iz) && _ix < _Nx && _iy < _Ny && _iz < _Nz) {
@@ -263,12 +264,12 @@ public:
     // TODO: implement
   }
 
-  bool collides_check(const CTSparseVoxelObject<Nx, Ny, Nz> &other) const {
+  bool collides_check(const CTSparseVoxelObject<_Nx, _Ny, _Nz> &other) const {
     limit_check(other); // significantly slows down collision checking
     return collides(other);
   }
 
-  bool collides(const CTSparseVoxelObject<Nx, Ny, Nz> &other) const {
+  bool collides(const CTSparseVoxelObject<_Nx, _Ny, _Nz> &other) const {
     auto ita = _data.begin();
     auto itb = other._data.begin();
     while (ita != _data.end() && itb != other._data.end()) {
@@ -287,7 +288,7 @@ public:
 
 protected:
   size_t block_idx(size_t bx, size_t by, size_t bz) {
-    return bz + Nz*(by + Ny*bx);
+    return bz + Nz()*(by + Ny()*bx);
   }
 
   // one in the given place, zeros everywhere else
@@ -308,7 +309,7 @@ protected:
     }
   }
 
-  void limit_check(const CTSparseVoxelObject<Nx, Ny, Nz> &other) const {
+  void limit_check(const CTSparseVoxelObject<_Nx, _Ny, _Nz> &other) const {
     double eps = std::numeric_limits<double>::epsilon();
     auto dbl_eq_check = [eps](const std::string &name, double val1, double val2) {
       if (std::abs(val1 - val2) >= eps) {

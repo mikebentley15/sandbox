@@ -11,6 +11,7 @@ template <size_t N> class CTVoxelOctree;
 class OctomapWrap;
 class VoxelOctree;
 class CTVoxelOctreeWrap;
+class AbstractVoxelOctree;
 
 bool collides (const VoxelObject &v1, const VoxelObject &v2);
 bool collides (const SparseVoxelObject &v1, const SparseVoxelObject &v2);
@@ -32,5 +33,6 @@ bool collides (const CTVoxelOctree<  4> &v1, const CTVoxelOctree<  4> &v2);
 bool collides (const VoxelOctree &v1, const VoxelOctree &v2);
 bool collides (const OctomapWrap &v1, const OctomapWrap &v2);
 bool collides (const CTVoxelOctreeWrap &v1, const CTVoxelOctreeWrap &v2);
+bool collides (const AbstractVoxelOctree &v1, const AbstractVoxelOctree &v2);
 
 #endif // COLLIDES_H

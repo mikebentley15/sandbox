@@ -22,23 +22,19 @@ template <size_t _N>
 class CTVoxelOctree {
 
 public:
-  static const size_t Nx = _N;            // number of voxels in the x-direction
-  static const size_t Ny = Nx;            // number of voxels in the y-direction
-  static const size_t Nz = Nx;            // number of voxels in the z-direction
-  static const size_t N  = Nx*Ny*Nz;      // number of voxels
-
-  static const size_t Nbx = _N / 4;       // number of blocks in the x-direction
-  static const size_t Nby = Nbx;          // number of blocks in the y-direction
-  static const size_t Nbz = Nbx;          // number of blocks in the z-direction
-  static const size_t Nb  = Nbx*Nby*Nbz;  // number of blocks
-
   using BlockType = uint64_t;
 
-protected:
 public:
   CTVoxelOctree();
   CTVoxelOctree(const CTVoxelOctree<_N> &other); // copy
   CTVoxelOctree(CTVoxelOctree<_N> &&other);      // move
+
+  size_t Nx()  const { return _N; }
+  size_t Ny()  const { return _N; }
+  size_t Nz()  const { return _N; }
+  size_t Nbx() const { return _N/4; }
+  size_t Nby() const { return _N/4; }
+  size_t Nbz() const { return _N/4; }
 
   void set_xlim(double xmin, double xmax);
   void set_ylim(double ymin, double ymax);

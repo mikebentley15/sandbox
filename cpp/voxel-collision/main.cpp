@@ -4,6 +4,7 @@
 #include "CTVoxelObject.h"
 #include "CTVoxelOctree.h"
 #include "CTVoxelOctreeWrap.h"
+#include "DerivedVoxelOctree.h"
 #include "OctomapWrap.h"
 #include "SparseVoxelObject.h"
 #include "VoxelObject.h"
@@ -78,18 +79,21 @@ void print_timing(const std::string &name, int N, Func &&f, std::ostream& out = 
 }
 
 template <typename VType>
-void try_voxel_type(const std::string &name, const std::unique_ptr<VType> &v, int N = 1000) {
+void try_voxel_type(const std::string &name,
+                    const std::unique_ptr<VType> &v1,
+                    const std::unique_ptr<VType> &v2,
+                    int N = 1000) {
   std::cout << "\n"
             << "---------------------------------------------------------\n"
             << "  " << name << "\n"
             << "\n"
             << "v is size ("
-            << v->Nx << ", " << v->Ny << ", " << v->Nz << ")" << std::endl
-            << "sizeof(v): " << sizeof(*v) << std::endl;
+            << v1->Nx() << ", " << v1->Ny() << ", " << v1->Nz() << ")" << std::endl
+            << "sizeof(v): " << sizeof(*v1) << std::endl;
 
   // copies
-  auto &v1 = v;
-  auto v2 = std::make_unique<VType>(*v);
+  //auto &v1 = v;
+  //auto v2 = std::make_unique<VType>(*v);
   //auto v3 = std::make_unique<VType>(*v);
   //auto v4 = std::make_unique<VType>(*v);
 
@@ -98,9 +102,9 @@ void try_voxel_type(const std::string &name, const std::unique_ptr<VType> &v, in
   //v2->add_sphere(0.5, 0.5, 0.1, 0.1);
   //v3->add_sphere(0.7, 0.2, 0.2, 0.55);
 
-  for (size_t bx = 0; bx < v1->Nbx; ++bx) {
-    for (size_t by = 0; by < v1->Nby; ++by) {
-      for (size_t bz = 0; bz < v1->Nbz; ++bz) {
+  for (size_t bx = 0; bx < v1->Nbx(); ++bx) {
+    for (size_t by = 0; by < v1->Nby(); ++by) {
+      for (size_t bz = 0; bz < v1->Nbz(); ++bz) {
         // dense around each other, but non-overlapping
         v1->set_block(bx, by, bz, 0x3c'3c'3c'3c'3c'3c'3c'3c);
         v2->set_block(bx, by, bz, 0xc3'c3'c3'c3'c3'c3'c3'c3);
@@ -304,30 +308,36 @@ int main() {
   //try_voxel_type("CTSparseVoxelObject_128", std::make_unique<CTSparseVoxelObject<128, 128, 128>>(), 100);
   //try_voxel_type("CTSparseVoxelObject_256", std::make_unique<CTSparseVoxelObject<256, 256, 256>>(), 100);
   //try_voxel_type("CTSparseVoxelObject_512", std::make_unique<CTSparseVoxelObject<512, 512, 512>>(), 100);
-  try_voxel_type("CTVoxelOctree_004", std::make_unique<CTVoxelOctree<  4>>(), 500);
-  try_voxel_type("CTVoxelOctreeWrap_004", std::make_unique<CTVoxelOctreeWrap> (  4), 500);
-  try_voxel_type("VoxelOctree_004"  , std::make_unique<VoxelOctree> (  4), 500);
-  try_voxel_type("CTVoxelOctree_008", std::make_unique<CTVoxelOctree<  8>>(), 500);
-  try_voxel_type("CTVoxelOctreeWrap_008", std::make_unique<CTVoxelOctreeWrap> (  8), 500);
-  try_voxel_type("VoxelOctree_008"  , std::make_unique<VoxelOctree> (  8), 500);
-  try_voxel_type("CTVoxelOctree_016", std::make_unique<CTVoxelOctree< 16>>(), 500);
-  try_voxel_type("CTVoxelOctreeWrap_016", std::make_unique<CTVoxelOctreeWrap> ( 16), 500);
-  try_voxel_type("VoxelOctree_016"  , std::make_unique<VoxelOctree> ( 16), 500);
-  try_voxel_type("CTVoxelOctree_032", std::make_unique<CTVoxelOctree< 32>>(), 500);
-  try_voxel_type("CTVoxelOctreeWrap_032", std::make_unique<CTVoxelOctreeWrap> ( 32), 500);
-  try_voxel_type("VoxelOctree_032"  , std::make_unique<VoxelOctree> ( 32), 500);
-  try_voxel_type("CTVoxelOctree_064", std::make_unique<CTVoxelOctree< 64>>(), 500);
-  try_voxel_type("CTVoxelOctreeWrap_064", std::make_unique<CTVoxelOctreeWrap> ( 64), 500);
-  try_voxel_type("VoxelOctree_064"  , std::make_unique<VoxelOctree> ( 64), 500);
-  try_voxel_type("CTVoxelOctree_128", std::make_unique<CTVoxelOctree<128>>(), 500);
-  try_voxel_type("CTVoxelOctreeWrap_128", std::make_unique<CTVoxelOctreeWrap> (128), 500);
-  try_voxel_type("VoxelOctree_128"  , std::make_unique<VoxelOctree> (128), 500);
-  try_voxel_type("CTVoxelOctree_256", std::make_unique<CTVoxelOctree<256>>(), 300);
-  try_voxel_type("CTVoxelOctreeWrap_256", std::make_unique<CTVoxelOctreeWrap> (256), 300);
-  try_voxel_type("VoxelOctree_256"  , std::make_unique<VoxelOctree> (256), 300);
-  try_voxel_type("CTVoxelOctree_512", std::make_unique<CTVoxelOctree<512>>(), 100);
-  try_voxel_type("CTVoxelOctreeWrap_512", std::make_unique<CTVoxelOctreeWrap> (512), 100);
-  try_voxel_type("VoxelOctree_512"  , std::make_unique<VoxelOctree> (512), 100);
+
+#define VOXEL_COMPARE(N, K) \
+  try_voxel_type("CTVoxelOctree_" #N, \
+                 std::make_unique<CTVoxelOctree<N>>(), \
+                 std::make_unique<CTVoxelOctree<N>>(), \
+                 K); \
+  try_voxel_type("DerivedVoxelOctree_" #N, \
+                 std::unique_ptr<AbstractVoxelOctree>(new DerivedVoxelOctree<N>()), \
+                 std::unique_ptr<AbstractVoxelOctree>(new DerivedVoxelOctree<N>()), \
+                 K); \
+  try_voxel_type("CTVoxelOctreeWrap_" #N, \
+                 std::make_unique<CTVoxelOctreeWrap>(N), \
+                 std::make_unique<CTVoxelOctreeWrap>(N), \
+                 K); \
+  try_voxel_type("VoxelOctree_" #N, \
+                 std::make_unique<VoxelOctree>(N), \
+                 std::make_unique<VoxelOctree>(N), \
+                 K);
+
+  VOXEL_COMPARE(  4, 500);
+  VOXEL_COMPARE(  8, 500);
+  VOXEL_COMPARE( 16, 500);
+  VOXEL_COMPARE( 32, 500);
+  VOXEL_COMPARE( 64, 500);
+  VOXEL_COMPARE(128, 500);
+  VOXEL_COMPARE(256, 300);
+  VOXEL_COMPARE(512, 100);
+
+#undef VOXEL_COMPARE
+
   //try_voxel_type("OctomapWrap", std::make_unique<OctomapWrap>(1.0/4.0), 10);
   //try_voxel_type("OctomapWrap", std::make_unique<OctomapWrap>(1.0/8.0), 10);
   //try_voxel_type("OctomapWrap", std::make_unique<OctomapWrap>(1.0/16.0), 10);

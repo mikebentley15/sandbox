@@ -16,45 +16,42 @@
 class VoxelObject {
 
 public:
-  const size_t Nx;   // number of voxels in the x-direction
-  const size_t Ny;   // number of voxels in the y-direction
-  const size_t Nz;   // number of voxels in the z-direction
-  const size_t N;    // number of voxels
+  size_t Nx() const { return _Nx; }
+  size_t Ny() const { return _Ny; }
+  size_t Nz() const { return _Nz; }
+  size_t N()  const { return Nx() * Ny() * Nz(); }
 
-  const size_t Nbx;  // number of blocks in the x-direction
-  const size_t Nby;  // number of blocks in the y-direction
-  const size_t Nbz;  // number of blocks in the z-direction
-  const size_t Nb;   // number of blocks
+  size_t Nbx() const { return _Nx / 4; }
+  size_t Nby() const { return _Ny / 4; }
+  size_t Nbz() const { return _Nz / 4; }
+  size_t Nb()  const { return Nbx() * Nby() * Nbz(); }
 
 public:
-  VoxelObject(size_t _Nx, size_t _Ny, size_t _Nz)
-    : Nx(_Nx), Ny(_Ny), Nz(_Nz), N(_Nx * _Ny * _Nz)
-    , Nbx(_Nx/4), Nby(_Ny/4), Nbz(_Nz/4), Nb(_Nx * _Ny * _Nz / 64)
-    , _data(new uint64_t[Nx*Ny*Nz])
+  VoxelObject(size_t Nx_, size_t Ny_, size_t Nz_)
+    : _Nx(Nx_), _Ny(Ny_), _Nz(Nz_)
+    , _data(new uint64_t[Nb()])
   {
-    dimension_size_check("Nx", Nx);
-    dimension_size_check("Ny", Ny);
-    dimension_size_check("Nz", Nz);
+    dimension_size_check("Nx", _Nx);
+    dimension_size_check("Ny", _Ny);
+    dimension_size_check("Nz", _Nz);
     set_xlim(0.0, 1.0);
     set_ylim(0.0, 1.0);
     set_zlim(0.0, 1.0);
   }
 
   VoxelObject(const VoxelObject &other) // copy
-    : Nx(other.Nx), Ny(other.Ny), Nz(other.Nz), N(other.N)
-    , Nbx(other.Nbx), Nby(other.Nby), Nbz(other.Nbz), Nb(other.Nb)
-    , _data(new uint64_t[Nx*Ny*Nz])
+    : _Nx(other._Nx), _Ny(other._Ny), _Nz(other._Nz)
+    , _data(new uint64_t[Nb()])
     , _xmin(other._xmin), _xmax(other._xmax)
     , _ymin(other._ymin), _ymax(other._ymax)
     , _zmin(other._zmin), _zmax(other._zmax)
     , _dx(other._dx), _dy(other._dy), _dz(other._dz)
   {
-    std::memcpy(_data.get(), other._data.get(), sizeof(uint64_t)*Nb);
+    std::memcpy(_data.get(), other._data.get(), sizeof(uint64_t)*Nb());
   }
 
   VoxelObject(VoxelObject &&other) // move
-    : Nx(other.Nx), Ny(other.Ny), Nz(other.Nz), N(other.N)
-    , Nbx(other.Nbx), Nby(other.Nby), Nbz(other.Nbz), Nb(other.Nb)
+    : _Nx(other._Nx), _Ny(other._Ny), _Nz(other._Nz)
     , _data(std::move(other._data))
     , _xmin(other._xmin), _xmax(other._xmax)
     , _ymin(other._ymin), _ymax(other._ymax)
@@ -68,7 +65,7 @@ public:
     }
     _xmin = xmin;
     _xmax = xmax;
-    _dx = (xmax - xmin) / Nx;
+    _dx = (xmax - xmin) / Nx();
   }
 
   void set_ylim(double ymin, double ymax) {
@@ -77,7 +74,7 @@ public:
     }
     _ymin = ymin;
     _ymax = ymax;
-    _dy = (ymax - ymin) / Ny;
+    _dy = (ymax - ymin) / Ny();
   }
 
   void set_zlim(double zmin, double zmax) {
@@ -86,7 +83,7 @@ public:
     }
     _zmin = zmin;
     _zmax = zmax;
-    _dz = (zmax - zmin) / Nz;
+    _dz = (zmax - zmin) / Nz();
   }
 
   std::pair<double, double> xlim() const { return {_xmin, _xmax}; }
@@ -103,7 +100,7 @@ public:
   double dby() const { return _dy * 4; }
   double dbz() const { return _dz * 4; }
 
-  size_t nblocks() const { return Nb; }
+  size_t nblocks() const { return Nb(); }
 
   uint64_t &block(size_t block_idx)       { return _data[block_idx]; }
   uint64_t  block(size_t block_idx) const { return _data[block_idx]; }
@@ -217,18 +214,18 @@ public:
       };
 
     // just check all of them
-    //for (size_t ix = 0; ix < Nx; ix++) {
-    //  for (size_t iy = 0; iy < Ny; iy++) {
-    //    for (size_t iz = 0; iz < Nz; iz++) {
+    //for (size_t ix = 0; ix < Nx(); ix++) {
+    //  for (size_t iy = 0; iy < Ny(); iy++) {
+    //    for (size_t iz = 0; iz < Nz(); iz++) {
     //      if (voxel_ctr_is_in_sphere(ix, iy, iz)) {
     //        this->set_cell(ix, iy, iz);
     //      }
     //    }
     //  }
     //}
-    for (size_t bx = 0; bx < Nbx; bx++) {
-      for (size_t by = 0; by < Nby; by++) {
-        for (size_t bz = 0; bz < Nbz; bz++) {
+    for (size_t bx = 0; bx < Nbx(); bx++) {
+      for (size_t by = 0; by < Nby(); by++) {
+        for (size_t bz = 0; bz < Nbz(); bz++) {
           // check this block
           uint64_t &b = block(bx, by, bz);
           for (uint_fast8_t i = 0; i < 4; i++) {
@@ -247,10 +244,10 @@ public:
     //// do a growing algorithm with a frontier and a visited
     //using IdxType = std::tuple<size_t, size_t, size_t>;
     //std::stack<IdxType> frontier;
-    //auto visited = std::make_unique<VoxelObject>(Nx, Ny, Nz);
+    //auto visited = std::make_unique<VoxelObject>(Nx(), Ny(), Nz());
 
     //auto check_push = [&frontier, &visited](size_t _ix, size_t _iy, size_t _iz) {
-    //  if (!visited->cell(_ix, _iy, _iz) && _ix < Nx && _iy < Ny && _iz < Nz) {
+    //  if (!visited->cell(_ix, _iy, _iz) && _ix < Nx() && _iy < Ny() && _iz < Nz()) {
     //    //std::cout << "  add_sphere(): pushing: "
     //    //          << _ix << ", " << _iy << ", " << _iz << std::endl;
     //    frontier.push(IdxType{_ix, _iy, _iz});
@@ -281,14 +278,14 @@ public:
   bool collides(const VoxelObject &other) const {
     dimension_check(other);
     limit_check(other);
-    for (size_t b = 0; b < Nb; b++) {
+    for (size_t b = 0; b < Nb(); b++) {
       if (block(b) & other.block(b)) {
         return true;
       }
     }
-    //for (size_t bx = 0; bx < Nbx; bx++) {
-    //  for (size_t by = 0; by < Nby; by++) {
-    //    for (size_t bz = 0; bz < Nbz; bz++) {
+    //for (size_t bx = 0; bx < Nbx(); bx++) {
+    //  for (size_t by = 0; by < Nby(); by++) {
+    //    for (size_t bz = 0; bz < Nbz(); bz++) {
     //      if (this->_data[bx][by][bz] & other._data[bx][by][bz]) {
     //        return true;
     //      }
@@ -309,7 +306,7 @@ protected:
   }
 
   uint64_t bidx(uint64_t bx, uint64_t by, uint64_t bz) const {
-    return bz + Nbz * (by + Nby * bx);
+    return bz + Nbz() * (by + Nby() * bx);
   }
 
   void dimension_size_check(const std::string &name, size_t val) const {
@@ -331,7 +328,7 @@ protected:
   }
 
   void dimension_check(const VoxelObject &other) const {
-    if (Nx != other.Nx || Ny != other.Ny || Nz != other.Nz) {
+    if (Nx() != other.Nx() || Ny() != other.Ny() || Nz() != other.Nz()) {
       // TODO: add the mismatching dimensions to the message
       throw std::invalid_argument("Voxel dimensions do not match");
     }
@@ -353,6 +350,9 @@ protected:
   }
 
 private:
+  const size_t _Nx;  // number of voxels in the x-direction
+  const size_t _Ny;  // number of voxels in the y-direction
+  const size_t _Nz;  // number of voxels in the z-direction
   std::unique_ptr<uint64_t[]> _data; // voxel data
   double _xmin;
   double _xmax;

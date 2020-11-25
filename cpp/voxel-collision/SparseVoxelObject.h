@@ -31,33 +31,31 @@ protected:
   }
 
 public:
-  const size_t Nx;  // number of voxels in the x-direction
-  const size_t Ny;  // number of voxels in the y-direction
-  const size_t Nz;  // number of voxels in the z-direction
-  const size_t N;   // number of voxels
+  size_t Nx() const { return _Nx; }
+  size_t Ny() const { return _Ny; }
+  size_t Nz() const { return _Nz; }
+  size_t N()  const { return Nx() * Ny() * Nz(); }
 
-  const size_t Nbx; // number of blocks in the x-direction
-  const size_t Nby; // number of blocks in the y-direction
-  const size_t Nbz; // number of blocks in the z-direction
-  const size_t Nb;  // number of blocks
+  size_t Nbx() const { return _Nx / 4; }
+  size_t Nby() const { return _Ny / 4; }
+  size_t Nbz() const { return _Nz / 4; }
+  size_t Nb()  const { return Nbx() * Nby() * Nbz(); }
 
 public:
-  SparseVoxelObject(size_t _Nx, size_t _Ny, size_t _Nz)
-    : Nx(_Nx), Ny(_Ny), Nz(_Nz), N(_Nx * _Ny * _Nz)
-    , Nbx(_Nx/4), Nby(_Ny/4), Nbz(_Nz/4), Nb(_Nx * _Ny * _Nz / 64)
+  SparseVoxelObject(size_t Nx_, size_t Ny_, size_t Nz_)
+    : _Nx(Nx_), _Ny(Ny_), _Nz(Nz_)
     , _data()
   {
-    dimension_size_check("Nx", Nx);
-    dimension_size_check("Ny", Ny);
-    dimension_size_check("Nz", Nz);
+    dimension_size_check("Nx", _Nx);
+    dimension_size_check("Ny", _Ny);
+    dimension_size_check("Nz", _Nz);
     set_xlim(0.0, 1.0);
     set_ylim(0.0, 1.0);
     set_zlim(0.0, 1.0);
   }
 
   SparseVoxelObject(const SparseVoxelObject &other)  // copy
-    : Nx(other.Nx), Ny(other.Ny), Nz(other.Nz), N(other.N)
-    , Nbx(other.Nbx), Nby(other.Nby), Nbz(other.Nbz), Nb(other.Nb)
+    : _Nx(other._Nx), _Ny(other._Ny), _Nz(other._Nz)
     , _data(other._data)
     , _xmin(other._xmin), _xmax(other._xmax)
     , _ymin(other._ymin), _ymax(other._ymax)
@@ -66,8 +64,7 @@ public:
   {}
 
   SparseVoxelObject(SparseVoxelObject &&other)  // move
-    : Nx(other.Nx), Ny(other.Ny), Nz(other.Nz), N(other.N)
-    , Nbx(other.Nbx), Nby(other.Nby), Nbz(other.Nbz), Nb(other.Nb)
+    : _Nx(other._Nx), _Ny(other._Ny), _Nz(other._Nz)
     , _data(std::move(other._data))
     , _xmin(other._xmin), _xmax(other._xmax)
     , _ymin(other._ymin), _ymax(other._ymax)
@@ -81,7 +78,7 @@ public:
     }
     _xmin = xmin;
     _xmax = xmax;
-    _dx = (xmax - xmin) / Nx;
+    _dx = (xmax - xmin) / Nx();
   }
 
   void set_ylim(double ymin, double ymax) {
@@ -90,7 +87,7 @@ public:
     }
     _ymin = ymin;
     _ymax = ymax;
-    _dy = (ymax - ymin) / Ny;
+    _dy = (ymax - ymin) / Ny();
   }
 
   void set_zlim(double zmin, double zmax) {
@@ -99,7 +96,7 @@ public:
     }
     _zmin = zmin;
     _zmax = zmax;
-    _dz = (zmax - zmin) / Nz;
+    _dz = (zmax - zmin) / Nz();
   }
 
   std::pair<double, double> xlim() const { return {_xmin, _xmax}; }
@@ -127,7 +124,7 @@ public:
   }
 
   size_t block_idx(size_t bx, size_t by, size_t bz) const {
-    return bz + Nbz*(by + Nby*bx);
+    return bz + Nbz()*(by + Nby()*bx);
   }
 
   uint64_t block(size_t bx, size_t by, size_t bz) const {
@@ -233,9 +230,9 @@ public:
       };
 
     // just check all of them
-    for (size_t bx = 0; bx < Nbx; bx++) {
-      for (size_t by = 0; by < Nby; by++) {
-        for (size_t bz = 0; bz < Nbz; bz++) {
+    for (size_t bx = 0; bx < Nbx(); bx++) {
+      for (size_t by = 0; by < Nby(); by++) {
+        for (size_t bz = 0; bz < Nbz(); bz++) {
           // check this block
           uint64_t b = 0;
           for (uint_fast8_t i = 0; i < 4; i++) {
@@ -278,16 +275,16 @@ public:
 
   void remove_interior_slow_1() {
     const SparseVoxelObject copy(*this);
-    for (size_t ix = 0; ix < Nx; ix++) {
-      for (size_t iy = 0; iy < Ny; iy++) {
-        for (size_t iz = 0; iz < Nz; iz++) {
+    for (size_t ix = 0; ix < Nx(); ix++) {
+      for (size_t iy = 0; iy < Ny(); iy++) {
+        for (size_t iz = 0; iz < Nz(); iz++) {
           bool curr   = copy.cell(ix, iy, iz);
-          bool left   = (ix == 0)    || copy.cell(ix-1, iy, iz);
-          bool right  = (ix == Nx-1) || copy.cell(ix+1, iy, iz);
-          bool front  = (iy == 0)    || copy.cell(ix, iy-1, iz);
-          bool behind = (iy == Ny-1) || copy.cell(ix, iy+1, iz);
-          bool below  = (iz == 0)    || copy.cell(ix, iy, iz-1);
-          bool above  = (iz == Nz-1) || copy.cell(ix, iy, iz+1);
+          bool left   = (ix == 0)      || copy.cell(ix-1, iy, iz);
+          bool right  = (ix == Nx()-1) || copy.cell(ix+1, iy, iz);
+          bool front  = (iy == 0)      || copy.cell(ix, iy-1, iz);
+          bool behind = (iy == Ny()-1) || copy.cell(ix, iy+1, iz);
+          bool below  = (iz == 0)      || copy.cell(ix, iy, iz-1);
+          bool above  = (iz == Nz()-1) || copy.cell(ix, iy, iz+1);
           if (curr && left && right && front && behind && below && above) {
             set_cell(ix, iy, iz, false);
           }
@@ -311,9 +308,9 @@ public:
     const uint64_t full = ~uint64_t(0);
 
     for (const auto &[idx, old_b] : _data) {
-      const size_t bx = idx / (Nby * Nbz);
-      const size_t by = (idx / Nbz) % Nby;
-      const size_t bz = idx % Nbz;
+      const size_t bx = idx / (Nby() * Nbz());
+      const size_t by = (idx / Nbz()) % Nby();
+      const size_t bz = idx % Nbz();
 
       //auto my_assert = [](bool val) {
       //  if (!val) {
@@ -323,12 +320,12 @@ public:
       uint64_t new_b = old_b;
 
       // get the neighbors
-      const uint64_t left   = (bx <= 0)     ? full : block(idx - Nby*Nbz);
-      const uint64_t right  = (bx >= Nbx-1) ? full : block(idx + Nby*Nbz);
-      const uint64_t front  = (by <= 0)     ? full : block(idx - Nbz);
-      const uint64_t behind = (by >= Nby-1) ? full : block(idx + Nbz);
-      const uint64_t below  = (bz <= 0)     ? full : block(idx - 1);
-      const uint64_t above  = (bz >= Nbz-1) ? full : block(idx + 1);
+      const uint64_t left   = (bx <= 0)       ? full : block(idx - Nby()*Nbz());
+      const uint64_t right  = (bx >= Nbx()-1) ? full : block(idx + Nby()*Nbz());
+      const uint64_t front  = (by <= 0)       ? full : block(idx - Nbz());
+      const uint64_t behind = (by >= Nby()-1) ? full : block(idx + Nbz());
+      const uint64_t below  = (bz <= 0)       ? full : block(idx - 1);
+      const uint64_t above  = (bz >= Nbz()-1) ? full : block(idx + 1);
 
       auto is_interior =
         [left, right, front, behind, below, above, old_b, this]
@@ -932,7 +929,7 @@ protected:
   }
 
   void dimension_check(const SparseVoxelObject &other) const {
-    if (Nx != other.Nx || Ny != other.Ny || Nz != other.Nz) {
+    if (Nx() != other.Nx() || Ny() != other.Ny() || Nz() != other.Nz()) {
       // TODO: add the mismatching dimensions to the message
       throw std::invalid_argument("Voxel dimensions do not match");
     }
@@ -954,6 +951,9 @@ protected:
   }
 
 private:
+  const size_t _Nx;  // number of voxels in the x-direction
+  const size_t _Ny;  // number of voxels in the y-direction
+  const size_t _Nz;  // number of voxels in the z-direction
   std::map<size_t, uint64_t> _data; // sparse voxel data
   double _xmin;
   double _xmax;

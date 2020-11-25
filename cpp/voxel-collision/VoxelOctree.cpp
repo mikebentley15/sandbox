@@ -6,9 +6,8 @@
 #include <functional>
 #include <type_traits>  // for std::decay_t()
 
-VoxelOctree::VoxelOctree(size_t _N)
-  : Nx(_N), Ny(_N), Nz(_N), N(Nx*Ny*Nz)
-  , Nbx(_N/4), Nby(_N/4), Nbz(_N/4), Nb(Nbx*Nby*Nbz)
+VoxelOctree::VoxelOctree(size_t N_)
+  : _N(N_)
 {
   make_empty_tree(_N);  // creates the _data object
   set_xlim(0.0, 1.0);
@@ -17,8 +16,7 @@ VoxelOctree::VoxelOctree(size_t _N)
 }
 
 VoxelOctree::VoxelOctree(const VoxelOctree &other) // copy
-  : Nx(other.Nx), Ny(other.Ny), Nz(other.Nz), N(other.N)
-  , Nbx(other.Nbx), Nby(other.Nby), Nbz(other.Nbz), Nb(other.Nb)
+  : _N(other._N)
   , _data(new TreeNodeVariant(*(other._data)))
   , _xmin(other._xmin), _xmax(other._xmax)
   , _ymin(other._ymin), _ymax(other._ymax)
@@ -27,8 +25,7 @@ VoxelOctree::VoxelOctree(const VoxelOctree &other) // copy
 {}
 
 VoxelOctree::VoxelOctree(VoxelOctree &&other)  // move
-  : Nx(other.Nx), Ny(other.Ny), Nz(other.Nz), N(other.N)
-  , Nbx(other.Nbx), Nby(other.Nby), Nbz(other.Nbz), Nb(other.Nb)
+  : _N(other._N)
   , _data(std::move(other._data))
   , _xmin(other._xmin), _xmax(other._xmax)
   , _ymin(other._ymin), _ymax(other._ymax)
@@ -42,7 +39,7 @@ void VoxelOctree::set_xlim(double xmin, double xmax) {
   }
   _xmin = xmin;
   _xmax = xmax;
-  _dx = (xmax - xmin) / Nx;
+  _dx = (xmax - xmin) / Nx();
 }
 
 void VoxelOctree::set_ylim(double ymin, double ymax) {
@@ -51,7 +48,7 @@ void VoxelOctree::set_ylim(double ymin, double ymax) {
   }
   _ymin = ymin;
   _ymax = ymax;
-  _dy = (ymax - ymin) / Ny;
+  _dy = (ymax - ymin) / Ny();
 }
 
 void VoxelOctree::set_zlim(double zmin, double zmax) {
@@ -60,7 +57,7 @@ void VoxelOctree::set_zlim(double zmin, double zmax) {
   }
   _zmin = zmin;
   _zmax = zmax;
-  _dz = (zmax - zmin) / Nz;
+  _dz = (zmax - zmin) / Nz();
 }
 
 size_t VoxelOctree::nblocks() const {
@@ -194,18 +191,18 @@ void VoxelOctree::add_sphere(double x, double y, double z, double r) {
     };
 
   // just check all of them
-  //for (size_t ix = 0; ix < Nx; ix++) {
-  //  for (size_t iy = 0; iy < Ny; iy++) {
-  //    for (size_t iz = 0; iz < Nz; iz++) {
+  //for (size_t ix = 0; ix < Nx(); ix++) {
+  //  for (size_t iy = 0; iy < Ny(); iy++) {
+  //    for (size_t iz = 0; iz < Nz(); iz++) {
   //      if (voxel_ctr_is_in_sphere(ix, iy, iz)) {
   //        this->set_cell(ix, iy, iz);
   //      }
   //    }
   //  }
   //}
-  for (size_t bx = 0; bx < Nbx; bx++) {
-    for (size_t by = 0; by < Nby; by++) {
-      for (size_t bz = 0; bz < Nbz; bz++) {
+  for (size_t bx = 0; bx < Nbx(); bx++) {
+    for (size_t by = 0; by < Nby(); by++) {
+      for (size_t bz = 0; bz < Nbz(); bz++) {
         // check this block
         uint64_t b = 0;
         for (uint_fast8_t i = 0; i < 4; i++) {
@@ -228,7 +225,7 @@ void VoxelOctree::add_sphere(double x, double y, double z, double r) {
   //auto visited = std::make_unique<VoxelObject<Nx, Ny, Nz>>();
 
   //auto check_push = [&frontier, &visited](size_t _ix, size_t _iy, size_t _iz) {
-  //  if (!visited->cell(_ix, _iy, _iz) && _ix < Nx && _iy < Ny && _iz < Nz) {
+  //  if (!visited->cell(_ix, _iy, _iz) && _ix < Nx() && _iy < Ny() && _iz < Nz()) {
   //    //std::cout << "  add_sphere(): pushing: "
   //    //          << _ix << ", " << _iy << ", " << _iz << std::endl;
   //    frontier.push(IdxType{_ix, _iy, _iz});
@@ -258,16 +255,16 @@ void VoxelOctree::add_sphere(double x, double y, double z, double r) {
 
 void VoxelOctree::remove_interior_slow_1() {
   const VoxelOctree copy(*this);
-  for (size_t ix = 0; ix < Nx; ix++) {
-    for (size_t iy = 0; iy < Ny; iy++) {
-      for (size_t iz = 0; iz < Nz; iz++) {
+  for (size_t ix = 0; ix < Nx(); ix++) {
+    for (size_t iy = 0; iy < Ny(); iy++) {
+      for (size_t iz = 0; iz < Nz(); iz++) {
         bool curr   = copy.cell(ix, iy, iz);
-        bool left   = (ix == 0)    || copy.cell(ix-1, iy, iz);
-        bool right  = (ix == Nx-1) || copy.cell(ix+1, iy, iz);
-        bool front  = (iy == 0)    || copy.cell(ix, iy-1, iz);
-        bool behind = (iy == Ny-1) || copy.cell(ix, iy+1, iz);
-        bool below  = (iz == 0)    || copy.cell(ix, iy, iz-1);
-        bool above  = (iz == Nz-1) || copy.cell(ix, iy, iz+1);
+        bool left   = (ix == 0)      || copy.cell(ix-1, iy, iz);
+        bool right  = (ix == Nx()-1) || copy.cell(ix+1, iy, iz);
+        bool front  = (iy == 0)      || copy.cell(ix, iy-1, iz);
+        bool behind = (iy == Ny()-1) || copy.cell(ix, iy+1, iz);
+        bool below  = (iz == 0)      || copy.cell(ix, iy, iz-1);
+        bool above  = (iz == Nz()-1) || copy.cell(ix, iy, iz+1);
         if (curr && left && right && front && behind && below && above) {
           set_cell(ix, iy, iz, false);
         }
@@ -297,12 +294,12 @@ void VoxelOctree::remove_interior() {
 
     const uint64_t full = ~uint64_t(0);
     auto new_b = old_b;
-    const uint64_t left   = (bx <= 0)     ? full : copy.block(bx-1, by, bz);
-    const uint64_t right  = (bx >= Nbx-1) ? full : copy.block(bx+1, by, bz);
-    const uint64_t front  = (by <= 0)     ? full : copy.block(bx, by-1, bz);
-    const uint64_t behind = (by >= Nby-1) ? full : copy.block(bx, by+1, bz);
-    const uint64_t below  = (bz <= 0)     ? full : copy.block(bx, by, bz-1);
-    const uint64_t above  = (bz >= Nbz-1) ? full : copy.block(bx, by, bz+1);
+    const uint64_t left   = (bx <= 0)       ? full : copy.block(bx-1, by, bz);
+    const uint64_t right  = (bx >= Nbx()-1) ? full : copy.block(bx+1, by, bz);
+    const uint64_t front  = (by <= 0)       ? full : copy.block(bx, by-1, bz);
+    const uint64_t behind = (by >= Nby()-1) ? full : copy.block(bx, by+1, bz);
+    const uint64_t below  = (bz <= 0)       ? full : copy.block(bx, by, bz-1);
+    const uint64_t above  = (bz >= Nbz()-1) ? full : copy.block(bx, by, bz+1);
 
     auto is_interior =
       [left, right, front, behind, below, above, old_b, this]
@@ -357,7 +354,7 @@ bool VoxelOctree::collides_check(const VoxelOctree &other) const {
 }
 
 bool VoxelOctree::collides(const VoxelOctree &other) const {
-  if (Nx != other.Nx) {
+  if (_N != other._N) {
     throw std::domain_error("voxel objects must match in size");
   }
   return std::visit(
@@ -406,21 +403,21 @@ void VoxelOctree::limit_check(const VoxelOctree &other) const {
   dbl_eq_check("zmax", this->_zmax, other._zmax);
 }
 
-void VoxelOctree::make_empty_tree(size_t N) {
+void VoxelOctree::make_empty_tree(size_t size) {
   auto make_uniq_variant = [](auto tree) {
     return std::make_unique<TreeNodeVariant>(tree);
   };
 
-  if      (N ==   4) { _data = make_uniq_variant(detail::TreeNode<  4>()); }
-  else if (N ==   8) { _data = make_uniq_variant(detail::TreeNode<  8>()); }
-  else if (N ==  16) { _data = make_uniq_variant(detail::TreeNode< 16>()); }
-  else if (N ==  32) { _data = make_uniq_variant(detail::TreeNode< 32>()); }
-  else if (N ==  64) { _data = make_uniq_variant(detail::TreeNode< 64>()); }
-  else if (N == 128) { _data = make_uniq_variant(detail::TreeNode<128>()); }
-  else if (N == 256) { _data = make_uniq_variant(detail::TreeNode<256>()); }
-  else if (N == 512) { _data = make_uniq_variant(detail::TreeNode<512>()); }
+  if      (size ==   4) { _data = make_uniq_variant(detail::TreeNode<  4>()); }
+  else if (size ==   8) { _data = make_uniq_variant(detail::TreeNode<  8>()); }
+  else if (size ==  16) { _data = make_uniq_variant(detail::TreeNode< 16>()); }
+  else if (size ==  32) { _data = make_uniq_variant(detail::TreeNode< 32>()); }
+  else if (size ==  64) { _data = make_uniq_variant(detail::TreeNode< 64>()); }
+  else if (size == 128) { _data = make_uniq_variant(detail::TreeNode<128>()); }
+  else if (size == 256) { _data = make_uniq_variant(detail::TreeNode<256>()); }
+  else if (size == 512) { _data = make_uniq_variant(detail::TreeNode<512>()); }
   else {
     throw std::invalid_argument("VoxelOctree size not supported: "
-                                + std::to_string(N));
+                                + std::to_string(size));
   }
 }

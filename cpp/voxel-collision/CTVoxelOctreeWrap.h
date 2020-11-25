@@ -18,20 +18,20 @@ public:
                                  CTVoxelOctree<256>,
                                  CTVoxelOctree<512>>;
 
-  const size_t Nx;      // number of voxels in the x-direction
-  const size_t Ny;      // number of voxels in the y-direction
-  const size_t Nz;      // number of voxels in the z-direction
-  const size_t N;       // number of voxels
+  size_t Nx() const { return _N; } // number of voxels in the x-direction
+  size_t Ny() const { return _N; } // number of voxels in the y-direction
+  size_t Nz() const { return _N; } // number of voxels in the z-direction
+  size_t N()  const { return Nx() * Ny() * Nz(); }
 
-  const size_t Nbx;     // number of blocks in the x-direction
-  const size_t Nby;     // number of blocks in the y-direction
-  const size_t Nbz;     // number of blocks in the z-direction
-  const size_t Nb;      // number of blocks
+  size_t Nbx() const { return Nx() / 4; } // number of blocks in the x-direction
+  size_t Nby() const { return Ny() / 4; } // number of blocks in the y-direction
+  size_t Nbz() const { return Nz() / 4; } // number of blocks in the z-direction
+  size_t Nb()  const { return Nbx() * Nby() * Nbz(); }
 
   using BlockType = uint64_t;
 
 public:
-  CTVoxelOctreeWrap(size_t _N);
+  CTVoxelOctreeWrap(size_t N_);
   CTVoxelOctreeWrap(const CTVoxelOctreeWrap &other) = default;  // copy
   CTVoxelOctreeWrap(CTVoxelOctreeWrap &&other)      = default;  // move
 
@@ -79,6 +79,7 @@ public:
   bool collides(const CTVoxelOctreeWrap &other) const;
 
 private:
+  size_t _N;
   VoxelType _data;
 };
 

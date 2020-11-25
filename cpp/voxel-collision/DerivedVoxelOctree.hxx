@@ -1,128 +1,84 @@
-#include "VoxelOctree.h"
+#ifndef DERIVED_VOXEL_OCTREE_HXX
+#define DERIVED_VOXEL_OCTREE_HXX
 
-#include <boost/iterator/iterator_adaptor.hpp>
+#include "DerivedVoxelOctree.h"
 
-#include <algorithm>
-#include <functional>
-#include <type_traits>  // for std::decay_t()
+template <size_t _N>
+DerivedVoxelOctree<_N>::DerivedVoxelOctree()
+  : AbstractVoxelOctree()
+  , _data(new detail::TreeNode<_N>())
+{}
 
-inline
-VoxelOctree::VoxelOctree(size_t N_)
-  : _N(N_)
-{
-  make_empty_tree(_N);  // creates the _data object
-  set_xlim(0.0, 1.0);
-  set_ylim(0.0, 1.0);
-  set_zlim(0.0, 1.0);
-}
-
-inline
-VoxelOctree::VoxelOctree(const VoxelOctree &other) // copy
-  : _N(other._N)
-  , _data(new TreeNodeVariant(*(other._data)))
-  , _xmin(other._xmin), _xmax(other._xmax)
-  , _ymin(other._ymin), _ymax(other._ymax)
-  , _zmin(other._zmin), _zmax(other._zmax)
+template <size_t _N>
+DerivedVoxelOctree<_N>::DerivedVoxelOctree(const DerivedVoxelOctree<_N> &other)
+  : AbstractVoxelOctree(other)
+  , _data(new detail::TreeNode<_N>(*(other._data)))
   , _dx(other._dx), _dy(other._dy), _dz(other._dz)
 {}
 
-inline
-VoxelOctree::VoxelOctree(VoxelOctree &&other)  // move
-  : _N(other._N)
+template <size_t _N>
+DerivedVoxelOctree<_N>::DerivedVoxelOctree(DerivedVoxelOctree<_N> &&other)
+  : AbstractVoxelOctree(std::move(other))
   , _data(std::move(other._data))
-  , _xmin(other._xmin), _xmax(other._xmax)
-  , _ymin(other._ymin), _ymax(other._ymax)
-  , _zmin(other._zmin), _zmax(other._zmax)
   , _dx(other._dx), _dy(other._dy), _dz(other._dz)
 {}
 
-inline
-void VoxelOctree::set_xlim(double xmin, double xmax) {
-  if (xmin >= xmax) {
-    throw std::length_error("xlimits must be positive in size");
-  }
-  _xmin = xmin;
-  _xmax = xmax;
+
+template <size_t _N>
+void DerivedVoxelOctree<_N>::set_xlim(double xmin, double xmax) {
+  AbstractVoxelOctree::set_xlim(xmin, xmax);
   _dx = (xmax - xmin) / Nx();
 }
 
-inline
-void VoxelOctree::set_ylim(double ymin, double ymax) {
-  if (ymin >= ymax) {
-    throw std::length_error("ylimits must be positive in size");
-  }
-  _ymin = ymin;
-  _ymax = ymax;
+template <size_t _N>
+void DerivedVoxelOctree<_N>::set_ylim(double ymin, double ymax) {
+  AbstractVoxelOctree::set_ylim(ymin, ymax);
   _dy = (ymax - ymin) / Ny();
 }
 
-inline
-void VoxelOctree::set_zlim(double zmin, double zmax) {
-  if (zmin >= zmax) {
-    throw std::length_error("zlimits must be positive in size");
-  }
-  _zmin = zmin;
-  _zmax = zmax;
+template <size_t _N>
+void DerivedVoxelOctree<_N>::set_zlim(double zmin, double zmax) {
+  AbstractVoxelOctree::set_zlim(zmin, zmax);
   _dz = (zmax - zmin) / Nz();
 }
 
-inline
-size_t VoxelOctree::nblocks() const {
-  return std::visit([](auto &tree) { return tree.nblocks(); }, *_data);
+template <size_t _N>
+size_t DerivedVoxelOctree<_N>::nblocks() const {
+  return _data->nblocks();
 }
 
-inline
-uint64_t VoxelOctree::block(size_t bx, size_t by, size_t bz) const {
-  return std::visit(
-      [&bx, &by, &bz](auto &tree) { return tree.block(bx, by, bz); }, *_data);
+template <size_t _N>
+uint64_t DerivedVoxelOctree<_N>::block(size_t bx, size_t by, size_t bz) const {
+  return _data->block(bx, by, bz);
 }
 
-inline
-void VoxelOctree::set_block(size_t bx, size_t by, size_t bz, uint64_t value) {
-  return std::visit(
-      [&bx, &by, &bz, &value](auto &tree) {
-        return tree.set_block(bx, by, bz, value);
-      },
-      *_data);
+template <size_t _N>
+void DerivedVoxelOctree<_N>::set_block(size_t bx, size_t by, size_t bz, uint64_t value) {
+  _data->set_block(bx, by, bz, value);
 }
 
-// returns old block type before unioning with value
-inline
-uint64_t VoxelOctree::union_block(size_t bx, size_t by, size_t bz,
-                                  uint64_t value)
-{
+template <size_t _N>
+uint64_t DerivedVoxelOctree<_N>::union_block(size_t bx, size_t by, size_t bz, uint64_t value) {
   if (value) {
-    return std::visit(
-        [&bx, &by, &bz, &value](auto &tree) {
-          return tree.union_block(bx, by, bz, value);
-        },
-        *_data);
+    return _data->union_block(bx, by, bz, value);
   } else {
-    return this->block(bx, by, bz);
+    return _data->block(bx, by, bz);
   }
 }
 
-inline
-uint64_t VoxelOctree::intersect_block(size_t bx, size_t by, size_t bz,
-                                      uint64_t value)
-{
-  return std::visit(
-      [&bx, &by, &bz, &value](auto &tree) {
-        return tree.intersect_block(bx, by, bz, value);
-      },
-      *_data);
+template <size_t _N>
+uint64_t DerivedVoxelOctree<_N>::intersect_block(size_t bx, size_t by, size_t bz, uint64_t value) {
+  return _data->intersect_block(bx, by, bz, value);
 }
 
-inline
-bool VoxelOctree::cell(size_t ix, size_t iy, size_t iz) const {
+template <size_t _N>
+bool DerivedVoxelOctree<_N>::cell(size_t ix, size_t iy, size_t iz) const {
   auto b = block(ix / 4, iy / 4, iz / 4);
   return b && (b & bitmask(ix % 4, iy % 4, iz % 4));
 }
 
-// sets the cell's value
-// returns true if the cell's value changed
-inline
-bool VoxelOctree::set_cell(size_t ix, size_t iy, size_t iz, bool value) {
+template <size_t _N>
+bool DerivedVoxelOctree<_N>::set_cell(size_t ix, size_t iy, size_t iz, bool value) {
   auto mask = bitmask(ix % 4, iy % 4, iz % 4);
   if (value) {
     auto oldval = this->union_block(ix / 4, iy / 4, iz / 4, mask);
@@ -133,16 +89,8 @@ bool VoxelOctree::set_cell(size_t ix, size_t iy, size_t iz, bool value) {
   }
 }
 
-inline
-uint64_t VoxelOctree::find_block(double x, double y, double z) const {
-  auto [bx, by, bz] = find_block_idx(x, y, z);
-  return block(bx, by, bz);
-}
-
-inline
-std::tuple<size_t, size_t, size_t> VoxelOctree::find_block_idx(
-    double x, double y, double z) const
-{
+template <size_t _N>
+std::tuple<size_t, size_t, size_t> DerivedVoxelOctree<_N>::find_block_idx(double x, double y, double z) const {
   domain_check(x, y, z);
   size_t ix = size_t((x - _xmin) / _dx);
   size_t iy = size_t((y - _ymin) / _dy);
@@ -150,10 +98,8 @@ std::tuple<size_t, size_t, size_t> VoxelOctree::find_block_idx(
   return {ix / 4, iy / 4, iz / 4};
 }
 
-inline
-std::tuple<size_t, size_t, size_t> VoxelOctree::find_cell(
-    double x, double y, double z) const
-{
+template <size_t _N>
+std::tuple<size_t, size_t, size_t> DerivedVoxelOctree<_N>::find_cell(double x, double y, double z) const {
   domain_check(x, y, z);
   size_t ix = size_t((x - _xmin) / _dx);
   size_t iy = size_t((y - _ymin) / _dy);
@@ -161,20 +107,8 @@ std::tuple<size_t, size_t, size_t> VoxelOctree::find_cell(
   return {ix, iy, iz};
 }
 
-inline
-void VoxelOctree::add_point(double x, double y, double z) {
-  auto [ix, iy, iz] = find_cell(x, y, z);
-  set_cell(ix, iy, iz);
-}
-
-// TODO: easier algorithm is to go through each voxel, create an FCL AABB box
-// TODO- and collision check it against the object to be added (for sphere,
-// TODO- capsule, and mesh).  Slow, but effective
-
-// sets sphere as occupied in voxel space, with center and radius specified
-// adds any voxels that intersect or are inside of the sphere.
-inline
-void VoxelOctree::add_sphere(double x, double y, double z, double r) {
+template <size_t _N>
+void DerivedVoxelOctree<_N>::add_sphere(double x, double y, double z, double r) {
   // Algorithm:
   // 1. add the sphere center to the voxelization
   // 2. grow the sphere center, asking each voxel center to see if it is inside
@@ -232,7 +166,7 @@ void VoxelOctree::add_sphere(double x, double y, double z, double r) {
             }
           }
         }
-        if (b) { this->union_block(bx, by, bz, b); }
+        if (b) { union_block(bx, by, bz, b); }
       }
     }
   }
@@ -271,9 +205,9 @@ void VoxelOctree::add_sphere(double x, double y, double z, double r) {
   // TODO: implement
 }
 
-inline
-void VoxelOctree::remove_interior_slow_1() {
-  const VoxelOctree copy(*this);
+template <size_t _N>
+void DerivedVoxelOctree<_N>::remove_interior_slow_1() {
+  const DerivedVoxelOctree<_N> copy(*this);
   for (size_t ix = 0; ix < Nx(); ix++) {
     for (size_t iy = 0; iy < Ny(); iy++) {
       for (size_t iz = 0; iz < Nz(); iz++) {
@@ -292,34 +226,24 @@ void VoxelOctree::remove_interior_slow_1() {
   }
 }
 
-/** For solid objects, removes the interior.
- *
- * Basically, this simply removes any occupied cells that are completely
- * surrounded by other occupied cells.  So, only leaves the occupied cells
- * that have an empty neighbor.  Neighbors are only the six directly adjacent
- * cells.
- *
- * For sparse voxel objects, this should reduce the number of occupied cells
- * and hopefully blocks, thus reducing memory.
- */
-inline
-void VoxelOctree::remove_interior() {
-  auto copy = *this;
+template <size_t _N>
+void DerivedVoxelOctree<_N>::remove_interior() {
+  auto copy = std::make_unique<detail::TreeNode<_N> const>(*_data);
 
   // iterate over copy and modify _data
   auto visitor = [this, &copy](size_t bx, size_t by, size_t bz, uint64_t old_b) {
 
 #define my_assert(val) if (!val) { throw std::runtime_error(#val); }
-    my_assert(old_b == copy.block(bx, by, bz));
+    my_assert(old_b == copy->block(bx, by, bz));
 
     const uint64_t full = ~uint64_t(0);
     auto new_b = old_b;
-    const uint64_t left   = (bx <= 0)       ? full : copy.block(bx-1, by, bz);
-    const uint64_t right  = (bx >= Nbx()-1) ? full : copy.block(bx+1, by, bz);
-    const uint64_t front  = (by <= 0)       ? full : copy.block(bx, by-1, bz);
-    const uint64_t behind = (by >= Nby()-1) ? full : copy.block(bx, by+1, bz);
-    const uint64_t below  = (bz <= 0)       ? full : copy.block(bx, by, bz-1);
-    const uint64_t above  = (bz >= Nbz()-1) ? full : copy.block(bx, by, bz+1);
+    const uint64_t left   = (bx <= 0)       ? full : copy->block(bx-1, by, bz);
+    const uint64_t right  = (bx >= Nbx()-1) ? full : copy->block(bx+1, by, bz);
+    const uint64_t front  = (by <= 0)       ? full : copy->block(bx, by-1, bz);
+    const uint64_t behind = (by >= Nby()-1) ? full : copy->block(bx, by+1, bz);
+    const uint64_t below  = (bz <= 0)       ? full : copy->block(bx, by, bz-1);
+    const uint64_t above  = (bz >= Nbz()-1) ? full : copy->block(bx, by, bz+1);
 
     auto is_interior =
       [left, right, front, behind, below, above, old_b, this]
@@ -360,47 +284,38 @@ void VoxelOctree::remove_interior() {
     }
 
     // store this new block
-    this->set_block(bx, by, bz, new_b);
+    this->_data->set_block(bx, by, bz, new_b);
   };
-  std::visit([&visitor] (auto &tree) {
-      //tree.visit_leaves(visitor);
-      tree.visit_leaves_2(visitor);
-    }, *copy._data);
+  //copy->visit_leaves(visitor);
+  copy->visit_leaves_2(visitor);
 }
 
-inline
-bool VoxelOctree::collides_check(const VoxelOctree &other) const {
-  limit_check(other); // significantly slows down collision checking?
-  return collides(other);
-}
-
-inline
-bool VoxelOctree::collides(const VoxelOctree &other) const {
-  if (_N != other._N) {
-    throw std::domain_error("voxel objects must match in size");
+template <size_t _N>
+bool DerivedVoxelOctree<_N>::collides_check(const AbstractVoxelOctree &other) const {
+  const auto other_derived = dynamic_cast<const DerivedVoxelOctree<_N>*>(&other);
+  if (other_derived == nullptr) {
+    throw std::invalid_argument("passed in not the same type of DerivedVoxelOctree");
   }
-  return std::visit(
-      [] (auto &a, auto &b) {
-        using A = std::decay_t<decltype(a)>;
-        using B = std::decay_t<decltype(b)>;
-        if constexpr (std::is_same_v<A, B>) {
-          return a.collides(b);
-        } else {
-          return true;
-        }
-      },
-      *(this->_data), *(other._data));
+  limit_check(*other_derived); // significantly slows down collision checking
+  return _data->collides(*(other_derived->_data));
 }
 
-// one in the given place, zeros everywhere else
-// for x, y, z within a block (each should be 0 <= x < 4)
-inline
-uint64_t VoxelOctree::bitmask(uint_fast8_t x, uint_fast8_t y, uint_fast8_t z) const {
+template <size_t _N>
+bool DerivedVoxelOctree<_N>::collides(const AbstractVoxelOctree &other) const {
+  const auto other_derived = dynamic_cast<const DerivedVoxelOctree<_N>*>(&other);
+  if (other_derived == nullptr) {
+    throw std::invalid_argument("passed in not the same type of DerivedVoxelOctree");
+  }
+  return _data->collides(*(other_derived->_data));
+}
+
+template <size_t _N>
+uint64_t DerivedVoxelOctree<_N>::bitmask(uint_fast8_t x, uint_fast8_t y, uint_fast8_t z) const {
   return uint64_t(1) << (x*16 + y*4 + z);
 }
 
-inline
-void VoxelOctree::domain_check(double x, double y, double z) const {
+template <size_t _N>
+void DerivedVoxelOctree<_N>::domain_check(double x, double y, double z) const {
   if (x < _xmin || _xmax < x) {
     throw std::domain_error("x is out of the voxel dimensions");
   }
@@ -412,8 +327,8 @@ void VoxelOctree::domain_check(double x, double y, double z) const {
   }
 }
 
-inline
-void VoxelOctree::limit_check(const VoxelOctree &other) const {
+template <size_t _N>
+void DerivedVoxelOctree<_N>::limit_check(const DerivedVoxelOctree<_N> &other) const {
   double eps = std::numeric_limits<double>::epsilon();
   auto dbl_eq_check = [eps](const std::string &name, double val1, double val2) {
     if (std::abs(val1 - val2) >= eps) {
@@ -428,22 +343,4 @@ void VoxelOctree::limit_check(const VoxelOctree &other) const {
   dbl_eq_check("zmax", this->_zmax, other._zmax);
 }
 
-inline
-void VoxelOctree::make_empty_tree(size_t size) {
-  auto make_uniq_variant = [](auto tree) {
-    return std::make_unique<TreeNodeVariant>(tree);
-  };
-
-  if      (size ==   4) { _data = make_uniq_variant(detail::TreeNode<  4>()); }
-  else if (size ==   8) { _data = make_uniq_variant(detail::TreeNode<  8>()); }
-  else if (size ==  16) { _data = make_uniq_variant(detail::TreeNode< 16>()); }
-  else if (size ==  32) { _data = make_uniq_variant(detail::TreeNode< 32>()); }
-  else if (size ==  64) { _data = make_uniq_variant(detail::TreeNode< 64>()); }
-  else if (size == 128) { _data = make_uniq_variant(detail::TreeNode<128>()); }
-  else if (size == 256) { _data = make_uniq_variant(detail::TreeNode<256>()); }
-  else if (size == 512) { _data = make_uniq_variant(detail::TreeNode<512>()); }
-  else {
-    throw std::invalid_argument("VoxelOctree size not supported: "
-                                + std::to_string(size));
-  }
-}
+#endif // DERIVED_VOXEL_OCTREE_HXX

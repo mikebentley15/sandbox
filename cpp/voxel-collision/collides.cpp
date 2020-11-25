@@ -1,4 +1,5 @@
 #include "collides.h"
+#include "AbstractVoxelOctree.h"
 #include "CTSparseVoxelObject.h"
 #include "CTVoxelObject.h"
 #include "CTVoxelOctree.h"
@@ -45,5 +46,6 @@ COLLIDES_IMPL(CTVoxelOctree<  4>)
 COLLIDES_IMPL(CTVoxelOctreeWrap)
 COLLIDES_IMPL(OctomapWrap)
 COLLIDES_IMPL(VoxelOctree)
+COLLIDES_IMPL(AbstractVoxelOctree)
 
 #undef COLLIDES_IMPL

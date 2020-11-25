@@ -25,15 +25,15 @@ namespace detail {
 class VoxelOctree {
 
 public:
-  const size_t Nx;      // number of voxels in the x-direction
-  const size_t Ny;      // number of voxels in the y-direction
-  const size_t Nz;      // number of voxels in the z-direction
-  const size_t N;       // number of voxels
+  size_t Nx() const { return _N; }
+  size_t Ny() const { return _N; }
+  size_t Nz() const { return _N; }
+  size_t N()  const { return Nx() * Ny() * Nz(); }
 
-  const size_t Nbx;     // number of blocks in the x-direction
-  const size_t Nby;     // number of blocks in the y-direction
-  const size_t Nbz;     // number of blocks in the z-direction
-  const size_t Nb;      // number of blocks
+  size_t Nbx() const { return Nx() / 4; }
+  size_t Nby() const { return Ny() / 4; }
+  size_t Nbz() const { return Nz() / 4; }
+  size_t Nb()  const { return Nbx() * Nby() * Nbz(); }
 
   using BlockType = uint64_t;
 
@@ -108,6 +108,7 @@ private:
                                        detail::TreeNode<256>,
                                        detail::TreeNode<512>>;
 
+  const size_t _N;
   std::unique_ptr<TreeNodeVariant> _data; // sparse voxel tree data
   double _xmin;
   double _xmax;

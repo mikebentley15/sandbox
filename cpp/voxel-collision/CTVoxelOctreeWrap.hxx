@@ -6,9 +6,8 @@
 #include <type_traits>
 
 inline
-CTVoxelOctreeWrap::CTVoxelOctreeWrap(size_t _N)
-  : Nx(_N), Ny(_N), Nz(_N), N(Nx*Ny*Nz)
-  , Nbx(_N/4), Nby(_N/4), Nbz(_N/4), Nb(Nbx*Nby*Nbz)
+CTVoxelOctreeWrap::CTVoxelOctreeWrap(size_t N_)
+  : _N(N_)
 {
   if      (_N ==   4) { _data.emplace<CTVoxelOctree<  4>>(); }
   else if (_N ==   8) { _data.emplace<CTVoxelOctree<  8>>(); }
@@ -201,7 +200,7 @@ void CTVoxelOctreeWrap::remove_interior() {
 
 inline
 bool CTVoxelOctreeWrap::collides_check(const CTVoxelOctreeWrap &other) const {
-  if (Nx != other.Nx) {
+  if (Nx() != other.Nx()) {
     throw std::invalid_argument("collides_check(): sizes do not match");
   }
   return std::visit(
