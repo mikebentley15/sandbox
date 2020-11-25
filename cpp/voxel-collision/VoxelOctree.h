@@ -121,6 +121,6 @@ private:
   double _dz;
 };
 
-#include "VoxelOctree.hxx"
+//#include "VoxelOctree.hxx"
 
 #endif // VOXEL_OCTREE_H

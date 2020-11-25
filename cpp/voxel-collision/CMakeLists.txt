@@ -25,8 +25,9 @@ add_executable(voxel-collision-example
   OctomapWrap.h
   SparseVoxelObject
   VoxelObject.h
-  #VoxelOctree.cpp
+  VoxelOctree.cpp
   VoxelOctree.h
+  #VoxelOctree.hxx
   detail/TreeNode.h
   detail/TreeNode.hxx
   )
