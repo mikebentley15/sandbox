@@ -7,8 +7,6 @@
 #include <utility>
 #include <vector>
 
-namespace util {
-
 class FunctionTimer {
 public:
   FunctionTimer() = default;
@@ -25,13 +23,13 @@ public:
   const std::vector<float>& get_times() const { return _times; }
 
   /// Time f().  This variant is used if f() returns void
-  template <typename Func, std::enable_if<returns_void_v<Func>, int> = 0>
+  template <typename Func, std::enable_if_t<returns_void_v<Func>, int> = 0>
   auto time(Func &&f) {
     this->_times.emplace_back(time_function_call(f));
   }
 
   /// Time f() and return its return value
-  template <typename Func, std::enable_if<returns_void_v<Func>, int> = 0>
+  template <typename Func, std::enable_if_t<returns_value_v<Func>, int> = 0>
   auto time(Func &&f) {
     float timing;
     auto val = time_function_call(f, timing);
@@ -42,7 +40,5 @@ public:
 private:
   std::vector<float> _times;
 }; // end of class FunctionTimer
-
-} // end of namespace util
 
 #endif // UTIL_FUNCTION_TIMER_H

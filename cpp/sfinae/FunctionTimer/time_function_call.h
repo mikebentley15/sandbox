@@ -23,12 +23,12 @@ float time_function_call(Func &&f) {
  * A lot of effort went into making this usable if the function f() does not
  * have a return type (i.e. void).
  */
-template <typename Func, std::enable_if<returns_void_v<Func>, int> = 0>
+template <typename Func, std::enable_if_t<returns_void_v<Func>, int> = 0>
 void time_function_call(Func &&f, float &time_out) {
   time_out = time_function_call(f);
 }
 
-template <typename Func, std::enable_if<returns_value_v<Func>, int> = 0>
+template <typename Func, std::enable_if_t<returns_value_v<Func>, int> = 0>
 auto time_function_call(Func &&f, float &time_out) {
   auto before = std::chrono::steady_clock::now();
   auto val = f();
@@ -36,7 +36,7 @@ auto time_function_call(Func &&f, float &time_out) {
   auto nanosec = std::chrono::duration_cast<
       std::chrono::nanoseconds>(after - before).count();
   time_out = nanosec / 1.0e9f; // convert to seconds as a float
-  return val.val();
+  return val;
 }
 
 #endif // TIME_FUNCTION_CALL_H
