@@ -7,29 +7,45 @@
 #include <functional>
 
 template <size_t _N>
-CTVoxelOctree<_N>::CTVoxelOctree() : _data(new detail::TreeNode<_N>()) {
+CTVoxelOctree<_N>::CTVoxelOctree() : _data() {
   set_xlim(0.0, 1.0);
   set_ylim(0.0, 1.0);
   set_zlim(0.0, 1.0);
 }
 
 template <size_t _N>
-CTVoxelOctree<_N>::CTVoxelOctree(const CTVoxelOctree<_N> &other) // copy
-  : _data(new detail::TreeNode<_N>(*(other._data)))
-  , _xmin(other._xmin), _xmax(other._xmax)
-  , _ymin(other._ymin), _ymax(other._ymax)
-  , _zmin(other._zmin), _zmax(other._zmax)
-  , _dx(other._dx), _dy(other._dy), _dz(other._dz)
-{}
+bool CTVoxelOctree<_N>::operator== (const CTVoxelOctree<_N> &other) const {
+  return _xmin == other._xmin
+      && _ymin == other._ymin
+      && _zmin == other._zmin
+      && _xmax == other._xmax
+      && _ymax == other._ymax
+      && _zmax == other._zmax
+      && _dx   == other._dx
+      && _dy   == other._dy
+      && _dz   == other._dz
+      && _data == other._data;
+}
 
 template <size_t _N>
-CTVoxelOctree<_N>::CTVoxelOctree(CTVoxelOctree<_N> &&other)  // move
-  : _data(std::move(other._data))
-  , _xmin(other._xmin), _xmax(other._xmax)
-  , _ymin(other._ymin), _ymax(other._ymax)
-  , _zmin(other._zmin), _zmax(other._zmax)
-  , _dx(other._dx), _dy(other._dy), _dz(other._dz)
-{}
+void CTVoxelOctree<_N>::copy_limits(const CTVoxelOctree<_N> &other) {
+  this->_xmin = other._xmin;
+  this->_xmax = other._xmax;
+  this->_ymin = other._ymin;
+  this->_ymax = other._ymax;
+  this->_zmin = other._zmin;
+  this->_zmax = other._zmax;
+  this->_dx   = other._dx;
+  this->_dy   = other._dy;
+  this->_dz   = other._dz;
+}
+
+template <size_t _N>
+CTVoxelOctree<_N> CTVoxelOctree<_N>::empty_copy() const {
+  CTVoxelOctree<_N> copy();
+  copy.copy_limits(*this);
+  return copy;
+}
 
 template <size_t _N>
 void CTVoxelOctree<_N>::set_xlim(double xmin, double xmax) {
@@ -62,31 +78,58 @@ void CTVoxelOctree<_N>::set_zlim(double zmin, double zmax) {
 }
 
 template <size_t _N>
-size_t CTVoxelOctree<_N>::nblocks() const { return _data->nblocks(); }
+void CTVoxelOctree<_N>::set_xlim(const std::pair<double, double> &lim) {
+  set_xlim(lim.first, lim.second);
+}
+
+template <size_t _N>
+void CTVoxelOctree<_N>::set_ylim(const std::pair<double, double> &lim) {
+  set_ylim(lim.first, lim.second);
+}
+
+template <size_t _N>
+void CTVoxelOctree<_N>::set_zlim(const std::pair<double, double> &lim) {
+  set_zlim(lim.first, lim.second);
+}
+
+template <size_t _N>
+size_t CTVoxelOctree<_N>::nblocks() const { return _data.nblocks(); }
+
+template <size_t _N>
+bool CTVoxelOctree<_N>::is_in_domain(double x, double y, double z) const {
+  return (_xmin <= x && x <= _xmax)
+      && (_ymin <= y && y <= _ymax)
+      && (_zmin <= z && z <= _zmax);
+}
 
 template <size_t _N>
 uint64_t CTVoxelOctree<_N>::block(size_t bx, size_t by, size_t bz) const {
-  return _data->block(bx, by, bz);
+  return _data.block(bx, by, bz);
 }
 
 template <size_t _N>
 void CTVoxelOctree<_N>::set_block(size_t bx, size_t by, size_t bz, uint64_t value) {
-  _data->set_block(bx, by, bz, value);
+  _data.set_block(bx, by, bz, value);
 }
 
 // returns old block type before unioning with value
 template <size_t _N>
 uint64_t CTVoxelOctree<_N>::union_block(size_t bx, size_t by, size_t bz, uint64_t value) {
   if (value) {
-    return _data->union_block(bx, by, bz, value);
+    return _data.union_block(bx, by, bz, value);
   } else {
-    return _data->block(bx, by, bz);
+    return _data.block(bx, by, bz);
   }
 }
 
 template <size_t _N>
 uint64_t CTVoxelOctree<_N>::intersect_block(size_t bx, size_t by, size_t bz, uint64_t value) {
-  return _data->intersect_block(bx, by, bz, value);
+  return _data.intersect_block(bx, by, bz, value);
+}
+
+template <size_t _N>
+uint64_t CTVoxelOctree<_N>::subtract_block(size_t bx, size_t by, size_t bz, uint64_t value) {
+  return _data.subtract_block(bx, by, bz, value);
 }
 
 template <size_t _N>
@@ -101,10 +144,10 @@ template <size_t _N>
 bool CTVoxelOctree<_N>::set_cell(size_t ix, size_t iy, size_t iz, bool value) {
   auto mask = bitmask(ix % 4, iy % 4, iz % 4);
   if (value) {
-    auto oldval = _data->union_block(ix / 4, iy / 4, iz / 4, mask);
+    auto oldval = _data.union_block(ix / 4, iy / 4, iz / 4, mask);
     return oldval & mask;
   } else {
-    auto oldval = _data->intersect_block(ix / 4, iy / 4, iz / 4, ~mask);
+    auto oldval = _data.intersect_block(ix / 4, iy / 4, iz / 4, ~mask);
     return oldval & ~mask;
   }
 }
@@ -242,6 +285,12 @@ void CTVoxelOctree<_N>::add_sphere(double x, double y, double z, double r) {
   //    box collides with the sphere at all.  If so, add it to the voxelization
   // TODO: implement
 }
+
+template <size_t _N>
+void CTVoxelOctree<_N>::add_voxels(const CTVoxelOctree<_N> &other) {
+  _data.union_tree(other._data);
+}
+
 template <size_t _N>
 void CTVoxelOctree<_N>::remove_interior_slow_1() {
   const CTVoxelOctree<_N> copy(*this);
@@ -275,7 +324,7 @@ void CTVoxelOctree<_N>::remove_interior_slow_1() {
  */
 template <size_t _N>
 void CTVoxelOctree<_N>::remove_interior() {
-  auto copy = std::make_unique<detail::TreeNode<_N> const>(*_data);
+  auto copy = std::make_unique<detail::TreeNode<_N> const>(_data);
 
   // iterate over copy and modify _data
   auto visitor = [this, &copy](size_t bx, size_t by, size_t bz, uint64_t old_b) {
@@ -331,21 +380,44 @@ void CTVoxelOctree<_N>::remove_interior() {
     }
 
     // store this new block
-    this->_data->set_block(bx, by, bz, new_b);
+    this->_data.set_block(bx, by, bz, new_b);
   };
-  //copy->visit_leaves(visitor);
-  copy->visit_leaves_2(visitor);
+  copy->visit_leaves(visitor);
+}
+
+template <size_t _N>
+void CTVoxelOctree<_N>::remove_point(double x, double y, double z) {
+  if (!is_in_domain(x, y, z)) { return; }
+  auto [ix, iy, iz] = find_cell(x, y, z);
+  set_cell(ix, iy, iz, false);
+}
+
+template <size_t _N>
+void CTVoxelOctree<_N>::remove_voxels(const CTVoxelOctree<_N> &other) {
+  _data.remove_tree(other._data);
+}
+
+template <size_t _N>
+void CTVoxelOctree<_N>::intersect_voxels(const CTVoxelOctree<_N> &other) {
+  _data.intersect_tree(other._data);
+}
+
+template <size_t _N>
+void CTVoxelOctree<_N>::visit_leaves(
+    const std::function<void(size_t, size_t, size_t, uint64_t)> &visitor) const
+{
+  _data.visit_leaves(visitor);
 }
 
 template <size_t _N>
 bool CTVoxelOctree<_N>::collides_check(const CTVoxelOctree<_N> &other) const {
-  limit_check(other); // significantly slows down collision checking
+  limit_check(other);
   return collides(other);
 }
 
 template <size_t _N>
 bool CTVoxelOctree<_N>::collides(const CTVoxelOctree<_N> &other) const {
-  return _data->collides(*(other._data));
+  return _data.collides(other._data);
 }
 
 // one in the given place, zeros everywhere else

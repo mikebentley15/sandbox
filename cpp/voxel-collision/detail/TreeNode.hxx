@@ -3,7 +3,9 @@
 
 #include <algorithm>
 #include <functional>
+#include <memory>
 
+#include <cstdint>
 
 namespace detail {
 
@@ -15,6 +17,40 @@ TreeNode<_Nt>::TreeNode(const TreeNode<_Nt> &other) { // copy
       _children[i] = std::make_unique<Child>(*child);
     }
   }
+}
+
+template <size_t _Nt>
+TreeNode<_Nt>& TreeNode<_Nt>::operator= (const TreeNode<_Nt> &other) { // copy
+  for (int i = 0; i < 8; ++i) {
+    auto &child = other._children[i];
+    if (child) {
+      _children[i] = std::make_unique<Child>(*child);
+    } else {
+      _children[i].reset(nullptr); // delete
+    }
+  }
+  return *this;
+}
+
+template <size_t _Nt>
+bool TreeNode<_Nt>::operator== (const TreeNode<_Nt> &other) const {
+  // first check suboccupancy
+  for (int i = 0; i < 8; i++) {
+    if (bool(_children[i]) != bool(other._children[i])) {
+      return false;
+    }
+  }
+
+  // recurse down
+  for (int i = 0; i < 8; i++) {
+    auto &a = _children[i];
+    auto &b = other._children[i];
+    if (a && b && !(*a == *b)) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 template <size_t _Nt>
@@ -38,7 +74,7 @@ template <size_t _Nt>
 uint64_t TreeNode<_Nt>::block(size_t bx, size_t by, size_t bz) const {
   const ChildPtr &child = _children[idx(bx, by, bz)];
   if (child) {
-    return child->block(bx % child_Nbt, by % child_Nbt, bz % child_Nbt);
+    return child->block(bx % child_Nbt(), by % child_Nbt(), bz % child_Nbt());
   }
   return 0;
 }
@@ -50,9 +86,52 @@ void TreeNode<_Nt>::set_block(size_t bx, size_t by, size_t bz, uint64_t value) {
     child = std::make_unique<Child>();
   }
   if (child) {
-    child->set_block(bx % child_Nbt, by % child_Nbt, bz % child_Nbt, value);
+    child->set_block(bx % child_Nbt(), by % child_Nbt(), bz % child_Nbt(), value);
     if (!value && child->is_empty()) {
       child.reset(nullptr); // delete
+    }
+  }
+}
+
+template <size_t _Nt>
+void TreeNode<_Nt>::union_tree(const TreeNode<_Nt> &other) {
+  for (int i = 0; i < 8; i++) {
+    ChildPtr &a = _children[i];
+    const ChildPtr &b = other._children[i];
+    if (a && b) {
+      a->union_tree(*b);
+    } else if (!a && b) {
+      a = std::make_unique<Child>(*b);
+    }
+  }
+}
+
+template <size_t _Nt>
+void TreeNode<_Nt>::intersect_tree(const TreeNode<_Nt> &other) {
+  for (int i = 0; i < 8; i++) {
+    ChildPtr &a = _children[i];
+    const ChildPtr &b = other._children[i];
+    if (a && b) {
+      a->intersect_tree(*b);
+      if (a->is_empty()) {
+        a.reset(nullptr); // delete to prune this part of the tree
+      }
+    } else if (a) {
+      a.reset(nullptr); // delete this subtree entirely
+    }
+  }
+}
+
+template <size_t _Nt>
+void TreeNode<_Nt>::remove_tree(const TreeNode<_Nt> &other) {
+  for (int i = 0; i < 8; i++) {
+    ChildPtr &a = _children[i];
+    const ChildPtr &b = other._children[i];
+    if (a && b) {
+      a->remove_tree(*b);
+      if (a->is_empty()) {
+        a.reset(nullptr); // delete to prune this part of the tree
+      }
     }
   }
 }
@@ -63,7 +142,8 @@ uint64_t TreeNode<_Nt>::union_block(size_t bx, size_t by, size_t bz, uint64_t va
   if (!child) {
     child = std::make_unique<Child>();
   }
-  return child->union_block(bx % child_Nbt, by % child_Nbt, bz % child_Nbt, value);
+  return child->union_block(
+      bx % child_Nbt(), by % child_Nbt(), bz % child_Nbt(), value);
 }
 
 template <size_t _Nt>
@@ -71,7 +151,7 @@ uint64_t TreeNode<_Nt>::intersect_block(size_t bx, size_t by, size_t bz, uint64_
   ChildPtr &child = _children[idx(bx, by, bz)];
   if (child) {
     auto oldval = child->intersect_block(
-        bx % child_Nbt, by % child_Nbt, bz % child_Nbt, value);
+        bx % child_Nbt(), by % child_Nbt(), bz % child_Nbt(), value);
     if (child->is_empty()) {
       child.reset(nullptr); // delete to prune this part of the tree
     }
@@ -81,7 +161,7 @@ uint64_t TreeNode<_Nt>::intersect_block(size_t bx, size_t by, size_t bz, uint64_
 }
 
 template <size_t _Nt>
-bool TreeNode<_Nt>::collides(const TreeNode<Nt> &other) const {
+bool TreeNode<_Nt>::collides(const TreeNode<_Nt> &other) const {
   for (int i = 0; i < 8; i++) {
     if (_children[i] && other._children[i]
         && _children[i]->collides(*other._children[i]))
@@ -93,55 +173,16 @@ bool TreeNode<_Nt>::collides(const TreeNode<Nt> &other) const {
 }
 
 template <size_t _Nt>
-void TreeNode<_Nt>::visit_leaves(
-    std::function<void(size_t, size_t, size_t, uint64_t)> visitor) const
-{
-  for (int i = 0; i < 8; i++) {
-    const auto &child = _children[i];
-    if (child) {
-      child->visit_leaves([i, &visitor]
-        (size_t ix, size_t iy, size_t iz, uint64_t value) {
-          visitor((_Nt/8) * (i/4) + ix,
-                  (_Nt/8) * ((i%4)/2) + iy,
-                  (_Nt/8) * (i%2) + iz,
-                  value);
-        });
-    }
-  }
-}
-
-template <size_t _Nt>
-void TreeNode<_Nt>::visit_leaves(
-    std::function<void(size_t, size_t, size_t, uint64_t&)> visitor)
-{
-  for (int i = 0; i < 8; i++) {
-    auto &child = _children[i];
-    if (child) {
-      child->visit_leaves([i, &visitor]
-        (size_t ix, size_t iy, size_t iz, uint64_t &value) {
-          visitor((_Nt/8) * (i/4) + ix,
-                  (_Nt/8) * ((i%4)/2) + iy,
-                  (_Nt/8) * (i%2) + iz,
-                  value);
-        });
-      if (child->is_empty()) {
-        child.reset(nullptr); // prune
-      }
-    }
-  }
-}
-
-template <size_t _Nt>
-void TreeNode<_Nt>::visit_leaves_2_impl(
-    std::function<void(size_t, size_t, size_t, uint64_t)> visitor,
+void TreeNode<_Nt>::visit_leaves_impl(
+    const std::function<void(size_t, size_t, size_t, uint64_t)> &visitor,
     size_t dx, size_t dy, size_t dz) const
 {
-  for (size_t bx = 0; bx < Nbt; bx += child_Nbt) {
-    for (size_t by = 0; by < Nbt; by += child_Nbt) {
-      for (size_t bz = 0; bz < Nbt; bz += child_Nbt) {
+  for (size_t bx = 0; bx < Nbt(); bx += child_Nbt()) {
+    for (size_t by = 0; by < Nbt(); by += child_Nbt()) {
+      for (size_t bz = 0; bz < Nbt(); bz += child_Nbt()) {
         auto &child = _children[idx(bx, by, bz)];
         if (child) {
-          child->visit_leaves_2_impl(visitor, dx + bx, dy + by, dz + bz);
+          child->visit_leaves_impl(visitor, dx + bx, dy + by, dz + bz);
         }
       }
     }
@@ -151,42 +192,40 @@ void TreeNode<_Nt>::visit_leaves_2_impl(
 // leaf node
 template <> class TreeNode<4> {
 public:
-  static const size_t Nt = 4;
-  static const size_t N = 64;
-  TreeNode() : _data(0) {}
-  TreeNode(const TreeNode<4> &other) : _data(other._data) {}
+  static constexpr size_t Nt() { return 4;  }
+  static constexpr size_t N()  { return 64; }
+  TreeNode() : _tree(0) {}
+  TreeNode(const TreeNode<4> &other) : _tree(other._tree) {}
+  bool operator ==(const TreeNode<4> &other) const { return _tree == other._tree; }
   size_t nblocks() const { return 1; }
-  bool is_empty() const { return !_data; }
-  uint64_t block(size_t, size_t, size_t) const { return _data; }
+  bool is_empty() const { return !_tree; }
+  uint64_t block(size_t, size_t, size_t) const { return _tree; }
+  void union_tree(const TreeNode<4> &other) { _tree |= other._tree; }
+  void intersect_tree(const TreeNode<4> &other) { _tree &= other._tree; }
+  void remove_tree(const TreeNode<4> &other) { _tree &= ~(other._tree); }
   uint64_t union_block(size_t, size_t, size_t, uint64_t value) {
-    auto prev = _data;
-    _data |= value;
+    auto prev = _tree;
+    _tree |= value;
     return prev;
   }
   uint64_t intersect_block(size_t, size_t, size_t, uint64_t value) {
-    auto prev = _data;
-    _data &= value;
+    auto prev = _tree;
+    _tree &= value;
     return prev;
   }
-  void set_block(size_t, size_t, size_t, uint64_t value) { _data = value; }
-  bool collides(const TreeNode<4> &other) const { return _data & other._data; }
-  void visit_leaves(std::function<void(size_t, size_t, size_t, uint64_t)> visitor) const {
-    visitor(0, 0, 0, _data);
+  void set_block(size_t, size_t, size_t, uint64_t value) { _tree = value; }
+  bool collides(const TreeNode<4> &other) const { return _tree & other._tree; }
+  void visit_leaves(const std::function<void(size_t, size_t, size_t, uint64_t)> &visitor) const {
+    visitor(0, 0, 0, _tree);
   }
-  void visit_leaves(std::function<void(size_t, size_t, size_t, uint64_t&)> visitor) {
-    visitor(0, 0, 0, _data);
-  }
-  void visit_leaves_2(std::function<void(size_t, size_t, size_t, uint64_t)> visitor) const {
-    visitor(0, 0, 0, _data);
-  }
-  void visit_leaves_2_impl(
-      std::function<void(size_t, size_t, size_t, uint64_t)> visitor,
+  void visit_leaves_impl(
+      const std::function<void(size_t, size_t, size_t, uint64_t)> &visitor,
       size_t dx, size_t dy, size_t dz) const
   {
-    visitor(dx, dy, dz, _data);
+    visitor(dx, dy, dz, _tree);
   }
 protected:
-  uint64_t _data;
+  uint64_t _tree;
 };
 
 } // end of namespace detail

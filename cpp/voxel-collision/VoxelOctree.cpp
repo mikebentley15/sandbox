@@ -342,7 +342,7 @@ void VoxelOctree::remove_interior() {
   };
   std::visit([&visitor] (auto &tree) {
       //tree.visit_leaves(visitor);
-      tree.visit_leaves_2(visitor);
+      tree.visit_leaves(visitor);
     }, *copy._data);
 }
 

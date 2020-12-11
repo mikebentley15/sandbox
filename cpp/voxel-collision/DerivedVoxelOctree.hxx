@@ -291,7 +291,7 @@ void DerivedVoxelOctree<_N>::remove_interior() {
     this->_data->set_block(bx, by, bz, new_b);
   };
   //copy->visit_leaves(visitor);
-  copy->visit_leaves_2(visitor);
+  copy->visit_leaves(visitor);
 }
 
 template <size_t _N>

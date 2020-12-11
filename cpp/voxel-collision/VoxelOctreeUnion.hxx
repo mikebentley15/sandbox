@@ -436,14 +436,14 @@ void VoxelOctreeUnion::remove_interior() {
   };
 
   switch (_N) {
-    case   4: tree_004.visit_leaves_2(visitor); break;
-    case   8: tree_008.visit_leaves_2(visitor); break;
-    case  16: tree_016.visit_leaves_2(visitor); break;
-    case  32: tree_032.visit_leaves_2(visitor); break;
-    case  64: tree_064.visit_leaves_2(visitor); break;
-    case 128: tree_128.visit_leaves_2(visitor); break;
-    case 256: tree_256.visit_leaves_2(visitor); break;
-    case 512: tree_512.visit_leaves_2(visitor); break;
+    case   4: tree_004.visit_leaves(visitor); break;
+    case   8: tree_008.visit_leaves(visitor); break;
+    case  16: tree_016.visit_leaves(visitor); break;
+    case  32: tree_032.visit_leaves(visitor); break;
+    case  64: tree_064.visit_leaves(visitor); break;
+    case 128: tree_128.visit_leaves(visitor); break;
+    case 256: tree_256.visit_leaves(visitor); break;
+    case 512: tree_512.visit_leaves(visitor); break;
   }
 }
 
