@@ -3,8 +3,6 @@
 
 #include "detail/TreeNode.h"
 
-#include <boost/iterator/iterator_adaptor.hpp>
-
 #include <algorithm>
 #include <functional>
 

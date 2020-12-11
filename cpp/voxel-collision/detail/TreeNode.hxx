@@ -1,8 +1,6 @@
 #ifndef TREE_NODE_HXX
 #define TREE_NODE_HXX
 
-#include <boost/iterator/iterator_adaptor.hpp>
-
 #include <algorithm>
 #include <functional>
 

@@ -1,7 +1,5 @@
 #include "VoxelOctree.h"
 
-#include <boost/iterator/iterator_adaptor.hpp>
-
 #include <algorithm>
 #include <functional>
 #include <type_traits>  // for std::decay_t()
