@@ -4,7 +4,7 @@
 line_width = 0.04;
 
 // Layer height being used for the slice
-layer_height = 0.02;
+layer_height = 0.01;
 
 
 /* [Model Settings] */
@@ -16,24 +16,24 @@ part = "nothing"; // ["nothing", "ball", "socket", "all"]
 magnet_size = 1.0;
 
 // screw radius
-screw_radius = 0.7;
+screw_radius = 1.59;
+
+// piece radius, the actual printed piece
+piece_radius = 0.8;
 
 // ball radius
-ball = 0.45;
+ball = 0.55;
 
 // rod radius
-rod_radius = 0.2;
+rod_radius = 0.234;
 
 // length of the rod from the joint socket
-rod_length = 3;
+rod_length = 1;
 
 /* [Advanced Settings] */
 
 // clearance for fitting together (e.g., for the socket joint)
-clearance = 0.08;
-
-// Extra length when making holes
-eps = 0.002;
+clearance = 0.13;
 
 // number of faces for spheres and cylinders
 num_curved_faces = 100;
@@ -56,7 +56,7 @@ if (part == "ball") {
       //#magnet();
       //#screw();
     }
-  //  mov_z(-10) cube(20);
+  //  mov_xz(-10, -10) cube(20);
   //}
 }
 
@@ -65,8 +65,8 @@ module ball(grow_by = 0) {
   b = ball;
   c = sqrt(b*b - a*a);
   union() {
-    mov_z(magnet_size + 2*b - c + clearance) sphere(b + grow_by);
-    mov_z(magnet_size + b) cylinder(r=a, h=rod_length);
+    mov_z(magnet_size + b - c + clearance/2) sphere(b + grow_by);
+    mov_z(magnet_size + b) cylinder(r=a, h=rod_length + rod_radius);
   }
 }
 
@@ -74,7 +74,7 @@ module socket() {
   size = magnet_size;
   difference() {
     mov_z(-magnet_size + clearance)
-      cylinder(r=screw_radius, h=magnet_size*2 + ball*2 - clearance);
+      cylinder(r=piece_radius, h=magnet_size*2 + ball - clearance);
     magnet(clearance);
     ball(clearance);
   }
@@ -86,7 +86,7 @@ module socket() {
           square([magnet_size * 2, magnet_size / 3], center=true);
           square([magnet_size / 3, magnet_size * 2], center=true);
         }
-        circle(screw_radius);
+        circle(piece_radius);
       }
     }
 }
