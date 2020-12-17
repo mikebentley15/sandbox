@@ -38,26 +38,38 @@ clearance = 0.13;
 // number of faces for spheres and cylinders
 num_curved_faces = 100;
 
+// show cross section
+cross_section = false;
+
 
 
 use <./helpers.scad>
 
 $fn = num_curved_faces;
 
-if (part == "ball") {
-  ball();
-} else if (part == "socket") {
-  socket();
-} else if (part == "all") {
-  //intersection() {
+
+if (cross_section) {
+  intersection() {
+    thing();
+    mov_xz(-5, -5) cube(10);
+  }
+} else {
+  thing();
+}
+
+module thing() {
+  if (part == "ball") {
+    ball();
+  } else if (part == "socket") {
+    socket();
+  } else if (part == "all") {
     union() {
       ball();
       socket();
       //#magnet();
       //#screw();
     }
-  //  mov_xz(-10, -10) cube(20);
-  //}
+  }
 }
 
 module ball(grow_by = 0) {
