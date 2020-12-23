@@ -10,13 +10,13 @@ layer_height = 0.2;
 /* [Cookie Settings] */
 
 // Scale
-svg_scale = 0.555;
+svg_scale = 1.0;
 
 // Outline of the cookie cutter
 outline_file = "outline.svg";
 
 // height of the cookie outline piece
-outline_height = 20.0;
+outline_height = 17.0;
 
 // use the decals_file
 use_decals = true;
@@ -25,7 +25,7 @@ use_decals = true;
 decals_file = "decals.svg";
 
 // height of the decals piece (shorter than outline height)
-decals_height = 15.0;
+decals_height = 14.0;
 
 // use the backing_file
 use_backing = true;
@@ -52,10 +52,13 @@ union() {
   }
 
   if (use_backing) {
-    difference() {
-      linear_extrude(backing_height) svg(backing_file);
+    linear_extrude(backing_height)
+    intersection() {
+      svg(backing_file);
       scale([svg_scale, svg_scale, 1.0])
-        translate([90, 60, -1]) cylinder(r=18, h=10, $fn=200);
+        mov_x(65) square([25, 1000]);
+      //scale([svg_scale, svg_scale, 1.0])
+      //  translate([90, 60, -1]) circle(18, $fn=200);
     }
   }
 
