@@ -12,10 +12,6 @@ using return_type_t = typename return_type<Func>::type;
 template <typename Func>
 struct returns_void : std::is_void<return_type_t<Func>> { };
 
-//template <typename Func>
-//struct returns_void :
-//  public std::is_void<std::decay<decltype(std::declval<Func>()())>> { };
-
 template <typename Func>
 inline constexpr bool returns_value_v = ! returns_void<Func>::value;
 
