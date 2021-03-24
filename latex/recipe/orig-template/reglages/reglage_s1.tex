@@ -1,0 +1,97 @@
+\makeatletter
+\newcommand{\PrepTime}[1]{\def\@PrepTime{#1\xspace}
+\def\PrepTimeb{#1}}
+\newcommand{\CookingTime}[1]{\def\@CookingTime{#1\xspace}}
+\newcommand{\CookingTempe}[1]{\def\@CookingTempe{#1}}
+\newcommand{\TypeCooking}[1]{\def\@TypeCooking{#1}}
+\newcommand{\NbPerson}[1]{\def\@NbPerson{#1\xspace}}
+\newcommand{\Image}[2]{\def\@ImageDim{#1} \def\@ImagePath{#2}}
+\def\maketitle{%
+
+\vspace{0cm}
+\begin{center}
+{\Huge \@title}
+\end{center}
+}
+
+\newenvironment{ingredient}
+  {\noindent\begingroup\edef\x{\endgroup\noexpand\includegraphics[width=1\linewidth,height=2.5cm,clip,viewport=\@ImageDim]{\@ImagePath}}\x
+  \maketitle
+  
+  \begin{footnotesize}\noindent\begin{tabular}{|L{0.62\linewidth}|L{0.33\linewidth}|}\hline\vspace{-0.21cm}\underline{\textbf{{\normalsize Ingredients (\@NbPerson persons):}}} &\\
+  \begin{minipage}{\linewidth}
+  \vspace{0.2cm}
+  }
+  {\vspace{-0.2cm}
+  \end{minipage}& \vspace{-1.8cm}Preparation time: \begin{tikzpicture}
+  \pgfmathsetmacro{\timeor}{\PrepTimeb}
+  \ifthenelse{\timeor>60}{
+  \pgfmathsetmacro{\timeorb}{90-(\PrepTimeb-60)/60*360}
+  \fill[orange] (0,0.55) arc(90:-270:0.55)      -- ++(-270:-0.55)
+  arc(-270:0:0)    -- cycle;
+  \fill[green] (0,0.55) arc(90:\timeorb:0.55)      -- ++(\timeorb:-0.55)
+  arc(\timeorb:0:0)    -- cycle;
+  }{
+  \pgfmathsetmacro{\timeorb}{90-(\PrepTimeb)/60*360}
+  \fill[orange] (0,0.55) arc(90:\timeorb:0.55)      -- ++(\timeorb:-0.55)
+  arc(\timeorb:0:0)    -- cycle;
+  }
+  \node[fill=white,inner sep=0pt] at (0,0) {{\tiny \PrepTimeb~min}};
+  \fill[black!50,even odd rule] (0,0) circle(0.65) circle(0.6);
+  \fill[black!50,even odd rule] (0,0.5) circle(0.05);
+  \fill[black!50,even odd rule] (0.5,0) circle(0.05);
+  \fill[black!50,even odd rule] (0,-0.5) circle(0.05);
+  \fill[black!50,even odd rule] (-0.5,0) circle(0.05);
+  \end{tikzpicture} \par
+  \vspace{0.2cm} Cooking: \@CookingTime min -- \@CookingTempe° \par \vspace{0.2cm} Type of cooking: \@TypeCooking \\\hline\end{tabular}\vspace{0.5cm} \end{footnotesize}}
+
+
+\newenvironment{main}
+  {\begin{multicols}{2}
+  \begin{itemize}[label=$$]
+  }
+  {\end{itemize}\end{multicols}}
+  
+\newenvironment{subingredient}[1]
+{\vspace{-0.3cm}\hspace{0.5cm}\underline{#1:}
+\vspace{-0.3cm}\begin{multicols}{2}
+\begin{itemize}[label=$$]
+}
+{\end{itemize}\end{multicols}}
+
+
+\newenvironment{recipe}
+{
+
+}
+{}
+\makeatother
+
+%-----------------------------------------
+%nouveau environnements
+
+\newenvironment{notes}
+{\vfill\def\FrameCommand{\fboxsep=\FrameSep\fcolorbox{black}{white}}%
+\MakeFramed {\advance\hsize-\width \FrameRestore}
+\noindent\underline{\textbf{Notes and tips:}}%
+
+\vspace{0.25cm}
+\noindent\hspace{-0.15cm}}
+{\vspace{2.5cm}\endMakeFramed}
+  
+  
+\newcommand{\step}[1]{\ifthenelse{\value{step}=0}{\noindent{\large \underline{\textbf{Preparation:}}}\vspace{0.3cm}
+
+}{}
+\noindent\stepcounter{step}\setcounter{substep}{0}\the\value{step}. #1\vspace{0.3cm}
+
+} 
+
+\newcommand{\substep}[2][1]{\ifthenelse{\value{substep}=0}{\noindent\stepcounter{step}\the\value{step}. \underline{\textbf{#1:}}\vspace{0.3cm}
+
+}{}
+\hspace{0.3cm}\begin{minipage}{0.948\textwidth}
+\noindent\stepcounter{substep}\roman{substep}. #2\vspace{0.5cm}
+\end{minipage}
+
+}   
