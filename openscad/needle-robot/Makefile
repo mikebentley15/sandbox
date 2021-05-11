@@ -1,0 +1,23 @@
+SCAD_FILE       = needle-robot.scad
+SCAD_INCLUDES   = helpers.scad
+SCAD_INCLUDES  += screwlib.scad
+MODELS         :=
+MODELS         += all.stl
+MODELS         += base.stl
+MODELS         += force-sensor.stl
+MODELS         += motor.stl
+MODELS         += 3dprinted-bracket-1.stl
+MODELS         += 3dprinted-bracket-2.stl
+OPENSCAD_VARS   =
+
+HOME            = $(PWD)
+
+.PHONY: all
+all: ${MODELS}
+
+%.stl: ${SCAD_FILE} ${SCAD_INCLUDES}
+	openscad -o $*.stl ${OPENSCAD_VARS} -D 'part="$*"' ${SCAD_FILE}
+
+.PHONY: clean
+clean:
+	$(RM) ${MODELS}
