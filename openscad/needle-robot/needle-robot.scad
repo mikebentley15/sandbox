@@ -148,6 +148,7 @@ if (part == "all") {
   mounted_force_sensor();
   mounted_motor();
   printed_bracket_1();
+  printed_bracket_1_screws();
 }
 
 if (part == "3dprinted-bracket-1") {
@@ -780,7 +781,9 @@ module printed_bracket_1() {
           h = printed_bracket_1_depth + 2 * eps
         );
   }
+}
 
+module printed_bracket_1_screws() {
   //
   // screws mounting to brackets and motor
   //
