@@ -30,6 +30,11 @@ sensor_mount_sensor_wall_slit_width =  8;
 
 /* [Printed L-Binder] */
 
+L_binder_width             = 10;
+L_binder_bracket_clearance = 0.3;
+L_binder_wall_thickness    = 2;
+
+
 /* [Printed Bearing Mount] */
 
 /* [Printed Motor Prismatic Coupler] */
@@ -227,6 +232,7 @@ if (part == "all") {
   mounted_sensor_mount();
   sensor_mount_screws();
   mounted_force_sensor();
+  mounted_L_binders();
 }
 
 if (part == "motor-mount") {
@@ -238,7 +244,7 @@ if (part == "sensor-mount") {
 }
 
 if (part == "L-bind") {
-
+  L_binder();
 }
 
 if (part == "bearing-mount") {
@@ -932,4 +938,44 @@ module sensor_mount_screws() {
         rot_z(30)
         M5_nut();
     }
+}
+
+module mounted_L_binders() {
+  translate([
+      platform_width / 2,
+      platform_depth / 2,
+      platform_height
+        + L_bracket_thickness
+    ])
+    dupe_x((platform_width + L_binder_width) / 2)
+    L_binder();
+}
+
+module L_binder() {
+  L_binder_depth =
+      2 * L_bracket_width
+        + 2 * L_binder_bracket_clearance
+        + L_bracket_inbetween_space
+        + 2 * L_binder_wall_thickness;
+  L_binder_height =
+      2 * L_bracket_thickness
+        + 2 * L_binder_bracket_clearance
+        + 2 * L_binder_wall_thickness;
+  color(printed_color_1)
+  difference() {
+    cube([
+        L_binder_width,
+        L_binder_depth,
+        L_binder_height
+      ], center=true);
+    dupe_y(L_bracket_width/2
+           + L_bracket_inbetween_space/2)
+      cube([
+          L_binder_width + 2*eps,
+          L_bracket_width
+            + 2 * L_binder_bracket_clearance,
+          2 * L_bracket_thickness
+            + 2 * L_binder_bracket_clearance
+        ], center=true);
+  }
 }
