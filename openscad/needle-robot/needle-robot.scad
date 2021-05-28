@@ -1,7 +1,40 @@
 /* [General Settings] */
 
 // Which model to render
-part = "all"; // ["all", "printed-1", "printed-2", "printed-3", "printed-4"]
+part = "all"; // ["all", "motor-mount", "sensor-mount", "L-bind", "bearing-mount", "motor-prismatic-coupler", "needle-prismatic-coupler"]
+
+
+/* [Printed Motor Mount] */
+
+motor_mount_front_buffer      = 4;
+motor_mount_depth_buffer      = 5;
+motor_mount_height            = 50;
+motor_mount_shaft_clearance   = 1;
+motor_mount_bracket_clearance = 0.3;
+motor_mount_screw_clearance   = 0.3;
+
+
+/* [Printed Sensor Mount] */
+
+sensor_mount_height                 = 28;
+sensor_mount_depth_buffer           =  5;
+sensor_mount_width_buffer           =  4;
+sensor_mount_bracket_clearance      =  0.3;
+sensor_mount_screw_clearance        =  0.3;
+sensor_mount_screw_size             =  5;
+sensor_mount_nut_depth              =  2;
+sensor_mount_sensor_clearance       =  0.4;
+sensor_mount_sensor_wall            =  3;
+sensor_mount_sensor_wall_slit_width =  8;
+
+
+/* [Printed L-Binder] */
+
+/* [Printed Bearing Mount] */
+
+/* [Printed Motor Prismatic Coupler] */
+
+/* [Printed Needle Prismatic Coupler] */
 
 
 /* [Platform] */
@@ -32,6 +65,28 @@ L_bracket_bottom_slit_length = 70;
 L_bracket_side_slit_length   = 90;
 
 
+/* [Motor] */
+
+motor_length = 48;
+motor_depth  = 42;
+motor_height = 42;
+
+motor_cylinder_length     = 2;
+motor_cylinder_diameter   = 22;
+motor_shaft_length        = 24;
+motor_shaft_diameter      = 5;
+motor_shaft_cutout_length = 15;
+motor_shaft_cutout_height = 4.5;
+
+motor_screw_size          = 4;
+motor_screw_depth         = 4.5;
+motor_screw_side_distance = 5.5;
+motor_screw_top_distance  = 5.5;
+
+motor_mount_x_buffer      = 20;
+motor_z_offset      = 20;
+
+
 /* [Force Sensor] */
 
 sensor_height    = 80;
@@ -53,50 +108,12 @@ sensor_top_screw_offset_1     = 5;
 sensor_top_screw_offset_2     = 20;
 
 
-/* [Motor] */
+/* [Bearing] */
 
-motor_length = 48;
-motor_depth  = 42;
-motor_height = 42;
-
-motor_cylinder_length     = 2;
-motor_cylinder_diameter   = 22;
-motor_shaft_length        = 24;
-motor_shaft_diameter      = 5;
-motor_shaft_cutout_length = 15;
-motor_shaft_cutout_height = 4.5;
-
-motor_screw_size          = 4;
-motor_screw_depth         = 4.5;
-motor_screw_side_distance = 5.5;
-motor_screw_top_distance  = 5.5;
-
-motor_mount_x_buffer      = 20;
-motor_mount_z_offset      = 20;
-
-
-/* [Printed Bracket 1] */
-
-printed_bracket_1_front_buffer      = 4;
-printed_bracket_1_depth_buffer      = 5;
-printed_bracket_1_height            = 50;
-printed_bracket_1_shaft_clearance   = 1;
-printed_bracket_1_bracket_clearance = 0.3;
-printed_bracket_1_screw_clearance   = 0.3;
-
-
-/* [Printed Bracket 2] */
-
-printed_bracket_2_height                 = 28;
-printed_bracket_2_depth_buffer           =  5;
-printed_bracket_2_width_buffer           =  4;
-printed_bracket_2_bracket_clearance      =  0.3;
-printed_bracket_2_screw_clearance        =  0.3;
-printed_bracket_2_screw_size             =  5;
-printed_bracket_2_nut_depth              =  2;
-printed_bracket_2_sensor_clearance       =  0.4;
-printed_bracket_2_sensor_wall            =  3;
-printed_bracket_2_sensor_wall_slit_width =  8;
+// TODO: measure and fill in
+bearing_outer_diameter = 10;
+bearing_inner_diameter =  5;
+bearing_thickness      =  5;
 
 
 /* [General Print Settings] */
@@ -152,17 +169,17 @@ motor_z_mount =
       - motor_screw_top_distance
       + motor_screw_size / 2
       - L_bracket_side_slit_length
-      + motor_mount_z_offset;
+      + motor_z_offset;
 
-printed_bracket_1_depth =
+motor_mount_depth =
     motor_cylinder_length
       + L_bracket_thickness
-      + printed_bracket_1_front_buffer;
+      + motor_mount_front_buffer;
 
-printed_bracket_1_width =
+motor_mount_width =
     platform_depth
       + 2 * bracket_depth_overhang
-      + 2 * printed_bracket_1_depth_buffer;
+      + 2 * motor_mount_depth_buffer;
 
 L_bracket_inbetween_space =
     platform_depth
@@ -176,18 +193,18 @@ L_bracket_right_slit_z_bottom =
       - L_bracket_slit_end_distance
       - L_bracket_side_slit_length;
 
-printed_bracket_2_thickness =
+sensor_mount_thickness =
     L_bracket_thickness
-      + 2 * printed_bracket_2_width_buffer
-      + 2 * printed_bracket_2_bracket_clearance;
+      + 2 * sensor_mount_width_buffer
+      + 2 * sensor_mount_bracket_clearance;
 
-printed_bracket_2_width =
+sensor_mount_width =
     2 * L_bracket_width
-      + 2 * printed_bracket_2_depth_buffer
-      + 2 * printed_bracket_2_bracket_clearance
+      + 2 * sensor_mount_depth_buffer
+      + 2 * sensor_mount_bracket_clearance
       + L_bracket_inbetween_space;
 
-printed_bracket_2_screw_distance =
+sensor_mount_screw_distance =
     sensor_bottom_screw_offset_2
       - sensor_bottom_screw_offset_1;
 
@@ -196,26 +213,34 @@ if (part == "all") {
   platform();
   mounted_L_brackets();
   mounted_motor();
-  mounted_printed_bracket_1();
-  printed_bracket_1_screws();
-  mounted_printed_bracket_2();
-  printed_bracket_2_screws();
+  mounted_motor_mount();
+  motor_mount_screws();
+  mounted_sensor_mount();
+  sensor_mount_screws();
   mounted_force_sensor();
 }
 
-if (part == "printed-1") {
-  printed_bracket_1(sacrificial_bridging=sacrificial_bridging);
+if (part == "motor-mount") {
+  motor_mount(sacrificial_bridging=sacrificial_bridging);
 }
 
-if (part == "printed-2") {
-  printed_bracket_2(sacrificial_bridging=sacrificial_bridging);
+if (part == "sensor-mount") {
+  sensor_mount(sacrificial_bridging=sacrificial_bridging);
 }
 
-if (part == "printed-3") {
+if (part == "L-bind") {
 
 }
 
-if (part == "printed-4") {
+if (part == "bearing-mount") {
+
+}
+
+if (part == "motor-prismatic-coupler") {
+
+}
+
+if (part == "needle-prismatic-coupler") {
 
 }
 
@@ -538,8 +563,8 @@ module mounted_force_sensor() {
       L_bracket_length
         + bracket_x_mount
         - sensor_width
-        - printed_bracket_2_width_buffer
-        - printed_bracket_2_bracket_clearance,
+        - sensor_mount_width_buffer
+        - sensor_mount_bracket_clearance,
       platform_top_screw_depth_side_distance
         - sensor_width / 2,
       L_bracket_right_slit_z_bottom
@@ -710,169 +735,169 @@ module motor() {
   }
 }
 
-module mounted_printed_bracket_1() {
+module mounted_motor_mount() {
   translate([
       bracket_x_mount
         - motor_cylinder_length,
       platform_depth / 2
-        - printed_bracket_1_width / 2,
+        - motor_mount_width / 2,
       motor_z_mount
-        - printed_bracket_1_height / 2
+        - motor_mount_height / 2
         + motor_height / 2
     ])
-    printed_bracket_1(sacrificial_bridging=false);
+    motor_mount(sacrificial_bridging=false);
 }
 
-module printed_bracket_1(sacrificial_bridging=false) {
+module motor_mount(sacrificial_bridging=false) {
   color(printed_color_1)
   union() {
-    if (sacrificial_bridging) { printed_bracket_1_sacrificial_bridging(); }
+    if (sacrificial_bridging) { motor_mount_sacrificial_bridging(); }
     difference() {
       // main body
       cube([
-          printed_bracket_1_depth,
-          printed_bracket_1_width,
-          printed_bracket_1_height
+          motor_mount_depth,
+          motor_mount_width,
+          motor_mount_height
         ]);
 
       // shaft hole
       translate([
           -eps,
-          printed_bracket_1_width / 2,
-          printed_bracket_1_height / 2
+          motor_mount_width / 2,
+          motor_mount_height / 2
         ])
         rot_y(90)
         cylinder(
-            r = motor_shaft_diameter / 2 + printed_bracket_1_shaft_clearance,
-            h = printed_bracket_1_depth + 2 * eps
+            r = motor_shaft_diameter / 2 + motor_mount_shaft_clearance,
+            h = motor_mount_depth + 2 * eps
           );
 
       // motor cylinder slide in
       translate([
           -eps,
-          printed_bracket_1_width / 2,
-          printed_bracket_1_height / 2
+          motor_mount_width / 2,
+          motor_mount_height / 2
         ])
         rot_y(90)
         cylinder(
-            r = motor_cylinder_diameter / 2 + printed_bracket_1_shaft_clearance,
+            r = motor_cylinder_diameter / 2 + motor_mount_shaft_clearance,
             h = motor_cylinder_length + eps
           );
 
       // bracket slide-in holes
       translate([
           motor_cylinder_length
-            - printed_bracket_1_bracket_clearance,
-          printed_bracket_1_depth_buffer
-            - printed_bracket_1_bracket_clearance,
+            - motor_mount_bracket_clearance,
+          motor_mount_depth_buffer
+            - motor_mount_bracket_clearance,
           - eps
         ])
         cube([
-            L_bracket_thickness + 2 * printed_bracket_1_bracket_clearance,
-            L_bracket_width + 2 * printed_bracket_1_bracket_clearance,
-            printed_bracket_1_height + 2 * eps
+            L_bracket_thickness + 2 * motor_mount_bracket_clearance,
+            L_bracket_width + 2 * motor_mount_bracket_clearance,
+            motor_mount_height + 2 * eps
           ]);
       translate([
           motor_cylinder_length
-            - printed_bracket_1_bracket_clearance,
-          printed_bracket_1_width
-            - printed_bracket_1_depth_buffer
+            - motor_mount_bracket_clearance,
+          motor_mount_width
+            - motor_mount_depth_buffer
             - L_bracket_width
-            - printed_bracket_1_bracket_clearance,
+            - motor_mount_bracket_clearance,
           - eps
         ])
         cube([
-            L_bracket_thickness + 2 * printed_bracket_1_bracket_clearance,
-            L_bracket_width + 2 * printed_bracket_1_bracket_clearance,
-            printed_bracket_1_height + 2 * eps
+            L_bracket_thickness + 2 * motor_mount_bracket_clearance,
+            L_bracket_width + 2 * motor_mount_bracket_clearance,
+            motor_mount_height + 2 * eps
           ]);
 
       // screw_holes
       translate([
           -eps,
-          printed_bracket_1_width / 2
+          motor_mount_width / 2
             - motor_depth / 2
             + motor_screw_side_distance,
-          printed_bracket_1_height / 2
+          motor_mount_height / 2
             - motor_height / 2
             + motor_screw_top_distance
         ])
         rot_y(90)
         cylinder(
             r = motor_screw_size / 2
-                + printed_bracket_1_screw_clearance,
-            h = printed_bracket_1_depth + 2 * eps
+                + motor_mount_screw_clearance,
+            h = motor_mount_depth + 2 * eps
           );
       translate([
           -eps,
-          printed_bracket_1_width / 2
+          motor_mount_width / 2
             + motor_depth / 2
             - motor_screw_side_distance,
-          printed_bracket_1_height / 2
+          motor_mount_height / 2
             - motor_height / 2
             + motor_screw_top_distance
         ])
         rot_y(90)
         cylinder(
             r = motor_screw_size / 2
-                + printed_bracket_1_screw_clearance,
-            h = printed_bracket_1_depth + 2 * eps
+                + motor_mount_screw_clearance,
+            h = motor_mount_depth + 2 * eps
           );
       translate([
           -eps,
-          printed_bracket_1_width / 2
+          motor_mount_width / 2
             - motor_depth / 2
             + motor_screw_side_distance,
-          printed_bracket_1_height / 2
+          motor_mount_height / 2
             + motor_height / 2
             - motor_screw_top_distance
         ])
         rot_y(90)
         cylinder(
             r = motor_screw_size / 2
-                + printed_bracket_1_screw_clearance,
-            h = printed_bracket_1_depth + 2 * eps
+                + motor_mount_screw_clearance,
+            h = motor_mount_depth + 2 * eps
           );
       translate([
           -eps,
-          printed_bracket_1_width / 2
+          motor_mount_width / 2
             + motor_depth / 2
             - motor_screw_side_distance,
-          printed_bracket_1_height / 2
+          motor_mount_height / 2
             + motor_height / 2
             - motor_screw_top_distance
         ])
         rot_y(90)
         cylinder(
             r = motor_screw_size / 2
-                + printed_bracket_1_screw_clearance,
-            h = printed_bracket_1_depth + 2 * eps
+                + motor_mount_screw_clearance,
+            h = motor_mount_depth + 2 * eps
           );
     }
   }
 }
 
-module printed_bracket_1_sacrificial_bridging() {
+module motor_mount_sacrificial_bridging() {
   screw_effective_diameter = motor_screw_size
-        + 2 * printed_bracket_1_screw_clearance;
+        + 2 * motor_mount_screw_clearance;
   L_bracket_clearance_x_offset =
       motor_cylinder_length
       + L_bracket_thickness
-      + printed_bracket_1_bracket_clearance;
+      + motor_mount_bracket_clearance;
 
   // at the end of the motor cylinder
   translate([
     layer_height / 2
       + motor_cylinder_length,
-    printed_bracket_1_width / 2,
-    printed_bracket_1_height / 2
+    motor_mount_width / 2,
+    motor_mount_height / 2
     ])
     cube([
       layer_height,
       L_bracket_inbetween_space
-        - 2 * printed_bracket_1_bracket_clearance,
+        - 2 * motor_mount_bracket_clearance,
       motor_shaft_diameter
-        + 2 * printed_bracket_1_shaft_clearance
+        + 2 * motor_mount_shaft_clearance
         + 2 * eps
       ],
       center=true);
@@ -880,16 +905,16 @@ module printed_bracket_1_sacrificial_bridging() {
   // end of L-bracket slide-in hole, for the shaft hole
   translate([
     layer_height / 2 + L_bracket_clearance_x_offset,
-    printed_bracket_1_width / 2,
-    printed_bracket_1_height / 2
+    motor_mount_width / 2,
+    motor_mount_height / 2
     ])
     cube([
       layer_height,
       motor_shaft_diameter
-        + 2 * printed_bracket_1_shaft_clearance
+        + 2 * motor_mount_shaft_clearance
         + 2 * eps,
       motor_shaft_diameter
-        + 2 * printed_bracket_1_shaft_clearance
+        + 2 * motor_mount_shaft_clearance
         + 2 * eps
       ],
       center=true);
@@ -898,12 +923,12 @@ module printed_bracket_1_sacrificial_bridging() {
   translate([L_bracket_clearance_x_offset, 0, 0])
     cube([
       layer_height,
-      printed_bracket_1_width,
-      printed_bracket_1_height
+      motor_mount_width,
+      motor_mount_height
       ]);
 }
 
-module printed_bracket_1_screws() {
+module motor_mount_screws() {
   //
   // screws mounting to brackets and motor
   //
@@ -913,7 +938,7 @@ module printed_bracket_1_screws() {
   translate([
       bracket_x_mount
         - motor_cylinder_length
-        + printed_bracket_1_depth,
+        + motor_mount_depth,
       platform_depth / 2
         - motor_depth / 2
         + motor_screw_side_distance,
@@ -926,7 +951,7 @@ module printed_bracket_1_screws() {
   translate([
       bracket_x_mount
         - motor_cylinder_length
-        + printed_bracket_1_depth
+        + motor_mount_depth
         + washer_thickness
         + screw_head_height,
       platform_depth / 2
@@ -943,7 +968,7 @@ module printed_bracket_1_screws() {
   translate([
       bracket_x_mount
         - motor_cylinder_length
-        + printed_bracket_1_depth,
+        + motor_mount_depth,
       platform_depth / 2
         + motor_depth / 2
         - motor_screw_side_distance,
@@ -956,7 +981,7 @@ module printed_bracket_1_screws() {
   translate([
       bracket_x_mount
         - motor_cylinder_length
-        + printed_bracket_1_depth
+        + motor_mount_depth
         + washer_thickness
         + screw_head_height,
       platform_depth / 2
@@ -973,7 +998,7 @@ module printed_bracket_1_screws() {
   translate([
       bracket_x_mount
         - motor_cylinder_length
-        + printed_bracket_1_depth,
+        + motor_mount_depth,
       platform_depth / 2
         - motor_depth / 2
         + motor_screw_side_distance,
@@ -987,7 +1012,7 @@ module printed_bracket_1_screws() {
   translate([
       bracket_x_mount
         - motor_cylinder_length
-        + printed_bracket_1_depth
+        + motor_mount_depth
         + washer_thickness
         + screw_head_height,
       platform_depth / 2
@@ -1005,7 +1030,7 @@ module printed_bracket_1_screws() {
   translate([
       bracket_x_mount
         - motor_cylinder_length
-        + printed_bracket_1_depth,
+        + motor_mount_depth,
       platform_depth / 2
         + motor_depth / 2
         - motor_screw_side_distance,
@@ -1019,7 +1044,7 @@ module printed_bracket_1_screws() {
   translate([
       bracket_x_mount
         - motor_cylinder_length
-        + printed_bracket_1_depth
+        + motor_mount_depth
         + washer_thickness
         + screw_head_height,
       platform_depth / 2
@@ -1033,7 +1058,7 @@ module printed_bracket_1_screws() {
     M4(20);
 }
 
-module mounted_printed_bracket_2() {
+module mounted_sensor_mount() {
   translate([
       L_bracket_length
         + bracket_x_mount,
@@ -1041,58 +1066,58 @@ module mounted_printed_bracket_2() {
         - L_bracket_width / 2,
       // line up the bottom screw hole with the bottom of the L-bracket slit
       L_bracket_right_slit_z_bottom
-        - printed_bracket_2_height / 2
-        + printed_bracket_2_screw_distance / 2
-        + printed_bracket_2_screw_size / 2
-        + printed_bracket_2_screw_clearance
+        - sensor_mount_height / 2
+        + sensor_mount_screw_distance / 2
+        + sensor_mount_screw_size / 2
+        + sensor_mount_screw_clearance
     ])
-    printed_bracket_2();
+    sensor_mount();
 }
 
-module printed_bracket_2(sacrificial_bridging=false) {
+module sensor_mount(sacrificial_bridging=false) {
   color(printed_color_1)
   union() {
     difference() {
       // main body
       translate([
-          - printed_bracket_2_width_buffer
-            - printed_bracket_2_bracket_clearance,
-          - printed_bracket_2_depth_buffer
-            - printed_bracket_2_bracket_clearance,
+          - sensor_mount_width_buffer
+            - sensor_mount_bracket_clearance,
+          - sensor_mount_depth_buffer
+            - sensor_mount_bracket_clearance,
           0
         ])
         cube([
-            printed_bracket_2_thickness,
-            printed_bracket_2_width,
-            printed_bracket_2_height
+            sensor_mount_thickness,
+            sensor_mount_width,
+            sensor_mount_height
           ]);
 
       // L-bracket slide holes
       translate([
-          - printed_bracket_2_bracket_clearance,
-          - printed_bracket_2_bracket_clearance,
+          - sensor_mount_bracket_clearance,
+          - sensor_mount_bracket_clearance,
           - eps])
         cube([
             L_bracket_thickness
-              + 2 * printed_bracket_2_bracket_clearance,
+              + 2 * sensor_mount_bracket_clearance,
             L_bracket_width
-              + 2 * printed_bracket_2_bracket_clearance,
-            printed_bracket_2_height
+              + 2 * sensor_mount_bracket_clearance,
+            sensor_mount_height
               + 2 * eps
           ]);
       translate([
-          - printed_bracket_2_bracket_clearance,
+          - sensor_mount_bracket_clearance,
           L_bracket_width
             + L_bracket_inbetween_space
-            - printed_bracket_2_bracket_clearance,
+            - sensor_mount_bracket_clearance,
           -eps
         ])
         cube([
             L_bracket_thickness
-              + 2 * printed_bracket_2_bracket_clearance,
+              + 2 * sensor_mount_bracket_clearance,
             L_bracket_width
-              + 2 * printed_bracket_2_bracket_clearance,
-            printed_bracket_2_height
+              + 2 * sensor_mount_bracket_clearance,
+            sensor_mount_height
               + 2 * eps
           ]);
 
@@ -1100,62 +1125,62 @@ module printed_bracket_2(sacrificial_bridging=false) {
       translate([
           L_bracket_thickness / 2,
           L_bracket_width / 2,
-          printed_bracket_2_height / 2
-            + printed_bracket_2_screw_distance / 2
+          sensor_mount_height / 2
+            + sensor_mount_screw_distance / 2
         ])
         rot_y(90)
           cylinder(
-              h=printed_bracket_2_thickness + 2*eps,
-              r=printed_bracket_2_screw_size/2
-                + printed_bracket_2_screw_clearance,
+              h=sensor_mount_thickness + 2*eps,
+              r=sensor_mount_screw_size/2
+                + sensor_mount_screw_clearance,
               center=true
             );
-        //printed_bracket_2_screw_hole_and_nut();
+        //sensor_mount_screw_hole_and_nut();
       translate([
           L_bracket_thickness / 2,
           L_bracket_width / 2,
-          printed_bracket_2_height / 2
-            - printed_bracket_2_screw_distance / 2
+          sensor_mount_height / 2
+            - sensor_mount_screw_distance / 2
         ])
         rot_y(90)
           cylinder(
-              h=printed_bracket_2_thickness + 2*eps,
-              r=printed_bracket_2_screw_size/2
-                + printed_bracket_2_screw_clearance,
+              h=sensor_mount_thickness + 2*eps,
+              r=sensor_mount_screw_size/2
+                + sensor_mount_screw_clearance,
               center=true
             );
-        //printed_bracket_2_screw_hole_and_nut();
+        //sensor_mount_screw_hole_and_nut();
       translate([
           L_bracket_thickness / 2,
           3 * L_bracket_width / 2
-            + printed_bracket_2_bracket_clearance
+            + sensor_mount_bracket_clearance
             + L_bracket_inbetween_space,
-          printed_bracket_2_height / 2
-            + printed_bracket_2_screw_distance / 2
+          sensor_mount_height / 2
+            + sensor_mount_screw_distance / 2
         ])
-        printed_bracket_2_screw_hole_and_nut();
+        sensor_mount_screw_hole_and_nut();
       translate([
           L_bracket_thickness / 2,
           3 * L_bracket_width / 2
-            + printed_bracket_2_bracket_clearance
+            + sensor_mount_bracket_clearance
             + L_bracket_inbetween_space,
-          printed_bracket_2_height / 2
-            - printed_bracket_2_screw_distance / 2
+          sensor_mount_height / 2
+            - sensor_mount_screw_distance / 2
         ])
-        printed_bracket_2_screw_hole_and_nut();
+        sensor_mount_screw_hole_and_nut();
     }
     // part to wrap around the force sensor
     sensor_wrap_depth =
           sensor_depth
-            + 2 * printed_bracket_2_sensor_wall
-            + 2 * printed_bracket_2_sensor_clearance;
+            + 2 * sensor_mount_sensor_wall
+            + 2 * sensor_mount_sensor_clearance;
     sensor_wrap_width =
           sensor_width
-            + printed_bracket_2_sensor_wall
-            + printed_bracket_2_sensor_clearance;
+            + sensor_mount_sensor_wall
+            + sensor_mount_sensor_clearance;
     translate([
-      - printed_bracket_2_bracket_clearance
-        - printed_bracket_2_width_buffer
+      - sensor_mount_bracket_clearance
+        - sensor_mount_width_buffer
         - sensor_wrap_width,
       L_bracket_width / 2
         - sensor_wrap_depth / 2,
@@ -1166,76 +1191,76 @@ module printed_bracket_2(sacrificial_bridging=false) {
             sensor_wrap_width
               + eps,
             sensor_wrap_depth,
-            printed_bracket_2_height
+            sensor_mount_height
           ]);
         translate([
-            printed_bracket_2_sensor_wall,
-            printed_bracket_2_sensor_wall,
+            sensor_mount_sensor_wall,
+            sensor_mount_sensor_wall,
             - eps
           ])
           cube([
               sensor_width
-                + printed_bracket_2_sensor_clearance
+                + sensor_mount_sensor_clearance
                 + 2 * eps,
               sensor_depth
-                + 2 * printed_bracket_2_sensor_clearance,
-              printed_bracket_2_height
+                + 2 * sensor_mount_sensor_clearance,
+              sensor_mount_height
                 + 2 * eps
             ]);
         translate([
             - eps,
-            - printed_bracket_2_sensor_wall_slit_width / 2
+            - sensor_mount_sensor_wall_slit_width / 2
               + sensor_wrap_depth / 2,
             - eps
           ])
           cube([
-              printed_bracket_2_sensor_wall
+              sensor_mount_sensor_wall
                 + 2 * eps,
-              printed_bracket_2_sensor_wall_slit_width,
-              printed_bracket_2_height
+              sensor_mount_sensor_wall_slit_width,
+              sensor_mount_height
                 + 2 * eps
             ]);
       }
   }
 }
 
-module printed_bracket_2_screw_hole_and_nut() {
+module sensor_mount_screw_hole_and_nut() {
   m5_nut_radius = 4 / cos(30);
   union() {
     rot_y(90)
       cylinder(
-          h=printed_bracket_2_thickness + 2*eps,
-          r=printed_bracket_2_screw_size/2
-            + printed_bracket_2_screw_clearance,
+          h=sensor_mount_thickness + 2*eps,
+          r=sensor_mount_screw_size/2
+            + sensor_mount_screw_clearance,
           center=true
         );
     translate([
-        - printed_bracket_2_thickness / 2 - eps, 0, 0
+        - sensor_mount_thickness / 2 - eps, 0, 0
       ])
       rot_y(90)
       rot_z(30)
       cylinder(
-          h=printed_bracket_2_nut_depth + eps,
-          r=m5_nut_radius + printed_bracket_2_screw_clearance,
+          h=sensor_mount_nut_depth + eps,
+          r=m5_nut_radius + sensor_mount_screw_clearance,
           $fn=6
         );
   }
 }
 
-module printed_bracket_2_screws() {
+module sensor_mount_screws() {
   // screws mounting L to printed 2 to force sensor
   translate([
       L_bracket_length
         + bracket_x_mount
         + L_bracket_thickness
-        + printed_bracket_2_bracket_clearance
-        + printed_bracket_2_width_buffer,
+        + sensor_mount_bracket_clearance
+        + sensor_mount_width_buffer,
       platform_top_screw_depth_side_distance,
       L_bracket_right_slit_z_bottom
-        + printed_bracket_2_screw_distance / 2
-        + printed_bracket_2_screw_size / 2
+        + sensor_mount_screw_distance / 2
+        + sensor_mount_screw_size / 2
     ])
-    dupe_z(printed_bracket_2_screw_distance / 2)
+    dupe_z(sensor_mount_screw_distance / 2)
     union() {
       color(screw_color)
         mov_x(
@@ -1253,16 +1278,16 @@ module printed_bracket_2_screws() {
       L_bracket_length
         + bracket_x_mount
         + L_bracket_thickness
-        + printed_bracket_2_bracket_clearance
-        + printed_bracket_2_width_buffer,
+        + sensor_mount_bracket_clearance
+        + sensor_mount_width_buffer,
       L_bracket_width
         + L_bracket_inbetween_space
         + platform_top_screw_depth_side_distance,
       L_bracket_right_slit_z_bottom
-        + printed_bracket_2_screw_distance / 2
-        + printed_bracket_2_screw_size / 2
+        + sensor_mount_screw_distance / 2
+        + sensor_mount_screw_size / 2
     ])
-    dupe_z(printed_bracket_2_screw_distance / 2)
+    dupe_z(sensor_mount_screw_distance / 2)
     union() {
       color(screw_color)
         mov_x(
@@ -1277,8 +1302,8 @@ module printed_bracket_2_screws() {
       color(nut_color)
         mov_x(
             - m5_nut_height
-              - printed_bracket_2_thickness
-              + printed_bracket_2_nut_depth
+              - sensor_mount_thickness
+              + sensor_mount_nut_depth
           )
         rot_y(90)
         rot_z(30)
