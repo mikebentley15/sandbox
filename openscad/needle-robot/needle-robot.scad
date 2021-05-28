@@ -39,6 +39,11 @@ L_binder_wall_thickness    = 2;
 
 /* [Printed Motor Prismatic Coupler] */
 
+motor_coupler_length      = 15;
+motor_coupler_diameter    = 14;
+motor_coupler_screw_size  = 3; // [3, 4]
+
+
 /* [Printed Needle Prismatic Coupler] */
 
 
@@ -130,11 +135,6 @@ layer_height                        = 0.2;
 extrusion_width                     = 0.45;
 
 /* [Advanced Settings] */
-
-washer_thickness  = 0.75;
-screw_head_height = 2.5;
-m4_nut_height     = 3.25;
-m5_nut_height     = 3.75;
 
 eps = 0.02;
 $fn = 20;
@@ -348,7 +348,7 @@ module mounted_L_brackets() {
       color(washer_color)
         M4_washer();
       color(screw_color)
-        mov_z(screw_head_height)
+        mov_z(M_screw_head_height(4))
         rot_x(180)
         M4(12);
     }
@@ -705,7 +705,7 @@ module motor_mount_screws() {
         rot_y(90)
         M4_washer();
       color(screw_color)
-        mov_x(screw_head_height + washer_thickness)
+        mov_x(M_screw_head_height(4) + M_washer_thickness(4))
         rot_y(-90)
         M4(20);
     }
@@ -893,8 +893,8 @@ module sensor_mount_screws() {
     union() {
       color(screw_color)
         mov_x(
-            screw_head_height
-              + washer_thickness
+            M_screw_head_height(5)
+              + M_washer_thickness(5)
           )
         rot_y(-90)
         M5(20);
@@ -920,8 +920,8 @@ module sensor_mount_screws() {
     union() {
       color(screw_color)
         mov_x(
-            screw_head_height
-              + washer_thickness
+            M_screw_head_height(5)
+              + M_washer_thickness(5)
           )
         rot_y(-90)
         M5(16);
@@ -930,7 +930,7 @@ module sensor_mount_screws() {
         M5_washer();
       color(nut_color)
         mov_x(
-            - m5_nut_height
+            - M_nut_height(5)
               - sensor_mount_thickness
               + sensor_mount_nut_depth
           )
