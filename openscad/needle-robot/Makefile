@@ -6,8 +6,10 @@ MODELS         :=
 #MODELS         += base.stl
 #MODELS         += force-sensor.stl
 #MODELS         += motor.stl
-MODELS         += 3dprinted-bracket-1.stl
-#MODELS         += 3dprinted-bracket-2.stl
+MODELS         += printed-1.stl
+MODELS         += printed-2.stl
+MODELS         += printed-3.stl
+MODELS         += printed-4.stl
 OPENSCAD_VARS   =
 
 HOME            = $(PWD)

@@ -1,7 +1,7 @@
 /* [General Settings] */
 
 // Which model to render
-part = "all"; // ["all", "base", "force-sensor", "motor", "3dprinted-bracket-1", "3dprinted-bracket-2"]
+part = "all"; // ["all", "printed-1", "printed-2", "printed-3", "printed-4"]
 
 
 /* [Platform] */
@@ -199,15 +199,24 @@ if (part == "all") {
   mounted_printed_bracket_1();
   printed_bracket_1_screws();
   mounted_printed_bracket_2();
+  printed_bracket_2_screws();
   mounted_force_sensor();
 }
 
-if (part == "3dprinted-bracket-1") {
+if (part == "printed-1") {
   printed_bracket_1(sacrificial_bridging=sacrificial_bridging);
 }
 
-if (part == "3dprinted-bracket-2") {
+if (part == "printed-2") {
   printed_bracket_2(sacrificial_bridging=sacrificial_bridging);
+}
+
+if (part == "printed-3") {
+
+}
+
+if (part == "printed-4") {
+
 }
 
 
@@ -1211,4 +1220,68 @@ module printed_bracket_2_screw_hole_and_nut() {
           $fn=6
         );
   }
+}
+
+module printed_bracket_2_screws() {
+  // screws mounting L to printed 2 to force sensor
+  translate([
+      L_bracket_length
+        + bracket_x_mount
+        + L_bracket_thickness
+        + printed_bracket_2_bracket_clearance
+        + printed_bracket_2_width_buffer,
+      platform_top_screw_depth_side_distance,
+      L_bracket_right_slit_z_bottom
+        + printed_bracket_2_screw_distance / 2
+        + printed_bracket_2_screw_size / 2
+    ])
+    dupe_z(printed_bracket_2_screw_distance / 2)
+    union() {
+      color(screw_color)
+        mov_x(
+            screw_head_height
+              + washer_thickness
+          )
+        rot_y(-90)
+        M5(20);
+      color(washer_color)
+        rot_y(90)
+        M5_washer();
+    }
+
+  translate([
+      L_bracket_length
+        + bracket_x_mount
+        + L_bracket_thickness
+        + printed_bracket_2_bracket_clearance
+        + printed_bracket_2_width_buffer,
+      L_bracket_width
+        + L_bracket_inbetween_space
+        + platform_top_screw_depth_side_distance,
+      L_bracket_right_slit_z_bottom
+        + printed_bracket_2_screw_distance / 2
+        + printed_bracket_2_screw_size / 2
+    ])
+    dupe_z(printed_bracket_2_screw_distance / 2)
+    union() {
+      color(screw_color)
+        mov_x(
+            screw_head_height
+              + washer_thickness
+          )
+        rot_y(-90)
+        M5(16);
+      color(washer_color)
+        rot_y(90)
+        M5_washer();
+      color(nut_color)
+        mov_x(
+            - m5_nut_height
+              - printed_bracket_2_thickness
+              + printed_bracket_2_nut_depth
+          )
+        rot_y(90)
+        rot_z(30)
+        M5_nut();
+    }
 }
