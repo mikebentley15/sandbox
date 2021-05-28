@@ -1,3 +1,45 @@
+module M_screw(size, length, pitch=0.5, profile=4) {
+  if (size == 3) {
+    M3(length, pitch, profile);
+  } else if (size == 4) {
+    M4(length, pitch, profile);
+  } else if (size == 5) {
+    M5(length, pitch, profile);
+  } else if (size == 6) {
+    M6(length, pitch, profile);
+  } else {
+    assert(false, "Unsupported size given");
+  }
+}
+
+module M_nut(size, pitch=0.5, profile=4) {
+  if (size == 3) {
+    M3_nut(pitch, profile);
+  } else if (size == 4) {
+    M4_nut(pitch, profile);
+  } else if (size == 5) {
+    M5_nut(pitch, profile);
+  } else if (size == 6) {
+    M6_nut(pitch, profile);
+  } else {
+    assert(false, "Unsupported size given");
+  }
+}
+
+module M_washer(size) {
+  if (size == 3) {
+    M3_washer();
+  } else if (size == 4) {
+    M4_washer();
+  } else if (size == 5) {
+    M5_washer();
+  } else if (size == 6) {
+    M6_washer();
+  } else {
+    assert(false, "Unsupported size given");
+  }
+}
+
 module M3(length, pitch=0.5, profile=4) {
   head_height = 2.5;
   eps = 0.01;
