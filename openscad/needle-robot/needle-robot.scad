@@ -9,10 +9,10 @@ part = "all"; // ["all", "motor-mount", "sensor-mount", "L-bind", "bearing-mount
 motor_mount_front_buffer       =  4;
 motor_mount_depth_buffer       =  5;
 motor_mount_height             = 50;
-motor_mount_shaft_clearance    =  1;
-motor_mount_cylinder_clearance =  0.5;
-motor_mount_bracket_clearance  =  0.3;
-motor_mount_screw_clearance    =  0.3;
+motor_mount_shaft_clearance    =  0.7;
+motor_mount_cylinder_clearance =  0.2;
+motor_mount_bracket_clearance  =  0.2;
+motor_mount_screw_clearance    =  0.2;
 
 
 /* [Printed Sensor Mount] */
@@ -20,8 +20,8 @@ motor_mount_screw_clearance    =  0.3;
 sensor_mount_height                 = 28;
 sensor_mount_depth_buffer           =  5;
 sensor_mount_width_buffer           =  4;
-sensor_mount_bracket_clearance      =  0.3;
-sensor_mount_screw_clearance        =  0.3;
+sensor_mount_bracket_clearance      =  0.2;
+sensor_mount_screw_clearance        =  0.2;
 sensor_mount_screw_size             =  5;
 sensor_mount_nut_depth              =  2;
 sensor_mount_sensor_clearance       =  0.4;
@@ -32,7 +32,7 @@ sensor_mount_sensor_wall_slit_width =  8;
 /* [Printed L-Binder] */
 
 L_binder_width             = 10;
-L_binder_bracket_clearance = 0.3;
+L_binder_bracket_clearance = 0.2;
 L_binder_wall_thickness    = 2;
 
 
@@ -78,50 +78,53 @@ platform_screw_size = 4;
 /* [L Bracket] */
 
 L_bracket_height    = 120;
-L_bracket_length    = 98;
-L_bracket_width     = 24;
-L_bracket_thickness = 2.9;
+L_bracket_length    = 99.3;
+L_bracket_width     = 24.1;
+L_bracket_thickness = 2.7;
 
 L_bracket_slit_width         = 5.2;
-L_bracket_slit_end_distance  = 12;
-L_bracket_bottom_slit_length = 70;
-L_bracket_side_slit_length   = 90;
+L_bracket_slit_end_distance  = 10.3;
+L_bracket_bottom_slit_length = 69.8;
+L_bracket_side_slit_length   = 89.8;
 
 
 /* [Motor] */
 
-motor_length = 48;
+motor_length = 47.3;
 motor_depth  = 42;
 motor_height = 42;
 
-motor_cylinder_length     = 2;
-motor_cylinder_diameter   = 22;
+motor_cylinder_length     = 1.7;
+motor_cylinder_diameter   = 21.9;
 motor_shaft_length        = 24;
-motor_shaft_diameter      = 5;
-motor_shaft_cutout_length = 15;
+motor_shaft_diameter      = 4.9;
+motor_shaft_cutout_length = 14.7;
 motor_shaft_cutout_height = 4.5;
 
-motor_screw_size          = 4;
+motor_screw_size          = 3;
 motor_screw_depth         = 4.5;
 motor_screw_side_distance = 5.5;
 motor_screw_top_distance  = 5.5;
 
 motor_mount_x_buffer      = 20;
-motor_z_offset      = 20;
+motor_z_offset            = 20;
 
 
 /* [Force Sensor] */
 
-sensor_height    = 80;
-sensor_width     = 12.7;
-sensor_depth     = 12.7;
+sensor_height    = 80.15;
+sensor_width     = 12.6;
+sensor_depth     = 12.6;
 
-sensor_center_hole_diameter = 10.7;
-sensor_center_hole_offset   = 3.4;
+sensor_center_hole_diameter = 10.63;
+sensor_center_hole_offset   = 3.56;
 
-sensor_center_bulge_thickness = 1;
+sensor_center_bulge_thickness = 1.18;
 sensor_center_bulge_length    = 23.5;
-sensor_center_bulge_depth     = 12.7;
+sensor_center_bulge_depth     = 12.6;
+
+// TODO: right bulge
+// width goes from 12.6 to 14.2!
 
 sensor_bottom_screw_size      = 5;
 sensor_bottom_screw_offset_1  = 5;
@@ -134,9 +137,9 @@ sensor_top_screw_offset_2     = 20;
 /* [Bearing] */
 
 // TODO: measure and fill in
-bearing_outer_diameter = 10;
-bearing_inner_diameter =  5;
-bearing_thickness      =  5;
+bearing_outer_diameter = 22;
+bearing_inner_diameter =  8;
+bearing_thickness      =  7;
 
 
 /* [General Print Settings] */

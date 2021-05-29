@@ -31,16 +31,20 @@ module M_washer(size) {
     M_washer_thickness(size));
 }
 
-function M_screw_head_height(size) = 2.5;
+function M_screw_head_height(size) =
+  size == 3 ?  1.6 :
+  size == 4 ?  2.4 :
+  size == 5 ?  2.8 :
+  size == 6 ?  3.3 : 0;
 function M_screw_head_diameter(size) =
-  size == 3 ?  6 :
-  size == 4 ?  7 :
-  size == 5 ?  9 :
-  size == 6 ? 10 : 0;
+  size == 3 ?  5.56 :
+  size == 4 ?  7.45 :
+  size == 5 ?  9.4 :
+  size == 6 ? 10.3 : 0;
 function M_screw_hex_radius(size) =
   size == 3 ? 1.00 :
-  size == 4 ? 1.50 :
-  size == 5 ? 2.00 :
+  size == 4 ? 1.25 :
+  size == 5 ? 1.75 :
   size == 6 ? 2.25 : 0;
 function M_default_pitch(size) =
   size == 3 ? 0.5 :
@@ -48,33 +52,33 @@ function M_default_pitch(size) =
   size == 5 ? 0.8 :
   size == 6 ? 1.0 : 1.0;
 function M_nut_height(size) =
-  size == 3 ? 2 :
-  size == 4 ? 3.25 :
-  size == 5 ? 3.75 :
-  size == 6 ? 5 : 5;
+  size == 3 ? 2.1 :
+  size == 4 ? 2.9 :
+  size == 5 ? 3.8 :
+  size == 6 ? 4.92 : 5;
 function hex_inner_diameter_to_outer_radius(d) = d / (2 * cos(30));
 function M_nut_inner_diameter(size) =
-  size == 3 ?  6 :
-  size == 4 ?  7 :
-  size == 5 ?  8 :
-  size == 6 ? 10 : 0;
+  size == 3 ?  5.2 :
+  size == 4 ?  6.7 :
+  size == 5 ?  7.9 :
+  size == 6 ?  9.83 : 0;
 function M_nut_outer_radius(size) =
   hex_inner_diameter_to_outer_radius(M_nut_inner_diameter(size));
 function M_washer_thickness(size) =
-  size == 3 ? 0.65 :
-  size == 4 ? 0.75 :
-  size == 5 ? 0.75 :
-  size == 6 ? 1.15 : 0;
+  size == 3 ? 0.62 :
+  size == 4 ? 0.95 :
+  size == 5 ? 1.00 :
+  size == 6 ? 1.05 : 0;
 function M_washer_outer_diameter(size) =
-  size == 3 ?  7 :
-  size == 4 ?  9 :
-  size == 5 ? 10 :
-  size == 6 ? 12 : 0;
+  size == 3 ?  6.83 :
+  size == 4 ?  8.8 :
+  size == 5 ?  9.9 :
+  size == 6 ? 11.7 : 0;
 function M_washer_inner_diameter(size) =
-  size == 3 ? 3 :
-  size == 4 ? 4 :
-  size == 5 ? 5 :
-  size == 6 ? 7 : 0;
+  size == 3 ? 3.2 :
+  size == 4 ? 4.4 :
+  size == 5 ? 5.3 :
+  size == 6 ? 6.5 : 0;
 
 module M3(length, pitch=0.5, profile=4) {
   M_screw(3, length, pitch, profile);
