@@ -1024,7 +1024,9 @@ module motor_coupler() {
     difference() {
       mov_z(-eps)
         cylinder(r=motor_shaft_diameter/2 + motor_coupler_shaft_clearance,
-                 h=motor_coupler_length + 2 * eps);
+                 h=motor_coupler_length
+                   - 2 * layer_height
+                   + 2 * eps);
       mov_x(
           motor_shaft_cutout_height
             - motor_shaft_diameter / 2
@@ -1037,10 +1039,18 @@ module motor_coupler() {
           );
     }
     // remove a slit on the side
-    mov_z(-eps)
+    // slit only up to prismatic piece on the last two layers
+    mov_y(motor_prismatic_outer_diameter/2 * cos(30))
+      mov_z(-eps)
       cube_cpp(motor_coupler_slit_size,
                motor_coupler_diameter,
                motor_coupler_length + 2 * eps);
+    mov_z(-eps)
+      cube_cpp(motor_coupler_slit_size,
+               motor_coupler_diameter,
+               motor_coupler_length
+                 - 2 * layer_height
+                 + 2 * eps);
 
     clamp_screw_y =
         motor_shaft_diameter / 4
