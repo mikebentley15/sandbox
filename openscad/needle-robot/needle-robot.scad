@@ -6,12 +6,13 @@ part = "all"; // ["all", "motor-mount", "sensor-mount", "L-bind", "bearing-mount
 
 /* [Printed Motor Mount] */
 
-motor_mount_front_buffer      = 4;
-motor_mount_depth_buffer      = 5;
-motor_mount_height            = 50;
-motor_mount_shaft_clearance   = 1;
-motor_mount_bracket_clearance = 0.3;
-motor_mount_screw_clearance   = 0.3;
+motor_mount_front_buffer       =  4;
+motor_mount_depth_buffer       =  5;
+motor_mount_height             = 50;
+motor_mount_shaft_clearance    =  1;
+motor_mount_cylinder_clearance =  0.5;
+motor_mount_bracket_clearance  =  0.3;
+motor_mount_screw_clearance    =  0.3;
 
 
 /* [Printed Sensor Mount] */
@@ -610,7 +611,7 @@ module motor_mount(sacrificial_bridging=false) {
         rot_y(90)
         cylinder(
             r = motor_cylinder_diameter / 2 + motor_mount_shaft_clearance,
-            h = motor_cylinder_length + eps
+            h = motor_cylinder_length + motor_mount_cylinder_clearance + eps
           );
 
       // bracket slide-in holes
@@ -661,7 +662,8 @@ module motor_mount_sacrificial_bridging() {
   // at the end of the motor cylinder
   translate([
     layer_height / 2
-      + motor_cylinder_length,
+      + motor_cylinder_length
+      + motor_mount_cylinder_clearance,
     motor_mount_width / 2,
     motor_mount_height / 2
     ])
