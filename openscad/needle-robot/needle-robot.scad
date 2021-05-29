@@ -122,6 +122,7 @@ sensor_center_hole_offset   = 3.56;
 sensor_center_bulge_thickness = 1.18;
 sensor_center_bulge_length    = 23.5;
 sensor_center_bulge_depth     = 12.6;
+sensor_right_bulge_thickness  = 1.6;
 
 // TODO: right bulge
 // width goes from 12.6 to 14.2!
@@ -256,7 +257,7 @@ if (part == "motor-mount") {
 }
 
 if (part == "sensor-mount") {
-  sensor_mount(sacrificial_bridging=sacrificial_bridging);
+  sensor_mount();
 }
 
 if (part == "L-bind") {
@@ -446,7 +447,16 @@ module force_sensor() {
         cube([
             sensor_width + sensor_center_bulge_thickness*2,
             sensor_center_bulge_depth,
-            sensor_center_bulge_length]);
+            sensor_center_bulge_length
+          ]);
+      mov_y(-sensor_right_bulge_thickness)
+        cube([
+            sensor_width,
+            sensor_right_bulge_thickness + eps,
+            sensor_height / 2
+              - sensor_center_hole_offset
+              - sensor_center_hole_diameter / 2
+          ]);
     }
 
     // center holes
@@ -744,7 +754,7 @@ module mounted_sensor_mount() {
     sensor_mount();
 }
 
-module sensor_mount(sacrificial_bridging=false) {
+module sensor_mount() {
   color(printed_color_1)
   union() {
     difference() {
@@ -819,7 +829,8 @@ module sensor_mount(sacrificial_bridging=false) {
     sensor_wrap_depth =
           sensor_depth
             + 2 * sensor_mount_sensor_wall
-            + 2 * sensor_mount_sensor_clearance;
+            + 2 * sensor_mount_sensor_clearance
+            + sensor_right_bulge_thickness;
     sensor_wrap_width =
           sensor_width
             + sensor_mount_sensor_wall
@@ -829,7 +840,7 @@ module sensor_mount(sacrificial_bridging=false) {
         - sensor_mount_width_buffer
         - sensor_wrap_width,
       L_bracket_width / 2
-        - sensor_wrap_depth / 2,
+        - (sensor_wrap_depth + sensor_right_bulge_thickness) / 2,
       0
       ])
       difference() {
@@ -849,6 +860,7 @@ module sensor_mount(sacrificial_bridging=false) {
                 + sensor_mount_sensor_clearance
                 + 2 * eps,
               sensor_depth
+                + sensor_right_bulge_thickness
                 + 2 * sensor_mount_sensor_clearance,
               sensor_mount_height
                 + 2 * eps
