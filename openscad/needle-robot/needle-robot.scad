@@ -39,9 +39,20 @@ L_binder_wall_thickness    = 2;
 
 /* [Printed Motor Prismatic Coupler] */
 
-motor_coupler_length      = 15;
-motor_coupler_diameter    = 14;
-motor_coupler_screw_size  = 3; // [3, 4]
+motor_coupler_length            = 15;
+motor_coupler_diameter          = 20;
+motor_coupler_screw_offset      =  6;
+motor_coupler_screw_size        =  3; // [3, 4]
+motor_coupler_screw_clearance   =  0.2;
+motor_coupler_shaft_clearance   =  0.3;
+motor_coupler_slit_size         =  1.3;
+// thickness on both sides of the slit for the screw
+motor_coupler_clamp_thickness   =  3;
+motor_prismatic_length          = 20;
+motor_prismatic_cavity_depth    = 17;
+motor_prismatic_outer_diameter  = 10;
+motor_prismatic_inner_diameter  =  7;
+motor_coupler_mount_x_offset    =  5;
 
 
 /* [Printed Needle Prismatic Coupler] */
@@ -233,6 +244,7 @@ if (part == "all") {
   sensor_mount_screws();
   mounted_force_sensor();
   mounted_L_binders();
+  mounted_motor_coupler();
 }
 
 if (part == "motor-mount") {
@@ -252,7 +264,7 @@ if (part == "bearing-mount") {
 }
 
 if (part == "motor-prismatic-coupler") {
-
+  motor_coupler();
 }
 
 if (part == "needle-prismatic-coupler") {
@@ -977,5 +989,101 @@ module L_binder() {
           2 * L_bracket_thickness
             + 2 * L_binder_bracket_clearance
         ], center=true);
+  }
+}
+
+module mounted_motor_coupler() {
+  translate([
+      bracket_x_mount
+        + L_bracket_thickness
+        + motor_mount_front_buffer
+        + motor_coupler_mount_x_offset,
+      platform_depth / 2,
+      motor_z_mount
+        + motor_height / 2
+    ])
+    rot_y(90)
+    rot_z(180)
+    motor_coupler();
+}
+
+module motor_coupler() {
+  color(printed_color_1)
+  difference() {
+    // main body and prismatic joint
+    union() {
+      cylinder(d=motor_coupler_diameter, h=motor_coupler_length);
+      mov_z(motor_coupler_length - eps)
+        cylinder(d=motor_prismatic_outer_diameter,
+                 h=motor_prismatic_length+eps,
+                 $fn=6);
+    }
+    // delete motor shaft
+    difference() {
+      mov_z(-eps)
+        cylinder(r=motor_shaft_diameter/2 + motor_coupler_shaft_clearance,
+                 h=motor_coupler_length + 2 * eps);
+      mov_x(
+          motor_shaft_cutout_height
+            - motor_shaft_diameter / 2
+            + motor_coupler_shaft_clearance)
+      mov_z(- 2 * eps)
+        cube_pcp(
+            motor_shaft_diameter,
+            motor_shaft_diameter,
+            motor_coupler_length + 3 * eps
+          );
+    }
+    // remove a slit on the side
+    mov_z(-eps)
+      cube_cpp(motor_coupler_slit_size,
+               motor_coupler_diameter,
+               motor_coupler_length + 2 * eps);
+
+    clamp_screw_y =
+        motor_shaft_diameter / 4
+          + motor_coupler_shaft_clearance / 2
+          + motor_coupler_diameter / 4;
+    clamp_screw_z = motor_coupler_screw_offset;
+    // create holes for the screw, head, and nut
+    // screw shaft hole
+    translate([0, clamp_screw_y, clamp_screw_z])
+      rot_y(90)
+      cylinder(r=motor_coupler_screw_size/2 + motor_coupler_screw_clearance,
+               h=motor_coupler_diameter,
+               center=true);
+    // screw head hole
+    translate([
+        motor_coupler_slit_size / 2
+          + motor_coupler_clamp_thickness,
+        clamp_screw_y,
+        clamp_screw_z
+      ])
+      rot_y(90)
+      cylinder(d=M_screw_head_diameter(motor_coupler_screw_size)
+                 + 2 * motor_coupler_screw_clearance,
+               h=motor_coupler_diameter);
+    // nut hole
+    translate([
+        - motor_coupler_slit_size / 2
+          - motor_coupler_clamp_thickness,
+        clamp_screw_y,
+        clamp_screw_z
+      ])
+      rot_y(-90)
+      rot_z(30)
+      cylinder(r=M_nut_outer_radius(motor_coupler_screw_size)
+                 + motor_coupler_screw_clearance,
+               h=motor_coupler_diameter,
+               $fn=6);
+
+    // prismatic inner shaft
+    mov_z(motor_coupler_length
+        + motor_prismatic_length
+        - motor_prismatic_cavity_depth
+        )
+      cylinder(d=motor_prismatic_inner_diameter,
+               h=max(motor_prismatic_length, motor_prismatic_cavity_depth + eps),
+               $fn=6);
   }
 }

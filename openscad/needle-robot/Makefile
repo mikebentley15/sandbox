@@ -6,7 +6,7 @@ MODELS         += motor-mount.stl
 MODELS         += sensor-mount.stl
 MODELS         += L-bind.stl
 #MODELS         += bearing-mount.stl
-#MODELS         += motor-prismatic-coupler.stl
+MODELS         += motor-prismatic-coupler.stl
 #MODELS         += needle-prismatic-coupler.stl
 OPENSCAD_VARS   = -D '$$fn=200'
 
