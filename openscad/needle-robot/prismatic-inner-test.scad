@@ -1,10 +1,21 @@
 /* [Settings] */
 
+// Results:
+// - 0.30mm slides nice, but too much rotational play
+// - 0.25mm is pretty good at sliding, but could use sanding.  It has less
+//   rotational play.
+// - 0.20mm does not fit at all
+// - 0.15mm and 0.10mm: did not test because 0.20mm would not fit.
+//
+// Conclusion:
+// - about 0.25mm clearance is good.  We could try 0.24, 0.23, and 0.22 before and
+//   after sanding
+
 prismatic_shaft_diameter = 7;
 prismatic_shaft_length   = 25;
-clearance_start          = 0.1;
-clearance_step           = 0.05;
-clearance_count          = 5;
+clearance_start          = 0.22;
+clearance_step           = 0.01;
+clearance_count          = 3;
 
 use <./helpers.scad>
 
