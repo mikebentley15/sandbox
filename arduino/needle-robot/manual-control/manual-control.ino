@@ -45,7 +45,7 @@ const int LOADCELL_SCK_PIN  = 12;
 const float calibration_factor = 418110.f;
 
 // how much to step rotary velocity
-const uint32_t motor_increment = 1; // Hz
+const uint32_t motor_increment = 50; // mHz
 const uint32_t steps_per_rotation = 200;
 
 
@@ -63,8 +63,8 @@ RegisteredEventBase *linear_motor_event = nullptr;
 //RegisteredEventBase *read_force_event = nullptr;
 //RegisteredEventBase *read_serial_event = nullptr;
 
-int32_t linear_velocity = 0; // Hz (rotations per second)
-int32_t rotary_velocity = 0; // Hz (rotations per second)
+int32_t linear_velocity = 0; // mHz (rotations per millisecond)
+int32_t rotary_velocity = 0; // mHz (rotations per millisecond)
 
 uint32_t force_events  = 0;
 uint32_t rotary_events = 0;
@@ -188,10 +188,10 @@ bool read_serial(RegisteredEventBase *event) {
 
     uint32_t call_freq;
     if (utype == UT_LINEAR) {
-      uint32_t call_freq = abs(linear_velocity) * 2 * steps_per_rotation;
+      uint32_t call_freq = abs(linear_velocity) * 2 * steps_per_rotation / 1000;
       Serial.print("< linear motor velocity = ");
       Serial.print(linear_velocity);
-      Serial.println(" Hz >");
+      Serial.println(" mHz >");
       if (linear_motor_event == nullptr) {
         if (linear_velocity != 0) {
           linear_motor_event = eventloop.schedule_frequency(
@@ -202,19 +202,20 @@ bool read_serial(RegisteredEventBase *event) {
         linear_motor_event = nullptr;
       } else {
         linear_motor_event->period_micros = 1000000 / call_freq;
-        if (linear_velocity < 0) {
-          linear_motor.go_backward();
-        } else {
-          linear_motor.go_forward();
-        }
+      }
+      // set the direction
+      if (linear_velocity < 0) {
+        linear_motor.go_backward();
+      } else {
+        linear_motor.go_forward();
       }
     }
 
     if (utype == UT_ROTARY) {
-      uint32_t call_freq = abs(rotary_velocity) * 2 * steps_per_rotation;
+      uint32_t call_freq = abs(rotary_velocity) * 2 * steps_per_rotation / 1000;
       Serial.print("< rotary motor velocity = ");
       Serial.print(rotary_velocity);
-      Serial.println(" Hz >");
+      Serial.println(" mHz >");
       if (rotary_motor_event == nullptr) {
         if (rotary_velocity != 0) {
           rotary_motor_event = eventloop.schedule_frequency(
@@ -225,11 +226,12 @@ bool read_serial(RegisteredEventBase *event) {
         rotary_motor_event = nullptr;
       } else {
         rotary_motor_event->period_micros = 1000000 / call_freq;
-        if (rotary_velocity < 0) {
-          rotary_motor.go_backward();
-        } else {
-          rotary_motor.go_forward();
-        }
+      }
+      // set the direction
+      if (rotary_velocity < 0) {
+        rotary_motor.go_backward();
+      } else {
+        rotary_motor.go_forward();
       }
     }
   }
