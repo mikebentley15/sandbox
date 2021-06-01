@@ -162,7 +162,7 @@ private:
     unsigned long now = micros();
     unsigned long delta = now - event->last_trigger;
     if (delta >= event->period_micros) {
-      event->last_trigger = now;
+      event->last_trigger = now - delta + event->period_micros;
       if ((event->callback)(event)) { // call callback
         remove_event(idx);
       } else {

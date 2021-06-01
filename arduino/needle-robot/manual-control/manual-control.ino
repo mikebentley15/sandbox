@@ -147,6 +147,7 @@ bool event_status(RegisteredEventBase *event) {
 
 bool read_force(RegisteredEventBase *event) {
   force_events++;
+  loadcell.get_units();
   //Serial.print("< force = ");
   //Serial.print(loadcell.get_units() * 1000);
   //Serial.println(" g >");
