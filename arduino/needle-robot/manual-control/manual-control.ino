@@ -45,9 +45,8 @@ const int LOADCELL_SCK_PIN  = 12;
 const float calibration_factor = 418110.f;
 
 // how much to step rotary velocity
-const float motor_increment = 1.f; // Hz
-const int steps_per_rotation = 200;
-const uint32_t freq_delta = uint32_t(2 * steps_per_rotation * motor_increment);
+const uint32_t motor_increment = 1; // Hz
+const uint32_t steps_per_rotation = 200;
 
 
 //
@@ -59,10 +58,18 @@ StepperMotor rotary_motor;
 StepperMotor linear_motor;
 EventLoop<10> eventloop;
 
-RegisteredEventBase *read_force_event = nullptr;
 RegisteredEventBase *rotary_motor_event = nullptr;
 RegisteredEventBase *linear_motor_event = nullptr;
-RegisteredEventBase *read_serial_event = nullptr;
+//RegisteredEventBase *read_force_event = nullptr;
+//RegisteredEventBase *read_serial_event = nullptr;
+
+int32_t linear_velocity = 0; // Hz (rotations per second)
+int32_t rotary_velocity = 0; // Hz (rotations per second)
+
+uint32_t force_events  = 0;
+uint32_t rotary_events = 0;
+uint32_t linear_events = 0;
+uint32_t event_status_period = 1000000;
 
 
 //
@@ -71,6 +78,7 @@ RegisteredEventBase *read_serial_event = nullptr;
 
 void setup();
 void loop();
+bool event_status(RegisteredEventBase *event);
 bool read_force(RegisteredEventBase *event);
 bool rotary_motor_half_step(RegisteredEventBase *event);
 bool linear_motor_half_step(RegisteredEventBase *event);
@@ -105,169 +113,125 @@ void setup() {
   loadcell.tare(); // blocking call
 
   // Setup the callback events
-  read_force_event = eventloop.schedule(86000, read_force);
-  read_serial_event = eventloop.schedule(1, read_serial);
+  eventloop.schedule(86000, read_force);
+  eventloop.schedule(1, read_serial);
+  eventloop.schedule(event_status_period, event_status);
 
   Serial.println();
   Serial.println("Setup complete");
   Serial.println();
+  Serial.println("force-events,rotary-events,linear-events");
 }
 
 void loop() {
   eventloop.update();
 }
-  //digitalWrite(linear_dir_pin, HIGH); // Enables the motor to move in a particular direction
-  //digitalWrite(rotary_dir_pin, HIGH); // Enables the motor to move in a particular direction
 
-  //int microwait = 1000;
-
-  //// Makes 200 pulses for making one full cycle rotation
-  //for(int x = 0; x < 400; x++) {
-  //  digitalWrite(linear_step_pin, HIGH);
-  //  digitalWrite(rotary_step_pin, HIGH);
-  //  delayMicroseconds(microwait);
-  //  digitalWrite(linear_step_pin, LOW);
-  //  digitalWrite(rotary_step_pin, LOW);
-  //  delayMicroseconds(microwait);
-  //}
-
-  //// Makes 400 pulses for making two full cycle rotation
-  //digitalWrite(linear_dir_pin, LOW); // Enables the motor to move in a particular direction
-  //digitalWrite(rotary_dir_pin, LOW); // Enables the motor to move in a particular direction
-  //for(int x = 0; x < 400; x++) {
-  //  digitalWrite(linear_step_pin, HIGH);
-  //  digitalWrite(rotary_step_pin, HIGH);
-  //  delayMicroseconds(microwait);
-  //  digitalWrite(linear_step_pin, LOW);
-  //  digitalWrite(rotary_step_pin, LOW);
-  //  delayMicroseconds(microwait);
-  //}
-  //delay(1000);
-//}
+bool event_status(RegisteredEventBase *event) {
+  uint32_t force_evt_freq  = force_events  * 1000000 / event_status_period;
+  uint32_t rotary_evt_freq = rotary_events * 1000000 / event_status_period;
+  uint32_t linear_evt_freq = linear_events * 1000000 / event_status_period;
+  // reset the event counts
+  force_events  = 0;
+  rotary_events = 0;
+  linear_events = 0;
+  // print the event frequencies
+  Serial.print(force_evt_freq);
+  Serial.print("\t");
+  Serial.print(rotary_evt_freq);
+  Serial.print("\t");
+  Serial.print(linear_evt_freq);
+  Serial.println();
+  return false;
+}
 
 bool read_force(RegisteredEventBase *event) {
-  Serial.print("< force = ");
-  Serial.print(loadcell.get_units());
-  Serial.println(" >");
+  force_events++;
+  //Serial.print("< force = ");
+  //Serial.print(loadcell.get_units() * 1000);
+  //Serial.println(" g >");
   return false;
 }
 
 bool rotary_motor_half_step(RegisteredEventBase *event) {
+  rotary_events++;
   rotary_motor.toggle_pulse();
   return false;
 }
 
 bool linear_motor_half_step(RegisteredEventBase *event) {
+  linear_events++;
   linear_motor.toggle_pulse();
   return false;
 }
 
 bool read_serial(RegisteredEventBase *event) {
-  uint32_t frequency;
+  enum UpdateType {
+    UT_NONE,
+    UT_LINEAR,
+    UT_ROTARY,
+  };
 
+  UpdateType utype = UT_NONE;
   if (Serial.available()) {
     char from_user = Serial.read();
 
-    if (from_user == 'a') { // move linear faster backward
-      if (linear_motor_event == nullptr) { // at 0Hz
-        frequency = freq_delta;
-        linear_motor_event = eventloop.schedule_frequency(
-            frequency, linear_motor_half_step);
-        linear_motor.go_backward();
-      } else {
-        frequency = 1000000 / linear_motor_event->period_micros;
-        frequency += (linear_motor.forward ? -freq_delta : freq_delta);
-        if (frequency == 0) {
-          eventloop.remove_event(linear_motor_event);
-          linear_motor_event = nullptr;
-        } else {
-          linear_motor_event->period_micros = 1000000 / frequency;
-        }
-      }
-      Serial.print("< linear motor velocity = ");
-      Serial.print(float(linear_motor.forward ? frequency : -frequency)
-                   / (2 * steps_per_rotation));
-      Serial.println(" Hz >");
+    switch (from_user) {
+      case 'a': utype = UT_LINEAR; linear_velocity -= motor_increment; break;
+      case 's': utype = UT_LINEAR; linear_velocity  = 0;               break;
+      case 'd': utype = UT_LINEAR; linear_velocity += motor_increment; break;
+      case 'z': utype = UT_ROTARY; rotary_velocity -= motor_increment; break;
+      case 'x': utype = UT_ROTARY; rotary_velocity  = 0;               break;
+      case 'c': utype = UT_ROTARY; rotary_velocity += motor_increment; break;
+    }
 
-    } else if (from_user == 's') { // stop linear motor
-      if (linear_motor_event != nullptr) {
+    uint32_t call_freq;
+    if (utype == UT_LINEAR) {
+      uint32_t call_freq = abs(linear_velocity) * 2 * steps_per_rotation;
+      Serial.print("< linear motor velocity = ");
+      Serial.print(linear_velocity);
+      Serial.println(" Hz >");
+      if (linear_motor_event == nullptr) {
+        if (linear_velocity != 0) {
+          linear_motor_event = eventloop.schedule_frequency(
+              call_freq, linear_motor_half_step);
+        }
+      } else if (linear_velocity == 0) {
         eventloop.remove_event(linear_motor_event);
         linear_motor_event = nullptr;
-      }
-      Serial.println("< linear motor velocity = 0 Hz >");
-
-    } else if (from_user == 'd') { // move linear faster forward
-      if (linear_motor_event == nullptr) { // at 0Hz
-        frequency = freq_delta;
-        linear_motor_event = eventloop.schedule_frequency(
-            frequency, linear_motor_half_step);
-        linear_motor.go_forward();
       } else {
-        frequency = 1000000 / linear_motor_event->period_micros;
-        frequency += (linear_motor.forward ? freq_delta : -freq_delta);
-        if (frequency == 0) {
-          eventloop.remove_event(linear_motor_event);
-          linear_motor_event = nullptr;
+        linear_motor_event->period_micros = 1000000 / call_freq;
+        if (linear_velocity < 0) {
+          linear_motor.go_backward();
         } else {
-          linear_motor_event->period_micros = 1000000 / frequency;
+          linear_motor.go_forward();
         }
       }
-      Serial.print("< linear motor velocity = ");
-      Serial.print(float(linear_motor.forward ? frequency : -frequency)
-                   / (2 * steps_per_rotation));
-      Serial.println(" Hz >");
+    }
 
-    } else if (from_user == 'z') { // move rotary faster backward
-      if (rotary_motor_event == nullptr) { // at 0Hz
-        frequency = freq_delta;
-        rotary_motor_event = eventloop.schedule_frequency(
-            frequency, rotary_motor_half_step);
-        rotary_motor.go_backward();
-      } else {
-        frequency = 1000000 / rotary_motor_event->period_micros;
-        frequency += (rotary_motor.forward ? -freq_delta : freq_delta);
-        if (frequency == 0) {
-          eventloop.remove_event(rotary_motor_event);
-          rotary_motor_event = nullptr;
-        } else {
-          rotary_motor_event->period_micros = 1000000 / frequency;
-        }
-      }
+    if (utype == UT_ROTARY) {
+      uint32_t call_freq = abs(rotary_velocity) * 2 * steps_per_rotation;
       Serial.print("< rotary motor velocity = ");
-      Serial.print(float(rotary_motor.forward ? frequency : -frequency)
-                   / (2 * steps_per_rotation));
+      Serial.print(rotary_velocity);
       Serial.println(" Hz >");
-
-
-    } else if (from_user == 'x') { // stop rotary motor
-      if (rotary_motor_event != nullptr) {
+      if (rotary_motor_event == nullptr) {
+        if (rotary_velocity != 0) {
+          rotary_motor_event = eventloop.schedule_frequency(
+              call_freq, rotary_motor_half_step);
+        }
+      } else if (rotary_velocity == 0) {
         eventloop.remove_event(rotary_motor_event);
         rotary_motor_event = nullptr;
-      }
-      Serial.println("< rotary motor velocity = 0 Hz >");
-
-    } else if (from_user == 'c') { // move rotary faster forward
-      if (rotary_motor_event == nullptr) { // at 0Hz
-        frequency = freq_delta;
-        rotary_motor_event = eventloop.schedule_frequency(
-            frequency, rotary_motor_half_step);
-        rotary_motor.go_forward();
       } else {
-        frequency = 1000000 / rotary_motor_event->period_micros;
-        frequency += (rotary_motor.forward ? freq_delta : -freq_delta);
-        if (frequency == 0) {
-          eventloop.remove_event(rotary_motor_event);
-          rotary_motor_event = nullptr;
+        rotary_motor_event->period_micros = 1000000 / call_freq;
+        if (rotary_velocity < 0) {
+          rotary_motor.go_backward();
         } else {
-          rotary_motor_event->period_micros = 1000000 / frequency;
+          rotary_motor.go_forward();
         }
       }
-      Serial.print("< rotary motor velocity = ");
-      Serial.print(float(rotary_motor.forward ? frequency : -frequency)
-                   / (2 * steps_per_rotation));
-      Serial.println(" Hz >");
-
     }
   }
+
   return false;
 }
