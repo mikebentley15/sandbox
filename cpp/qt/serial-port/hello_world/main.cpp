@@ -23,7 +23,11 @@ int main(int argc, char *argv[])
 //        return 1;
 //    }
 
-  const QString serialPortName = "/dev/ttyACM0"; //"COM5"; //argumentList.at(1);
+  QString serialPortName = "/dev/ttyACM0"; //"COM5"; //argumentList.at(1);
+  if (argc > 1) {
+    serialPortName = argv[1];
+  }
+
   std::cout << "About to open port: " << serialPortName.toStdString() << std::endl;
   QSerialPort serialPort;
   serialPort.setPortName(serialPortName);
