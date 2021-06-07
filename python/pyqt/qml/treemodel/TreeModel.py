@@ -25,7 +25,7 @@ class TreeModel(QAbstractItemModel):
             }
         return roles
 
-    def columnCount(self.parent):
+    def columnCount(self, parent):
         if parent.isValid():
             return parent.internalPointer().columnCount()
         else:
@@ -69,7 +69,7 @@ class TreeModel(QAbstractItemModel):
             return QModelIndex()
         childItem = index.internalPointer()
         parentItem = childItem.parent()
-        if parentItem = self.rootItem:
+        if parentItem == self.rootItem:
             return QModelIndex()
         return self.createIndex(parentItem.row(), 0, parentItem)
     
@@ -102,13 +102,14 @@ class TreeModel(QAbstractItemModel):
                 if position > indentations[-1]:
                     # The last child of the current parent is now the new
                     # parent unless the current parent has no children.
-                    if parents[-1].childCoun() > 0:
+                    if parents[-1].childCount() > 0:
                         parents.append(parents[-1].child(parents[-1].childCount() - 1))
                         indentations.append(position)
             else:
                 while position < indentations[-1] and len(parents) > 0:
                     parents.pop()
                     indentations.pop()
+                continue
             parents[-1].appendChild(TreeItem(columnData, parents[-1]))
         number += 1
 

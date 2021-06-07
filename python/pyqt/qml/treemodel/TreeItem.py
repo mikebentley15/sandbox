@@ -16,7 +16,7 @@ class TreeItem(object):
         self.itemData = data
         self.childItems = []
 
-    def append_child(self, item):
+    def appendChild(self, item):
         self.childItems.append(item)
     
     def child(self, row):
