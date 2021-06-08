@@ -9,9 +9,20 @@
 
 #include <iostream>
 
+#include <csignal>
+
+extern "C" void sigint_handler(int signal) {
+  auto instance = QCoreApplication::instance();
+  if (instance != nullptr) {
+    instance->quit();
+  }
+}
+
 int main (int argc, char *argv[]) {
   QCoreApplication app(argc, argv);
   const QStringList argList = QCoreApplication::arguments();
+
+  std::signal(SIGINT, sigint_handler);
 
   // print help (if --help was given)
   if (argList.size() > 1 && argList.at(1) == "--help") {
@@ -87,7 +98,7 @@ int main (int argc, char *argv[]) {
     QObject::connect(&app, &QCoreApplication::aboutToQuit,
         [&serialPort]() { serialPort.close(); });
     QObject::connect(&serialPort, &QSerialPort::aboutToClose,
-        []() { std::cout << "about to close serial port" << std::endl; });
+        []() { std::cout << "closing serial port" << std::endl; });
 
     // received message pipeline
     QObject::connect(&communicator, &SerialCommunicator::received,
