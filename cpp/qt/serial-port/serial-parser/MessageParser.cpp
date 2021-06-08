@@ -1,6 +1,8 @@
 #include "MessageParser.h"
 
-#include <QtGlobal> // for qFatal()
+#include <QCoreApplication>
+#include <QtGlobal> // for qCritical()
+#include <QtDebug>
 
 /** [Public Methods] **/
 
@@ -15,7 +17,9 @@ void MessageParser::parse(const QString &to_parse) const {
     emit new_message(msg);
   // } else if (to_parse.startsWith("move ")) {
   } else {
-    qFatal("MessageParser: parsing error: unrecognized command type: '%s'",
-           to_parse.data());
+    qCritical()
+        << "MessageParser: parsing error: unrecognized command type: '"
+        << to_parse << "'";
+    QCoreApplication::instance()->quit();
   }
 }

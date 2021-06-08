@@ -1,8 +1,9 @@
 #include "SerialCommunicator.h"
 
-#include <QtGlobal>
-#include <QtDebug>
+#include <QCoreApplication>
 #include <QIODevice>
+#include <QtDebug>
+#include <QtGlobal>
 
 #include <stdexcept>
 
@@ -42,18 +43,19 @@ SerialCommunicator::SerialCommunicator(QSerialPort *port, QObject *parent)
 
 void SerialCommunicator::send(const QString &msg) const {
   _num_sent++;
-  qWarning() << "SerialCommunicator::send() is unimplemented";
-  QByteArray to_write = _start + msg.toUtf8() + _end;
+  QByteArray to_write = _start + msg.toUtf8() + _end + "\r\n hello there \r\n";
 
   // send
   auto bytes_written = _port->write(to_write);
 
   // make sure it sent
   if (bytes_written == -1) {
-    qFatal("Failed to send message on serial port");
+    qCritical("Failed to send message on serial port");
+    QCoreApplication::instance()->quit();
   }
   if (bytes_written != to_write.size()) {
-    qFatal("Failed to send entire message");
+    qCritical("Failed to send entire message");
+    QCoreApplication::instance()->quit();
   }
 }
 
@@ -64,8 +66,9 @@ void SerialCommunicator::read() {
   // read from the port
   _data.append(_port->readAll());
   if (_port->error() == QSerialPort::ReadError) {
-    qFatal("Failed to read from port %s, error: %s",
-           _port->portName().data(), _port->errorString().toStdString());
+    qCritical("Failed to read from port %s, error: %s",
+              _port->portName().data(), _port->errorString().toStdString());
+    QCoreApplication::instance()->quit();
   }
 
   // for each beginning and ending, emit received with interior
@@ -77,19 +80,19 @@ void SerialCommunicator::read() {
     if (end_idx == -1) {
       if (idx > 0) {
         // remove everything before the start character
-        qDebug() << "_data before left stripping:      " << _data;
+        //qDebug() << "_data before left stripping:      " << _data;
         _data = _data.right(_data.size() - idx);
-        qDebug() << "_data after  left stripping:      " << _data;
+        //qDebug() << "_data after  left stripping:      " << _data;
       }
       break; // done parsing for now (missing end character)
     }
 
     // has the end character.  extract the command and emit
     _num_received++;
-    auto command = QString::fromUtf8(_data.data() + idx + 1, end_idx - idx);
-    qDebug() << "_data before removing one message:" << _data;
+    auto command = QString::fromUtf8(_data.data() + idx + 1, end_idx - idx - 1);
+    //qDebug() << "_data before removing one message:" << _data;
     _data = _data.right(_data.size() - end_idx - 1);
-    qDebug() << "_data after  removing one message:" << _data;
+    //qDebug() << "_data after  removing one message:" << _data;
     emit received(command);
   }
 }

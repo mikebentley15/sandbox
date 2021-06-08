@@ -56,51 +56,57 @@ int main (int argc, char *argv[]) {
     << "baud:    " << int(baud)          << "\n"
     << std::endl;
 
-  // open the serial port connection
   QSerialPort serialPort;
-  serialPort.setPortName(port);
-  serialPort.setBaudRate(baud);
-  if (!serialPort.open(QIODevice::ReadOnly)) {
-    std::cout << "Failed to open port " << port.toStdString()
-              << ", error: " << serialPort.errorString().toStdString()
-              << std::endl;
-    return 1;
-  }
-
-  // create other filters
-  SerialCommunicator communicator(&serialPort);
-  MessageGenerator generator;
-  MessageParser    parser;
-  QTimer           heartbeat_timer;
-
-  communicator.set_start('<');
-  communicator.set_end('>');
-  heartbeat_timer.start(1000); // heartbeat every 1 second
-
-  //
-  // make connections
-  //
-
-  // received message pipeline
-  QObject::connect(&communicator, &SerialCommunicator::received,
-                   &parser,       &MessageParser::parse);
-  QObject::connect(&parser,       &MessageParser::new_message,
-      [](const QString &msg) {
-        std::cout << "received:  '" << msg.toStdString() << std::endl;
-      });
-
-  // message generation pipeline
-  QObject::connect(&heartbeat_timer, &QTimer::timeout,
-      [&generator]() {
-        static int i = 1;
-        generator.message("hello world - " + QString::number(i++));
-      });
-  QObject::connect(&generator,    &MessageGenerator::to_send,
-                   &communicator, &SerialCommunicator::send);
-
-  // start the event loop
   int return_code = -1;
   try {
+    // open the serial port connection
+    serialPort.setPortName(port);
+    serialPort.setBaudRate(baud);
+    if (!serialPort.open(QIODevice::ReadWrite)) {
+      std::cout << "Failed to open port " << port.toStdString()
+                << ", error: " << serialPort.errorString().toStdString()
+                << std::endl;
+      return 1;
+    }
+
+    // create other filters
+    SerialCommunicator communicator(&serialPort);
+    MessageGenerator generator;
+    MessageParser    parser;
+    QTimer           heartbeat_timer;
+
+    communicator.set_start('<');
+    communicator.set_end('>');
+    heartbeat_timer.start(1000); // heartbeat every 1 second
+
+    //
+    // make connections
+    //
+
+    // cleanup
+    QObject::connect(&app, &QCoreApplication::aboutToQuit,
+        [&serialPort]() { serialPort.close(); });
+    QObject::connect(&serialPort, &QSerialPort::aboutToClose,
+        []() { std::cout << "about to close serial port" << std::endl; });
+
+    // received message pipeline
+    QObject::connect(&communicator, &SerialCommunicator::received,
+                     &parser,       &MessageParser::parse);
+    QObject::connect(&parser,       &MessageParser::new_message,
+        [](const QString &msg) {
+          std::cout << "received:  '" << msg.toStdString() << "'" << std::endl;
+        });
+
+    // message generation pipeline
+    QObject::connect(&heartbeat_timer, &QTimer::timeout,
+        [&generator]() {
+          static int i = 1;
+          generator.message("hello world - " + QString::number(i++));
+        });
+    QObject::connect(&generator,    &MessageGenerator::to_send,
+                     &communicator, &SerialCommunicator::send);
+
+    // start the event loop
     return_code = app.exec();
   } catch (...) {
     serialPort.close();
