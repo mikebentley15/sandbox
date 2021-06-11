@@ -16,6 +16,9 @@ my-screw.stl: screw_thread_spool.scad screwlib.scad Makefile
 my-nut.stl: screw_thread_spool.scad screwlib.scad Makefile
 	openscad -D 'piece="nut"' -o $@ $<
 
+my-washer.stl: screw_thread_spool.scad screwlib.scad Makefile
+	openscad -D 'piece="washer"' -o $@ $<
+
 .PHONY: clean
 clean:
 	$(RM) ${MODELS}
