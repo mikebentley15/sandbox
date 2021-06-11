@@ -1,7 +1,7 @@
 module M_screw(size, length, pitch=-1, profile=4) {
   assert(size == 3 || size == 4 || size == 5 || size == 6, "Unsupported size given");
   if (pitch == -1) { pitch = M_default_pitch(size); }
-  head_height = M_screw_head_height(3);
+  head_height = M_screw_head_height(size);
   eps = 0.01;
   union() {
     translate([0, 0, head_height - eps])
