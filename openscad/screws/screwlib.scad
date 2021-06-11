@@ -148,7 +148,7 @@ module screw_hex_roundhead(width, height, hex_radius) {
 
 module screw_shaft(size, height, pitch, profile=4) {
   rotations = height / pitch;
-  linear_extrude(height=height, twist=360*rotations)
+  linear_extrude(height=height, twist=-360*rotations)
     screwslice(size, pitch, profile=profile);
 }
 
