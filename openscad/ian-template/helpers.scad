@@ -109,6 +109,28 @@ module square_np(x, y) { mov_xy(  -x,    0) square(size=[x, y]); }
 module square_nc(x, y) { mov_xy(  -x, -y/2) square(size=[x, y]); }
 module square_nn(x, y) { mov_xy(  -x,   -y) square(size=[x, y]); }
 
+// bb is bounding box as [center, dimensions] where
+// - center: 3-vector for the center of the bounding box
+// - dimensions: 3-vector for the size of the box in each direction
+
+function bb_xmin(bb) = bb[0].x - bb[1].x/2;
+function bb_ymin(bb) = bb[0].y - bb[1].y/2;
+function bb_zmin(bb) = bb[0].z - bb[1].z/2;
+
+function bb_xmax(bb) = bb[0].x + bb[1].x/2;
+function bb_ymax(bb) = bb[0].y + bb[1].y/2;
+function bb_zmax(bb) = bb[0].z + bb[1].z/2;
+
+function bb_dim(bb) = bb[1];
+function bb_xdim(bb) = bb[1].x;
+function bb_ydim(bb) = bb[1].y;
+function bb_zdim(bb) = bb[1].z;
+
+function bb_center(bb) = bb[0];
+function bb_xcenter(bb) = bb[0].x;
+function bb_ycenter(bb) = bb[0].y;
+function bb_zcenter(bb) = bb[0].z;
+
 // Used to fix render bugs on preview by making holes slightly longer than needed
 eps = 0.04;
 module nudge_x() { mov_x(-eps) children(); }
