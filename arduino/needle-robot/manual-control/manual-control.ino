@@ -48,6 +48,11 @@ const float calibration_factor = 418110.f;
 const uint32_t motor_increment = 50; // mHz
 const uint32_t steps_per_rotation = 200;
 
+// linear movement per linear motor rotation
+const uint32_t linear_pitch_micrometers = 5000;
+const uint32_t linear_step_micrometers =
+    linear_pitch_micrometers / steps_per_rotation;
+
 
 //
 // global non-const variables
