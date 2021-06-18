@@ -38,6 +38,23 @@ L_binder_wall_thickness    = 2;
 
 /* [Printed Bearing Mount] */
 
+bearing_mount_sensor_wall            =  4;
+bearing_mount_sensor_clearance       =  0.2;
+bearing_mount_sensor_overhang        =  2;
+bearing_mount_sensor_overhang_height =  2;
+bearing_mount_sensor_wall_length     = 10;
+bearing_mount_screw_size             = 4;
+bearing_mount_screw_clearance        = 0.2;
+bearing_mount_bearing_clearance      = 0.15;
+// extra buffer away from the sensor mount
+bearing_mount_bearing_sensor_x_buffer = 5;
+bearing_mount_bearing_wall_thickness = 3;
+bearing_mount_bearing_wall_height    = 5;
+bearing_mount_depth                  = 60;
+bearing_mount_center_hole_clearance  = 2;
+// TODO: others
+
+
 /* [Printed Motor Prismatic Coupler] */
 
 motor_coupler_length            = 15;
@@ -124,9 +141,6 @@ sensor_center_bulge_length    = 23.5;
 sensor_center_bulge_depth     = 12.6;
 sensor_right_bulge_thickness  = 1.6;
 
-// TODO: right bulge
-// width goes from 12.6 to 14.2!
-
 sensor_bottom_screw_size      = 5;
 sensor_bottom_screw_offset_1  = 5;
 sensor_bottom_screw_offset_2  = 20;
@@ -137,7 +151,6 @@ sensor_top_screw_offset_2     = 20;
 
 /* [Bearing] */
 
-// TODO: measure and fill in
 bearing_outer_diameter = 22;
 bearing_inner_diameter =  8;
 bearing_thickness      =  7;
@@ -165,6 +178,7 @@ nut_color          = "#3333aaaa";
 washer_color       = "#333333aa";
 force_sensor_color = "#6cff6caa";
 motor_color        = "#00ffffaa";
+bearing_color      = "#ff00ffaa";
 printed_color_1    = "#ff0000aa";
 
 
@@ -185,6 +199,18 @@ bracket_depth_overhang =
 //      - platform_screw_size / 2
 //      - L_bracket_length;
 
+L_bracket_inbetween_space =
+    platform_depth
+    - 2 * platform_top_screw_depth_side_distance
+    - L_bracket_width;
+
+L_bracket_right_slit_z_bottom =
+    platform_height
+      + L_bracket_thickness
+      + L_bracket_height
+      - L_bracket_slit_end_distance
+      - L_bracket_side_slit_length;
+
 // new mount point centered on the platform
 bracket_x_mount =
     - L_bracket_length
@@ -201,6 +227,11 @@ motor_z_mount =
       - L_bracket_side_slit_length
       + motor_z_offset;
 
+sensor_z_mount =
+    L_bracket_right_slit_z_bottom
+      - sensor_bottom_screw_offset_1
+      + sensor_bottom_screw_size / 2;
+
 motor_mount_depth =
     motor_cylinder_length
       + L_bracket_thickness
@@ -210,18 +241,6 @@ motor_mount_width =
     platform_depth
       + 2 * bracket_depth_overhang
       + 2 * motor_mount_depth_buffer;
-
-L_bracket_inbetween_space =
-    platform_depth
-    - 2 * platform_top_screw_depth_side_distance
-    - L_bracket_width;
-
-L_bracket_right_slit_z_bottom =
-    platform_height
-      + L_bracket_thickness
-      + L_bracket_height
-      - L_bracket_slit_end_distance
-      - L_bracket_side_slit_length;
 
 sensor_mount_thickness =
     L_bracket_thickness
@@ -250,6 +269,8 @@ if (part == "all") {
   mounted_force_sensor();
   mounted_L_binders();
   mounted_motor_coupler();
+  bearing();
+  //mounted_bearing_mount();
 }
 
 if (part == "motor-mount") {
@@ -265,7 +286,7 @@ if (part == "L-bind") {
 }
 
 if (part == "bearing-mount") {
-
+  bearing_mount();
 }
 
 if (part == "motor-prismatic-coupler") {
@@ -423,12 +444,11 @@ module mounted_force_sensor() {
         + bracket_x_mount
         - sensor_width
         - sensor_mount_width_buffer
-        - sensor_mount_bracket_clearance,
+        - sensor_mount_bracket_clearance
+        - sensor_mount_sensor_clearance,
       platform_top_screw_depth_side_distance
         - sensor_width / 2,
-      L_bracket_right_slit_z_bottom
-        - sensor_bottom_screw_offset_1
-        + sensor_bottom_screw_size / 2
+      sensor_z_mount
     ])
     force_sensor();
 }
@@ -834,7 +854,7 @@ module sensor_mount() {
     sensor_wrap_width =
           sensor_width
             + sensor_mount_sensor_wall
-            + sensor_mount_sensor_clearance;
+            + 2 * sensor_mount_sensor_clearance;
     translate([
       - sensor_mount_bracket_clearance
         - sensor_mount_width_buffer
@@ -857,7 +877,7 @@ module sensor_mount() {
           ])
           cube([
               sensor_width
-                + sensor_mount_sensor_clearance
+                + 2 * sensor_mount_sensor_clearance
                 + 2 * eps,
               sensor_depth
                 + sensor_right_bulge_thickness
@@ -1112,5 +1132,207 @@ module motor_coupler() {
       cylinder(d=motor_prismatic_inner_diameter,
                h=max(motor_prismatic_length, motor_prismatic_cavity_depth + eps),
                $fn=6);
+  }
+}
+
+module bearing() {
+  translate([
+      L_bracket_length
+        + bracket_x_mount
+        - bearing_thickness
+        - sensor_mount_width_buffer
+        - sensor_mount_bracket_clearance
+        - 2 * sensor_mount_sensor_clearance
+        - sensor_width
+        - sensor_mount_sensor_wall
+        - bearing_mount_bearing_sensor_x_buffer
+        ,
+      platform_depth / 2,
+      motor_z_mount
+        + motor_height / 2
+    ])
+    color(bearing_color)
+    rot_y(90)
+    difference() {
+      cylinder(d=bearing_outer_diameter, h=bearing_thickness);
+      mov_z(-eps)
+        cylinder(d=bearing_inner_diameter, h=bearing_thickness + 2*eps);
+    }
+}
+
+module mounted_bearing_mount() {
+  translate([
+      L_bracket_length
+        + bracket_x_mount
+        - bearing_thickness
+        - sensor_mount_width_buffer
+        - sensor_mount_bracket_clearance
+        - 2 * sensor_mount_sensor_clearance
+        - sensor_width
+        - sensor_mount_sensor_wall
+        - bearing_mount_bearing_sensor_x_buffer
+        - bearing_mount_bearing_clearance
+        ,
+      platform_depth / 2,
+      motor_z_mount
+        + motor_height / 2
+    ])
+    bearing_mount();
+}
+
+module bearing_mount() {
+  // hat for the force sensor
+  hat_width =
+        sensor_width
+          + 2 * bearing_mount_sensor_clearance
+          + 2 * bearing_mount_sensor_wall;
+  hat_depth =
+        sensor_depth
+          + 2 * bearing_mount_sensor_clearance
+          + 2 * bearing_mount_sensor_wall;
+  hat_height =
+        sensor_top_screw_offset_2
+          + sensor_top_screw_size / 2
+          + 2 * bearing_mount_sensor_wall
+          + bearing_mount_sensor_clearance;
+  head_top =
+        - motor_height / 2
+        - motor_z_mount
+        + sensor_z_mount
+        + sensor_height;
+  hat_x =
+        - hat_width / 2
+        + bearing_thickness
+        + bearing_mount_bearing_sensor_x_buffer
+        + sensor_mount_sensor_wall
+        + sensor_mount_sensor_clearance
+        + sensor_width / 2
+        + bearing_mount_bearing_clearance;
+  hat_y =
+        - sensor_depth / 2
+        - bearing_mount_sensor_clearance
+        - bearing_mount_sensor_wall
+        - L_bracket_inbetween_space / 2
+        - L_bracket_width / 2;
+  hat_z =
+        - hat_height
+        + head_top
+        + bearing_mount_sensor_wall
+        + bearing_mount_sensor_clearance;
+
+  bearing_cushion_diameter =
+        bearing_outer_diameter
+          + 2 * bearing_mount_bearing_clearance
+          + 2 * bearing_mount_bearing_wall_thickness;
+
+  color(printed_color_1)
+  difference() {
+    union() {
+      // sensor hat
+      translate([
+          hat_x,
+          hat_y,
+          hat_z
+        ])
+        difference() {
+          cube([
+              hat_width,
+              hat_depth,
+              hat_height
+            ]);
+          // sensor cutout
+          translate([
+              bearing_mount_sensor_wall,
+              bearing_mount_sensor_wall,
+              -eps
+            ])
+            cube([
+                sensor_width
+                  + 2 * bearing_mount_sensor_clearance,
+                sensor_depth
+                  + 2 * bearing_mount_sensor_clearance,
+                hat_height
+                  - bearing_mount_sensor_wall
+                  + eps
+              ]);
+          // cut off front half
+          translate([
+              2 * hat_width / 3,
+              - eps,
+              - eps
+            ])
+            cube([
+                hat_width + eps,
+                hat_depth + 2 * eps,
+                hat_height + 2 * eps
+              ]);
+          // screw holes
+          translate([
+              hat_width / 2,
+              hat_depth / 2,
+              hat_height
+                - bearing_mount_sensor_wall
+                - bearing_mount_sensor_clearance
+                - sensor_top_screw_offset_1
+            ])
+            rot_y(90)
+            cylinder(d=bearing_mount_screw_size + 2*bearing_mount_screw_clearance,
+                     h=hat_width + 2 * eps,
+                     center=true);
+          translate([
+              hat_width / 2,
+              hat_depth / 2,
+              hat_height
+                - bearing_mount_sensor_wall
+                - bearing_mount_sensor_clearance
+                - sensor_top_screw_offset_2
+            ])
+            rot_y(90)
+            cylinder(d=bearing_mount_screw_size + 2*bearing_mount_screw_clearance,
+                     h=hat_width + 2 * eps,
+                     center=true);
+        }
+
+      // wall around bearing
+      rot_y(90)
+      translate([0, 0, - bearing_mount_bearing_wall_thickness])
+      cylinder(d=bearing_cushion_diameter,
+               h=bearing_thickness
+                 + bearing_mount_bearing_wall_thickness);
+
+      // connection between them
+      intersection() {
+        union() {
+          rot_x(-60)
+          translate([
+              - bearing_mount_bearing_wall_thickness,
+              - 100,
+              - bearing_cushion_diameter / 2
+            ])
+            cube([100, 100, bearing_cushion_diameter]);
+          rot_x(90 + 22)
+          translate([
+              - bearing_mount_bearing_wall_thickness,
+              0,
+              - bearing_cushion_diameter / 2
+            ])
+            cube([100, 100, bearing_cushion_diameter]);
+        }
+        //#cube([10, 10, 10], center=true);
+      }
+    }
+
+    // subtract bearing
+    rot_y(90)
+      cylinder(d=bearing_outer_diameter + 2 * bearing_mount_bearing_clearance,
+               h=bearing_thickness + eps);
+
+    // subtract channel in bearing
+    rot_y(90)
+      mov_z(- bearing_mount_bearing_wall_thickness - eps)
+      cylinder(d=bearing_inner_diameter + 2 * bearing_mount_center_hole_clearance,
+               h=bearing_thickness
+                 + bearing_mount_bearing_wall_thickness
+                 + 2 * eps);
   }
 }
