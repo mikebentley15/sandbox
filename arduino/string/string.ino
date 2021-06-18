@@ -6,9 +6,21 @@
 
 StaticString<100> str;
 
+template <typename StringGeneratorFunc>
+void print_func(StringGeneratorFunc f) {
+  Serial.println(f());
+}
+
 void setup() {
   str.extend("hello world");
   Serial.println(str.data());
+  auto L = []() -> const char* {
+    static StaticString<100> s;
+    s.extend("hi there");
+    return s.data();
+  };
 }
 
-void loop() { }
+void loop() {
+  delay(1000);
+}
