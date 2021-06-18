@@ -668,16 +668,14 @@ module motor_mount_sacrificial_bridging() {
   L_bracket_clearance_x_offset =
       motor_cylinder_length
       + L_bracket_thickness
-      + motor_mount_bracket_clearance;
+      + 2 * motor_mount_bracket_clearance;
+  cylinder_hole_xmax =
+      - bb_xdim(motor_mount_bb) / 2
+      + motor_cylinder_length
+      + motor_mount_cylinder_clearance;
 
   // at the end of the motor cylinder
-  translate([
-    layer_height / 2
-      + motor_cylinder_length
-      + motor_mount_cylinder_clearance,
-    motor_mount_width / 2,
-    motor_mount_height / 2
-    ])
+  mov_x(cylinder_hole_xmax + layer_height / 2)
     cube([
       layer_height,
       L_bracket_inbetween_space
@@ -688,30 +686,16 @@ module motor_mount_sacrificial_bridging() {
       ],
       center=true);
 
-  // end of L-bracket slide-in hole, for the shaft hole
-  translate([
-    layer_height / 2 + L_bracket_clearance_x_offset,
-    motor_mount_width / 2,
-    motor_mount_height / 2
-    ])
+  //// end of L-bracket slide-in hole, for the screw holes
+  mov_x(- bb_xdim(motor_mount_bb) / 2
+        + L_bracket_clearance_x_offset
+        + layer_height / 2)
     cube([
-      layer_height,
-      motor_shaft_diameter
-        + 2 * motor_mount_shaft_clearance
-        + 2 * eps,
-      motor_shaft_diameter
-        + 2 * motor_mount_shaft_clearance
-        + 2 * eps
+        layer_height,
+        bb_ydim(motor_mount_bb),
+        bb_zdim(motor_mount_bb)
       ],
-      center=true);
-
-  // end of L-bracket slide-in hole, for the screw holes
-  translate([L_bracket_clearance_x_offset, 0, 0])
-    cube([
-      layer_height,
-      motor_mount_width,
-      motor_mount_height
-      ]);
+      center = true);
 }
 
 module motor_mount_screws() {
