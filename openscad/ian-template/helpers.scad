@@ -38,14 +38,24 @@ module rot_yz(ya, za)      { rotate(a=[ 0, ya, za]) children(); }
 module rot_xyz(xa, ya, za) { rotate(a=[xa, ya, za]) children(); }
 
 // Duplicate an object moving one positive and one negative
-module dupe_x(d) { mov_x(d) children(); mov_x(-d) children(); }
-module dupe_y(d) { mov_y(d) children(); mov_y(-d) children(); }
-module dupe_z(d) { mov_z(d) children(); mov_z(-d) children(); }
+module dupe(dx=0, dy=0, dz=0) {
+  displacement = [dx, dy, dz] / 2;
+  translate(-displacement) children();
+  translate( displacement) children();
+}
+// convenience methods for one dimension
+module dupe_x(d) { dupe(dx=d) children(); }
+module dupe_y(d) { dupe(dy=d) children(); }
+module dupe_z(d) { dupe(dz=d) children(); }
 
 // Mirror while duplicating
-module mir_x() { children(); mirror(v=[1, 0, 0]) children(); }
-module mir_y() { children(); mirror(v=[0, 1, 0]) children(); }
-module mir_z() { children(); mirror(v=[0, 0, 1]) children(); }
+module mir(axis=[1, 1, 1], dx=0, dy=0, dz=0) {
+  translate(-[dx/2, dy/2, dz/2]) children();
+  translate([dx/2, dy/2, dz/2]) mirror(v=[1, 0, 0]) children();
+}
+module mir_x(dx=0, dy=0, dz=0) { mir(axis=[1, 0, 0], dx=dx, dy=dy, dz=dz) children(); }
+module mir_y(dx=0, dy=0, dz=0) { mir(axis=[0, 1, 0], dx=dx, dy=dy, dz=dz) children(); }
+module mir_z(dx=0, dy=0, dz=0) { mir(axis=[0, 0, 1], dx=dx, dy=dy, dz=dz) children(); }
 
 // Move and mirror while duplicating
 module mov_mir_x(d) { mir_x() mov_x(d) children(); }
@@ -112,6 +122,10 @@ module square_nn(x, y) { mov_xy(  -x,   -y) square(size=[x, y]); }
 // bb is bounding box as [center, dimensions] where
 // - center: 3-vector for the center of the bounding box
 // - dimensions: 3-vector for the size of the box in each direction
+
+// create a bounding box
+function bb(center=[0,0,0], dim=[0,0,0]) = [center, dim];
+module show_bb(bb) { %translate(bb_center(bb)) cube(bb_dim(bb), center=true); }
 
 function bb_xmin(bb) = bb[0].x - bb[1].x/2;
 function bb_ymin(bb) = bb[0].y - bb[1].y/2;
