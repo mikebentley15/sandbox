@@ -202,6 +202,7 @@ extrusion_width                     = 0.45;
 
 /* [Advanced Settings] */
 
+show_fasteners = true;
 eps = 0.02;
 $fn = 20;
 
@@ -420,13 +421,13 @@ sensor_mount_bb = bb_join(sensor_mount_bracket_part_bb,
 if (part == "all") {
   translate(bb_center(platform_bb)) platform();
   translate(bb_center(L_brackets_bb)) L_brackets();
-  L_brackets_screws();
+  if (show_fasteners) { L_brackets_screws(); }
   translate(bb_center(motor_bb)) motor();
   translate(bb_center(motor_mount_bb)) motor_mount();
-  motor_mount_screws();
+  if (show_fasteners) { motor_mount_screws(); }
   translate(bb_center(sensor_bb)) force_sensor();
   translate(bb_center(sensor_mount_bb)) sensor_mount();
-  sensor_mount_screws();
+  if (show_fasteners) { sensor_mount_screws(); }
   //mounted_L_binders();
   //mounted_motor_coupler();
   //bearing();
