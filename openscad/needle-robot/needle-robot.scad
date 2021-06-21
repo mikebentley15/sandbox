@@ -620,11 +620,11 @@ module L_brackets_screws() {
       )
     union() {
       color(washer_color)
-        M4_washer();
+        M_washer(platform_screw_size);
       color(screw_color)
-        mov_z(M_screw_head_height(4))
+        mov_z(M_screw_head_height(platform_screw_size))
         rot_x(180)
-        M4(12);
+        M_screw(platform_screw_size, 12);
     }
 }
 
@@ -828,11 +828,12 @@ module motor_mount_screws() {
     union() {
       color(washer_color)
         rot_y(90)
-        M4_washer();
+        M_washer(motor_screw_size);
       color(screw_color)
-        mov_x(M_screw_head_height(4) + M_washer_thickness(4))
+        mov_x(M_screw_head_height(motor_screw_size)
+              + M_washer_thickness(motor_screw_size))
         rot_y(-90)
-        M4(20);
+        M_screw(motor_screw_size, 20);
     }
 }
 
@@ -980,13 +981,13 @@ module sensor_mount_screws() {
     dupe_z(sensor_bottom_screw_distance)
     union() {
       color(screw_color)
-        mov_x(M_screw_head_height(5)
-              + M_washer_thickness(5))
+        mov_x(M_screw_head_height(sensor_bottom_screw_size)
+              + M_washer_thickness(sensor_bottom_screw_size))
         rot_y(-90)
-        M5(20);
+        M_screw(sensor_bottom_screw_size, 20);
       color(washer_color)
         rot_y(90)
-        M5_washer();
+        M_washer(sensor_bottom_screw_size);
     }
 
   // screws on the other L brackets attached with nuts
@@ -999,20 +1000,20 @@ module sensor_mount_screws() {
     dupe_z(sensor_bottom_screw_distance)
     union() {
       color(screw_color)
-        mov_x(M_screw_head_height(5)
-              + M_washer_thickness(5))
+        mov_x(M_screw_head_height(sensor_bottom_screw_size)
+              + M_washer_thickness(sensor_bottom_screw_size))
         rot_y(-90)
-        M5(16);
+        M_screw(sensor_bottom_screw_size, 16);
       color(washer_color)
         rot_y(90)
-        M5_washer();
+        M_washer(sensor_bottom_screw_size);
       color(nut_color)
-        mov_x(- M_nut_height(5)
+        mov_x(- M_nut_height(sensor_bottom_screw_size)
               - bb_xdim(sensor_mount_bracket_part_bb)
               + sensor_mount_nut_depth)
         rot_y(90)
         rot_z(30)
-        M5_nut();
+        M_nut(sensor_bottom_screw_size);
     }
 }
 
