@@ -50,6 +50,9 @@ show_motor_coupler_coupler_part_bb = false;
 // printed motor coupler (hollow prismatic joint part)
 show_motor_coupler_prismatic_part_bb = false;
 
+// bearing
+show_bearing_bb = false;
+
 
 /* [Printed Motor Mount] */
 
@@ -493,6 +496,20 @@ motor_coupler_prismatic_part_bb = bb(
 motor_coupler_bb = bb_join(motor_coupler_coupler_part_bb,
                            motor_coupler_prismatic_part_bb);
 
+bearing_bb = bb(
+    center = [
+      bb_xmin(sensor_mount_bb)
+        - bearing_thickness / 2
+        - bearing_mount_bearing_sensor_x_buffer,
+      bb_ycenter(motor_bb),
+      bb_zcenter(motor_bb)
+    ],
+    dim = [
+      bearing_thickness,
+      bearing_outer_diameter,
+      bearing_outer_diameter
+    ]
+  );
 
 
 //
@@ -512,7 +529,7 @@ if (part == "all") {
   translate(bb_center(L_binders_bb)) L_binders();
   translate(bb_center(motor_coupler_bb)) motor_coupler();
   if (show_fasteners) { motor_coupler_screws(); }
-  //bearing();
+  translate(bb_center(bearing_bb)) bearing();
   //mounted_bearing_mount();
 }
 
@@ -564,7 +581,7 @@ check_show_bb(show_motor_coupler_coupler_part_bb,
               motor_coupler_coupler_part_bb);
 check_show_bb(show_motor_coupler_prismatic_part_bb,
               motor_coupler_prismatic_part_bb);
-
+check_show_bb(show_bearing_bb, bearing_bb);
 
 //
 // Helper functions
@@ -1022,26 +1039,13 @@ module L_binders() {
 }
 
 module L_binder() {
-  L_binder_depth =
-      2 * L_bracket_width
-        + 2 * L_binder_bracket_clearance
-        + L_bracket_inbetween_space
-        + 2 * L_binder_wall_thickness;
-  L_binder_height =
-      2 * L_bracket_thickness
-        + 2 * L_binder_bracket_clearance
-        + 2 * L_binder_wall_thickness;
   color(printed_color_1)
   difference() {
-    cube([
-        L_binder_width,
-        L_binder_depth,
-        L_binder_height
-      ], center=true);
-    dupe_y(L_bracket_width/2
-           + L_bracket_inbetween_space/2)
+    cube(bb_dim(L_binder_1_bb), center = true);
+    dupe_y(bb_ydim(L_brackets_bb) - L_bracket_width)
       cube([
-          L_binder_width + 2*eps,
+          bb_xdim(L_binder_1_bb)
+            + 2 * eps,
           L_bracket_width
             + 2 * L_binder_bracket_clearance,
           2 * L_bracket_thickness
@@ -1173,28 +1177,12 @@ module motor_coupler_screws() {
 }
 
 module bearing() {
-  translate([
-      L_bracket_length
-        + bracket_x_mount
-        - bearing_thickness
-        - sensor_mount_width_buffer
-        - sensor_mount_bracket_clearance
-        - 2 * sensor_mount_sensor_clearance
-        - sensor_width
-        - sensor_mount_sensor_wall
-        - bearing_mount_bearing_sensor_x_buffer
-        ,
-      platform_depth / 2,
-      motor_z_mount
-        + motor_height / 2
-    ])
-    color(bearing_color)
-    rot_y(90)
-    difference() {
-      cylinder(d=bearing_outer_diameter, h=bearing_thickness);
-      mov_z(-eps)
-        cylinder(d=bearing_inner_diameter, h=bearing_thickness + 2*eps);
-    }
+  color(bearing_color)
+  rot_y(90)
+  difference() {
+    cylinder(center=true, d=bearing_outer_diameter, h=bearing_thickness);
+    cylinder(center=true, d=bearing_inner_diameter, h=bearing_thickness + 2*eps);
+  }
 }
 
 module mounted_bearing_mount() {
