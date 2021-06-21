@@ -130,10 +130,12 @@ module show_bb(bb) { %translate(bb_center(bb)) cube(bb_dim(bb), center=true); }
 function bb_xmin(bb) = bb[0].x - bb[1].x/2;
 function bb_ymin(bb) = bb[0].y - bb[1].y/2;
 function bb_zmin(bb) = bb[0].z - bb[1].z/2;
+function bb_min(bb)  = [bb_xmin(bb), bb_ymin(bb), bb_zmin(bb)];
 
 function bb_xmax(bb) = bb[0].x + bb[1].x/2;
 function bb_ymax(bb) = bb[0].y + bb[1].y/2;
 function bb_zmax(bb) = bb[0].z + bb[1].z/2;
+function bb_max(bb)  = [bb_xmax(bb), bb_ymax(bb), bb_zmax(bb)];
 
 function bb_dim(bb) = bb[1];
 function bb_xdim(bb) = bb[1].x;
@@ -144,6 +146,19 @@ function bb_center(bb) = bb[0];
 function bb_xcenter(bb) = bb[0].x;
 function bb_ycenter(bb) = bb[0].y;
 function bb_zcenter(bb) = bb[0].z;
+
+function bb_join(bb1, bb2) = bb(
+    center = [
+      (max(bb_xmax(bb1), bb_xmax(bb2)) + min(bb_xmin(bb1), bb_xmin(bb2))) / 2,
+      (max(bb_ymax(bb1), bb_ymax(bb2)) + min(bb_ymin(bb1), bb_ymin(bb2))) / 2,
+      (max(bb_zmax(bb1), bb_zmax(bb2)) + min(bb_zmin(bb1), bb_zmin(bb2))) / 2
+    ],
+    dim = [
+      max(bb_xmax(bb1), bb_xmax(bb2)) - min(bb_xmin(bb1), bb_xmin(bb2)),
+      max(bb_ymax(bb1), bb_ymax(bb2)) - min(bb_ymin(bb1), bb_ymin(bb2)),
+      max(bb_zmax(bb1), bb_zmax(bb2)) - min(bb_zmin(bb1), bb_zmin(bb2))
+    ]
+  );
 
 // Used to fix render bugs on preview by making holes slightly longer than needed
 eps = 0.04;
