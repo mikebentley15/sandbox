@@ -228,6 +228,7 @@ extrusion_width                     = 0.45;
 /* [Advanced Settings] */
 
 show_fasteners = true;
+show_cutouts = false;
 eps = 0.02;
 $fn = 20;
 
@@ -587,23 +588,23 @@ if (part == "all") {
 }
 
 if (part == "motor-mount") {
-  motor_mount(sacrificial_bridging=sacrificial_bridging);
+  motor_mount(sacrificial_bridging=sacrificial_bridging, show_cutouts=show_cutouts);
 }
 
 if (part == "sensor-mount") {
-  sensor_mount();
+  sensor_mount(show_cutouts = show_cutouts);
 }
 
 if (part == "L-bind") {
-  L_binder();
+  L_binder(show_cutouts = show_cutouts);
 }
 
 if (part == "bearing-mount") {
-  bearing_mount(show_cutouts=true);
+  bearing_mount(show_cutouts = show_cutouts);
 }
 
 if (part == "motor-prismatic-coupler") {
-  motor_coupler();
+  motor_coupler(show_cutouts = show_cutouts);
 }
 
 if (part == "needle-prismatic-coupler") {
@@ -800,7 +801,7 @@ module motor() {
   }
 }
 
-module motor_mount(sacrificial_bridging=false) {
+module motor_mount(sacrificial_bridging=false, show_cutouts=false) {
   color(printed_color_1)
   union() {
     if (sacrificial_bridging) { motor_mount_sacrificial_bridging(); }
@@ -808,48 +809,51 @@ module motor_mount(sacrificial_bridging=false) {
       // main body
       cube(bb_dim(motor_mount_bb), center=true);
 
-      // shaft hole
-      rot_y(90)
-        cylinder(
-            r = motor_shaft_diameter / 2 + motor_mount_shaft_clearance,
-            h = bb_xdim(motor_mount_bb) + 2 * eps,
-            center = true
-          );
-
-      // motor cylinder slide in
-      mov_x(-bb_xdim(motor_mount_bb) / 2 - eps)
+      hash_if(show_cutouts)
+      union() {
+        // shaft hole
         rot_y(90)
-        cylinder(
-            r = motor_cylinder_diameter / 2 + motor_mount_shaft_clearance,
-            h = motor_cylinder_length + motor_mount_cylinder_clearance + eps
-          );
+          cylinder(
+              r = motor_shaft_diameter / 2 + motor_mount_shaft_clearance,
+              h = bb_xdim(motor_mount_bb) + 2 * eps,
+              center = true
+            );
 
-      // bracket slide-in holes
-      mov_x(- bb_xdim(motor_mount_bb) / 2
-            + motor_cylinder_length
-            + L_bracket_thickness / 2
-            + motor_mount_bracket_clearance)
-        dupe_y(
-            L_bracket_width
-            + L_bracket_inbetween_space
-          )
-        cube([
-            L_bracket_thickness + 2 * motor_mount_bracket_clearance,
-            L_bracket_width + 2 * motor_mount_bracket_clearance,
-            motor_mount_height + 2 * eps
-          ],
-          center = true);
+        // motor cylinder slide in
+        mov_x(-bb_xdim(motor_mount_bb) / 2 - eps)
+          rot_y(90)
+          cylinder(
+              r = motor_cylinder_diameter / 2 + motor_mount_shaft_clearance,
+              h = motor_cylinder_length + motor_mount_cylinder_clearance + eps
+            );
 
-      // screw_holes
-      dupe_y(motor_depth - 2 * motor_screw_side_distance)
-        dupe_z(motor_height - 2 * motor_screw_top_distance)
-        rot_y(90)
-        cylinder(
-            r = motor_screw_size / 2
-                + motor_mount_screw_clearance,
-            h = bb_xdim(motor_mount_bb) + 2 * eps,
-            center = true
-          );
+        // bracket slide-in holes
+        mov_x(- bb_xdim(motor_mount_bb) / 2
+              + motor_cylinder_length
+              + L_bracket_thickness / 2
+              + motor_mount_bracket_clearance)
+          dupe_y(
+              L_bracket_width
+              + L_bracket_inbetween_space
+            )
+          cube([
+              L_bracket_thickness + 2 * motor_mount_bracket_clearance,
+              L_bracket_width + 2 * motor_mount_bracket_clearance,
+              motor_mount_height + 2 * eps
+            ],
+            center = true);
+
+        // screw_holes
+        dupe_y(motor_depth - 2 * motor_screw_side_distance)
+          dupe_z(motor_height - 2 * motor_screw_top_distance)
+          rot_y(90)
+          cylinder(
+              r = motor_screw_size / 2
+                  + motor_mount_screw_clearance,
+              h = bb_xdim(motor_mount_bb) + 2 * eps,
+              center = true
+            );
+      }
     }
   }
 }
@@ -965,7 +969,7 @@ module force_sensor() {
   }
 }
 
-module sensor_mount() {
+module sensor_mount(show_cutouts=false) {
   // move from bracket part centered at the origin to full thing centered at
   // the origin
   translate(bb_center(sensor_mount_bracket_part_bb)
@@ -976,40 +980,42 @@ module sensor_mount() {
       // main body
       cube(bb_dim(sensor_mount_bracket_part_bb), center=true);
 
-      // L-bracket slide holes
-      dupe_y(bb_ydim(L_brackets_bb) - L_bracket_width)
-        cube([
-            L_bracket_thickness
-              + 2 * sensor_mount_bracket_clearance,
-            L_bracket_width
-              + 2 * sensor_mount_bracket_clearance,
-            sensor_mount_height
-              + 2 * eps
-          ], center=true);
+      hash_if(show_cutouts) {
+        // L-bracket slide holes
+        dupe_y(bb_ydim(L_brackets_bb) - L_bracket_width)
+          cube([
+              L_bracket_thickness
+                + 2 * sensor_mount_bracket_clearance,
+              L_bracket_width
+                + 2 * sensor_mount_bracket_clearance,
+              sensor_mount_height
+                + 2 * eps
+            ], center=true);
 
-      // screw holes
-      dupe_y(bb_ydim(L_brackets_bb) - L_bracket_width)
-        dupe_z(sensor_bottom_screw_distance)
-        rot_y(90)
-        cylinder(d = sensor_bottom_screw_size
-                     + 2 * sensor_mount_screw_clearance,
-                 h = bb_xdim(sensor_mount_bracket_part_bb) + 2 * eps,
-                 center = true);
+        // screw holes
+        dupe_y(bb_ydim(L_brackets_bb) - L_bracket_width)
+          dupe_z(sensor_bottom_screw_distance)
+          rot_y(90)
+          cylinder(d = sensor_bottom_screw_size
+                       + 2 * sensor_mount_screw_clearance,
+                   h = bb_xdim(sensor_mount_bracket_part_bb) + 2 * eps,
+                   center = true);
 
-      // hex holes on one side for nuts to slide into
-      mov_x(- bb_xdim(sensor_mount_bracket_part_bb) / 2
-            + sensor_mount_nut_depth / 2
-            - eps / 2)
-        mov_y(L_bracket_width / 2
-              + L_bracket_inbetween_space / 2)
-        dupe_z(sensor_bottom_screw_distance)
-        rot_y(90)
-        rot_z(30)
-        cylinder(r = M_nut_outer_radius(sensor_bottom_screw_size)
-                     + sensor_mount_screw_clearance,
-                 h = sensor_mount_nut_depth + eps,
-                 $fn = 6,
-                 center = true);
+        // hex holes on one side for nuts to slide into
+        mov_x(- bb_xdim(sensor_mount_bracket_part_bb) / 2
+              + sensor_mount_nut_depth / 2
+              - eps / 2)
+          mov_y(L_bracket_width / 2
+                + L_bracket_inbetween_space / 2)
+          dupe_z(sensor_bottom_screw_distance)
+          rot_y(90)
+          rot_z(30)
+          cylinder(r = M_nut_outer_radius(sensor_bottom_screw_size)
+                       + sensor_mount_screw_clearance,
+                   h = sensor_mount_nut_depth + eps,
+                   $fn = 6,
+                   center = true);
+      }
     }
 
     // part to wrap around the force sensor
@@ -1019,27 +1025,30 @@ module sensor_mount() {
       mov_x(eps / 2)
         cube(bb_dim(sensor_mount_sensor_part_bb) + [eps, 0, 0],
              center = true);
-      // space for the sensor
-      mov_x(sensor_mount_sensor_wall / 2 + eps)
-        cube([
-            bb_xdim(sensor_inner_bb)
-              + 2 * sensor_mount_sensor_clearance
-              + 2 * eps,
-            bb_ydim(sensor_bb)
-              + 2 * sensor_mount_sensor_clearance,
-            bb_zdim(sensor_mount_sensor_part_bb)
-              + 2 * eps
-          ], center = true);
-      // slit at the end
-      mov_x(- bb_xdim(sensor_mount_sensor_part_bb) / 2
-            + sensor_mount_sensor_wall / 2)
-        cube([
-            sensor_mount_sensor_wall
-              + 2 * eps,
-            sensor_mount_sensor_wall_slit_width,
-            bb_zdim(sensor_mount_sensor_part_bb)
-              + 2 * eps
-          ], center = true);
+
+      hash_if(show_cutouts) {
+        // space for the sensor
+        mov_x(sensor_mount_sensor_wall / 2 + eps)
+          cube([
+              bb_xdim(sensor_inner_bb)
+                + 2 * sensor_mount_sensor_clearance
+                + 2 * eps,
+              bb_ydim(sensor_bb)
+                + 2 * sensor_mount_sensor_clearance,
+              bb_zdim(sensor_mount_sensor_part_bb)
+                + 2 * eps
+            ], center = true);
+        // slit at the end
+        mov_x(- bb_xdim(sensor_mount_sensor_part_bb) / 2
+              + sensor_mount_sensor_wall / 2)
+          cube([
+              sensor_mount_sensor_wall
+                + 2 * eps,
+              sensor_mount_sensor_wall_slit_width,
+              bb_zdim(sensor_mount_sensor_part_bb)
+                + 2 * eps
+            ], center = true);
+      }
     }
   }
 }
@@ -1094,11 +1103,12 @@ module L_binders() {
   dupe_x(platform_width + L_binder_width) L_binder();
 }
 
-module L_binder() {
+module L_binder(show_cutouts=false) {
   color(printed_color_1)
   difference() {
     cube(bb_dim(L_binder_1_bb), center = true);
-    dupe_y(bb_ydim(L_brackets_bb) - L_bracket_width)
+    hash_if(show_cutouts)
+      dupe_y(bb_ydim(L_brackets_bb) - L_bracket_width)
       cube([
           bb_xdim(L_binder_1_bb)
             + 2 * eps,
@@ -1110,7 +1120,7 @@ module L_binder() {
   }
 }
 
-module motor_coupler() {
+module motor_coupler(show_cutouts = false) {
   // rotate and shift so it is at the correct orientation and centered
   mov_x(- bb_xdim(motor_coupler_bb) / 2)
   rot_y(90)
@@ -1126,82 +1136,84 @@ module motor_coupler() {
                  $fn=6);
     }
     // delete motor shaft
-    difference() {
+    hash_if(show_cutouts) {
+      difference() {
+        mov_z(-eps)
+          cylinder(r=motor_shaft_diameter/2 + motor_coupler_shaft_clearance,
+                   h=motor_coupler_length
+                     - 2 * layer_height
+                     + 2 * eps);
+        mov_x(
+            motor_shaft_cutout_height
+              - motor_shaft_diameter / 2
+              + motor_coupler_shaft_clearance)
+        mov_z(- 2 * eps)
+          cube_pcp(
+              motor_shaft_diameter,
+              motor_shaft_diameter,
+              motor_coupler_length + 3 * eps
+            );
+      }
+      // remove a slit on the side
+      // slit only up to prismatic piece on the last two layers
+      mov_y(motor_prismatic_outer_diameter/2 * cos(30))
+        mov_z(-eps)
+        cube_cpp(motor_coupler_slit_size,
+                 motor_coupler_diameter,
+                 motor_coupler_length + 2 * eps);
       mov_z(-eps)
-        cylinder(r=motor_shaft_diameter/2 + motor_coupler_shaft_clearance,
-                 h=motor_coupler_length
+        cube_cpp(motor_coupler_slit_size,
+                 motor_coupler_diameter,
+                 motor_coupler_length
                    - 2 * layer_height
                    + 2 * eps);
-      mov_x(
-          motor_shaft_cutout_height
-            - motor_shaft_diameter / 2
-            + motor_coupler_shaft_clearance)
-      mov_z(- 2 * eps)
-        cube_pcp(
-            motor_shaft_diameter,
-            motor_shaft_diameter,
-            motor_coupler_length + 3 * eps
-          );
+
+      clamp_screw_y =
+          motor_shaft_diameter / 4
+            + motor_coupler_shaft_clearance / 2
+            + motor_coupler_diameter / 4;
+      clamp_screw_z = motor_coupler_screw_offset;
+      // create holes for the screw, head, and nut
+      // screw shaft hole
+      translate([0, clamp_screw_y, clamp_screw_z])
+        rot_y(90)
+        cylinder(r=motor_coupler_screw_size/2 + motor_coupler_screw_clearance,
+                 h=motor_coupler_diameter,
+                 center=true);
+      // screw head hole
+      translate([
+          motor_coupler_slit_size / 2
+            + motor_coupler_clamp_thickness,
+          clamp_screw_y,
+          clamp_screw_z
+        ])
+        rot_y(90)
+        cylinder(d=M_screw_head_diameter(motor_coupler_screw_size)
+                   + 2 * motor_coupler_screw_clearance,
+                 h=motor_coupler_diameter);
+      // nut hole
+      translate([
+          - motor_coupler_slit_size / 2
+            - motor_coupler_clamp_thickness,
+          clamp_screw_y,
+          clamp_screw_z
+        ])
+        rot_y(-90)
+        rot_z(30)
+        cylinder(r=M_nut_outer_radius(motor_coupler_screw_size)
+                   + motor_coupler_screw_clearance,
+                 h=motor_coupler_diameter,
+                 $fn=6);
+
+      // prismatic inner shaft
+      mov_z(motor_coupler_length
+          + motor_prismatic_length
+          - motor_prismatic_cavity_depth
+          )
+        cylinder(d=motor_prismatic_inner_diameter,
+                 h=max(motor_prismatic_length, motor_prismatic_cavity_depth + eps),
+                 $fn=6);
     }
-    // remove a slit on the side
-    // slit only up to prismatic piece on the last two layers
-    mov_y(motor_prismatic_outer_diameter/2 * cos(30))
-      mov_z(-eps)
-      cube_cpp(motor_coupler_slit_size,
-               motor_coupler_diameter,
-               motor_coupler_length + 2 * eps);
-    mov_z(-eps)
-      cube_cpp(motor_coupler_slit_size,
-               motor_coupler_diameter,
-               motor_coupler_length
-                 - 2 * layer_height
-                 + 2 * eps);
-
-    clamp_screw_y =
-        motor_shaft_diameter / 4
-          + motor_coupler_shaft_clearance / 2
-          + motor_coupler_diameter / 4;
-    clamp_screw_z = motor_coupler_screw_offset;
-    // create holes for the screw, head, and nut
-    // screw shaft hole
-    translate([0, clamp_screw_y, clamp_screw_z])
-      rot_y(90)
-      cylinder(r=motor_coupler_screw_size/2 + motor_coupler_screw_clearance,
-               h=motor_coupler_diameter,
-               center=true);
-    // screw head hole
-    translate([
-        motor_coupler_slit_size / 2
-          + motor_coupler_clamp_thickness,
-        clamp_screw_y,
-        clamp_screw_z
-      ])
-      rot_y(90)
-      cylinder(d=M_screw_head_diameter(motor_coupler_screw_size)
-                 + 2 * motor_coupler_screw_clearance,
-               h=motor_coupler_diameter);
-    // nut hole
-    translate([
-        - motor_coupler_slit_size / 2
-          - motor_coupler_clamp_thickness,
-        clamp_screw_y,
-        clamp_screw_z
-      ])
-      rot_y(-90)
-      rot_z(30)
-      cylinder(r=M_nut_outer_radius(motor_coupler_screw_size)
-                 + motor_coupler_screw_clearance,
-               h=motor_coupler_diameter,
-               $fn=6);
-
-    // prismatic inner shaft
-    mov_z(motor_coupler_length
-        + motor_prismatic_length
-        - motor_prismatic_cavity_depth
-        )
-      cylinder(d=motor_prismatic_inner_diameter,
-               h=max(motor_prismatic_length, motor_prismatic_cavity_depth + eps),
-               $fn=6);
   }
 }
 
