@@ -1364,6 +1364,22 @@ module bearing_mount(show_cutouts=false) {
                    + 2 * bearing_mount_center_hole_clearance,
                  h = 2 * bb_xdim(bearing_mount_bb),
                  center = true);
+
+      // cut away part of the hat
+      translate([
+          bearing_mount_sensor_wall / 2
+            + bb_xmax(local_sensor_cutout_bb),
+          sensor_part_center.y,
+          sensor_part_center.z
+        ])
+        cube([
+            bearing_mount_sensor_wall
+              + 2 * eps,
+            bb_ydim(bearing_mount_sensor_part_bb)
+              + 2 * eps,
+            bb_zdim(bearing_mount_sensor_part_bb)
+              + 2 * eps
+          ], center = true);
     }
   }
 }
