@@ -511,6 +511,7 @@ if (part == "all") {
   if (show_fasteners) { sensor_mount_screws(); }
   translate(bb_center(L_binders_bb)) L_binders();
   translate(bb_center(motor_coupler_bb)) motor_coupler();
+  if (show_fasteners) { motor_coupler_screws(); }
   //bearing();
   //mounted_bearing_mount();
 }
@@ -1048,19 +1049,6 @@ module L_binder() {
   }
 }
 
-module mounted_motor_coupler() {
-  translate([
-      bracket_x_mount
-        + L_bracket_thickness
-        + motor_mount_front_buffer
-        + motor_coupler_mount_x_offset,
-      platform_depth / 2,
-      motor_z_mount
-        + motor_height / 2
-    ])
-    motor_coupler();
-}
-
 module motor_coupler() {
   // rotate and shift so it is at the correct orientation and centered
   mov_x(- bb_xdim(motor_coupler_bb) / 2)
@@ -1153,6 +1141,33 @@ module motor_coupler() {
       cylinder(d=motor_prismatic_inner_diameter,
                h=max(motor_prismatic_length, motor_prismatic_cavity_depth + eps),
                $fn=6);
+  }
+}
+
+module motor_coupler_screws() {
+  screw_nut_distance = motor_coupler_slit_size
+                       + 2 * motor_coupler_clamp_thickness;
+
+  translate([
+      bb_xmin(motor_coupler_coupler_part_bb)
+        + motor_coupler_screw_offset,
+      bb_ycenter(motor_coupler_coupler_part_bb)
+        - motor_shaft_diameter / 4
+        - motor_coupler_shaft_clearance / 2
+        - motor_coupler_diameter / 4,
+      bb_zcenter(motor_coupler_coupler_part_bb)
+    ])
+  {
+    color(screw_color)
+    mov_z(M_screw_head_height(motor_coupler_screw_size)
+          + screw_nut_distance / 2)
+      rot_x(180)
+      M_screw(motor_coupler_screw_size, 12);
+    color(nut_color)
+      mov_z(- M_nut_height(motor_coupler_screw_size)
+            - screw_nut_distance / 2)
+      rot_z(30)
+      M_nut(motor_coupler_screw_size);
   }
 }
 
