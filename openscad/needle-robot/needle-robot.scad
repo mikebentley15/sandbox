@@ -38,6 +38,8 @@ show_sensor_mount_bracket_part_bounding_box = false;
 // printed mounting for the force sensor (part around force sensor)
 show_sensor_mount_sensor_part_bounding_box = false;
 
+// printed piece binding the two L brackets at the bottom
+show_L_binders_bounding_box = false;
 
 /* [Printed Motor Mount] */
 
@@ -68,7 +70,7 @@ sensor_mount_z_offset               =  0;
 
 /* [Printed L-Binder] */
 
-L_binder_width             = 10;
+L_binder_width             = 15;
 L_binder_bracket_clearance = 0.2;
 L_binder_wall_thickness    = 2;
 
@@ -418,6 +420,38 @@ sensor_mount_sensor_part_bb = bb(
 sensor_mount_bb = bb_join(sensor_mount_bracket_part_bb,
                           sensor_mount_sensor_part_bb);
 
+L_binder_1_bb = bb(
+    center = [
+      bb_xmin(platform_bb)
+        - L_binder_width / 2,
+      bb_ycenter(L_brackets_bb),
+      bb_zmax(platform_bb)
+        + L_bracket_thickness
+    ],
+    dim = [
+      L_binder_width,
+      bb_ydim(L_brackets_bb)
+        + 2 * L_binder_bracket_clearance
+        + 2 * L_binder_wall_thickness,
+      2 * L_bracket_thickness
+        + 2 * L_binder_bracket_clearance
+        + 2 * L_binder_wall_thickness
+    ]
+  );
+
+L_binder_2_bb = bb(
+    center = [
+      bb_xmax(platform_bb)
+        + L_binder_width / 2,
+      bb_ycenter(L_binder_1_bb),
+      bb_zcenter(L_binder_1_bb)
+    ],
+    dim = bb_dim(L_binder_1_bb)
+  );
+
+L_binders_bb = bb_join(L_binder_1_bb, L_binder_2_bb);
+
+
 if (part == "all") {
   translate(bb_center(platform_bb)) platform();
   translate(bb_center(L_brackets_bb)) L_brackets();
@@ -428,6 +462,7 @@ if (part == "all") {
   translate(bb_center(sensor_bb)) force_sensor();
   translate(bb_center(sensor_mount_bb)) sensor_mount();
   if (show_fasteners) { sensor_mount_screws(); }
+  translate(bb_center(L_binders_bb)) L_binders();
   //mounted_L_binders();
   //mounted_motor_coupler();
   //bearing();
@@ -472,6 +507,7 @@ check_show_bb(show_sensor_mount_bracket_part_bounding_box,
 check_show_bb(show_sensor_mount_sensor_part_bounding_box,
               sensor_mount_sensor_part_bb);
 check_show_bb(show_sensor_mount_bounding_box, sensor_mount_bb);
+check_show_bb(show_L_binders_bounding_box, L_binders_bb);
 
 module check_show_bb(cond, bb) {
   if (cond) {
@@ -919,15 +955,8 @@ module sensor_mount_screws() {
     }
 }
 
-module mounted_L_binders() {
-  translate([
-      platform_width / 2,
-      platform_depth / 2,
-      platform_height
-        + L_bracket_thickness
-    ])
-    dupe_x((platform_width + L_binder_width) / 2)
-    L_binder();
+module L_binders() {
+  dupe_x(platform_width + L_binder_width) L_binder();
 }
 
 module L_binder() {
