@@ -1,11 +1,11 @@
 module M_screw(size, length, pitch=-1, profile=4) {
   assert(size == 3 || size == 4 || size == 5 || size == 6, "Unsupported size given");
-  if (pitch == -1) { pitch = M_default_pitch(size); }
+  used_pitch = pitch == -1 ? M_default_pitch(size) : pitch;
   head_height = M_screw_head_height(size);
   eps = 0.01;
   union() {
     translate([0, 0, head_height - eps])
-      screw_shaft(size, length + eps, pitch, profile=profile);
+      screw_shaft(size, length + eps, used_pitch, profile=profile);
     screw_hex_roundhead(
         M_screw_head_diameter(size),
         head_height,
@@ -15,10 +15,10 @@ module M_screw(size, length, pitch=-1, profile=4) {
 
 module M_nut(size, pitch=-1, profile=4) {
   assert(size == 3 || size == 4 || size == 5 || size == 6, "Unsupported size given");
-  if (pitch == -1) { pitch = M_default_pitch(size); }
+  used_pitch = pitch == -1 ? M_default_pitch(size) : pitch;
   nut(size,
       M_nut_inner_diameter(size),
-      pitch,
+      used_pitch,
       M_nut_height(size),
       profile=profile);
 }
@@ -31,6 +31,7 @@ module M_washer(size) {
     M_washer_thickness(size));
 }
 
+// TODO: refactor to use lookup() function (to linearly interpolate between sizes)
 function M_screw_head_height(size) =
   size == 3 ?  1.6 :
   size == 4 ?  2.4 :
@@ -97,19 +98,19 @@ module M6(length, pitch=1.0, profile=4) {
 }
 
 module M3_nut(pitch=0.5, profile=4) {
-  M_nut(3);
+  M_nut(3, pitch, profile);
 }
 
 module M4_nut(pitch=0.7, profile=4) {
-  M_nut(4);
+  M_nut(4, pitch, profile);
 }
 
 module M5_nut(pitch=0.8, profile=4) {
-  M_nut(5);
+  M_nut(5, pitch, profile);
 }
 
 module M6_nut(pitch=1.0, profile=4) {
-  M_nut(6);
+  M_nut(6, pitch, profile);
 }
 
 module M3_washer() {

@@ -3,43 +3,53 @@
 // Which model to render
 part = "all"; // ["all", "motor-mount", "sensor-mount", "L-bind", "bearing-mount", "motor-prismatic-coupler", "needle-prismatic-coupler"]
 
-/* [Bounding Boxes] */
+/* [Bounding Boxes (bb)] */
 
 // bottom platform
-show_platform_bounding_box = false;
+show_platform_bb = false;
 
 // all L brackets together
-show_L_brackets_bounding_box = false;
+show_L_brackets_bb = false;
 
 // the vertical slit for the L brackets
-show_L_brackets_vsplit_bounding_box = false;
+show_L_brackets_vsplit_bb = false;
 
 // motor with shaft
-show_motor_bounding_box = false;
+show_motor_bb = false;
 
 // the box part of the motor
-show_motor_box_bounding_box = false;
+show_motor_box_bb = false;
 
 // printed mount for the motor to the L brackets
-show_motor_mount_bounding_box = false;
+show_motor_mount_bb = false;
 
 // full force sensor with protuberances on the sides
-show_sensor_bounding_box = false;
+show_sensor_bb = false;
 
 // inner aluminum body of the force sensor
-show_sensor_inner_bounding_box = false;
+show_sensor_inner_bb = false;
 
 // printed mounting for the force sensor
-show_sensor_mount_bounding_box = false;
+show_sensor_mount_bb = false;
 
 // printed mounting for the force sensor (part around L brackets)
-show_sensor_mount_bracket_part_bounding_box = false;
+show_sensor_mount_bracket_part_bb = false;
 
 // printed mounting for the force sensor (part around force sensor)
-show_sensor_mount_sensor_part_bounding_box = false;
+show_sensor_mount_sensor_part_bb = false;
 
 // printed piece binding the two L brackets at the bottom
-show_L_binders_bounding_box = false;
+show_L_binders_bb = false;
+
+// printed motor coupler with prismatic shaft
+show_motor_coupler_bb = false;
+
+// printed motor coupler (motor shaft part)
+show_motor_coupler_coupler_part_bb = false;
+
+// printed motor coupler (hollow prismatic joint part)
+show_motor_coupler_prismatic_part_bb = false;
+
 
 /* [Printed Motor Mount] */
 
@@ -451,6 +461,43 @@ L_binder_2_bb = bb(
 
 L_binders_bb = bb_join(L_binder_1_bb, L_binder_2_bb);
 
+motor_coupler_coupler_part_bb = bb(
+    center = [
+      bb_xmax(motor_mount_bb)
+        + motor_coupler_length / 2
+        + motor_coupler_mount_x_offset,
+      bb_ycenter(motor_bb),
+      bb_zcenter(motor_bb)
+    ],
+    dim = [
+      motor_coupler_length,
+      motor_coupler_diameter,
+      motor_coupler_diameter
+    ]
+  );
+
+motor_coupler_prismatic_part_bb = bb(
+    center = bb_center(motor_coupler_coupler_part_bb) + [
+      bb_xdim(motor_coupler_coupler_part_bb) / 2
+        + motor_prismatic_length / 2,
+      0,
+      0
+    ],
+    dim = [
+      motor_prismatic_length,
+      cos(30) * motor_prismatic_outer_diameter, // because of flat sides
+      motor_prismatic_outer_diameter
+    ]
+  );
+
+motor_coupler_bb = bb_join(motor_coupler_coupler_part_bb,
+                           motor_coupler_prismatic_part_bb);
+
+
+
+//
+// Actual generation
+//
 
 if (part == "all") {
   translate(bb_center(platform_bb)) platform();
@@ -463,8 +510,7 @@ if (part == "all") {
   translate(bb_center(sensor_mount_bb)) sensor_mount();
   if (show_fasteners) { sensor_mount_screws(); }
   translate(bb_center(L_binders_bb)) L_binders();
-  //mounted_L_binders();
-  //mounted_motor_coupler();
+  translate(bb_center(motor_coupler_bb)) motor_coupler();
   //bearing();
   //mounted_bearing_mount();
 }
@@ -494,20 +540,34 @@ if (part == "needle-prismatic-coupler") {
 }
 
 
-check_show_bb(show_platform_bounding_box, platform_bb);
-check_show_bb(show_L_brackets_bounding_box, L_brackets_bb);
-check_show_bb(show_L_brackets_vsplit_bounding_box, L_brackets_vsplit_bb);
-check_show_bb(show_motor_box_bounding_box, motor_box_bb);
-check_show_bb(show_motor_bounding_box, motor_bb);
-check_show_bb(show_motor_mount_bounding_box, motor_mount_bb);
-check_show_bb(show_sensor_inner_bounding_box, sensor_inner_bb);
-check_show_bb(show_sensor_bounding_box, sensor_bb);
-check_show_bb(show_sensor_mount_bracket_part_bounding_box,
+//
+// Showing bounding boxes (if enabled)
+//
+
+check_show_bb(show_platform_bb, platform_bb);
+check_show_bb(show_L_brackets_bb, L_brackets_bb);
+check_show_bb(show_L_brackets_vsplit_bb, L_brackets_vsplit_bb);
+check_show_bb(show_motor_box_bb, motor_box_bb);
+check_show_bb(show_motor_bb, motor_bb);
+check_show_bb(show_motor_mount_bb, motor_mount_bb);
+check_show_bb(show_sensor_inner_bb, sensor_inner_bb);
+check_show_bb(show_sensor_bb, sensor_bb);
+check_show_bb(show_sensor_mount_bracket_part_bb,
               sensor_mount_bracket_part_bb);
-check_show_bb(show_sensor_mount_sensor_part_bounding_box,
+check_show_bb(show_sensor_mount_sensor_part_bb,
               sensor_mount_sensor_part_bb);
-check_show_bb(show_sensor_mount_bounding_box, sensor_mount_bb);
-check_show_bb(show_L_binders_bounding_box, L_binders_bb);
+check_show_bb(show_sensor_mount_bb, sensor_mount_bb);
+check_show_bb(show_L_binders_bb, L_binders_bb);
+check_show_bb(show_motor_coupler_bb, motor_coupler_bb);
+check_show_bb(show_motor_coupler_coupler_part_bb,
+              motor_coupler_coupler_part_bb);
+check_show_bb(show_motor_coupler_prismatic_part_bb,
+              motor_coupler_prismatic_part_bb);
+
+
+//
+// Helper functions
+//
 
 module check_show_bb(cond, bb) {
   if (cond) {
@@ -998,12 +1058,14 @@ module mounted_motor_coupler() {
       motor_z_mount
         + motor_height / 2
     ])
-    rot_y(90)
-    rot_z(180)
     motor_coupler();
 }
 
 module motor_coupler() {
+  // rotate and shift so it is at the correct orientation and centered
+  mov_x(- bb_xdim(motor_coupler_bb) / 2)
+  rot_y(90)
+  rot_z(180)
   color(printed_color_1)
   difference() {
     // main body and prismatic joint
