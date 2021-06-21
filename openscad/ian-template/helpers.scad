@@ -17,6 +17,10 @@ module cylinder_pipe(rin, rout, h, center=false) {
   }
 }
 
+// apply the # operator if a condition is true
+module hash_if(cond) { if (cond) { #children(); } else { children(); } }
+// apply the % operator if a condition is true
+module mod_if(cond) { if (cond) { %children(); } else { children(); } }
 
 
 // Aliases for translate
