@@ -1810,4 +1810,16 @@ module needle_prismatic_screws() {
       ])
     rot_y(-90)
     M_nut(prismatic_joint_screw_size, simplify = simplify_fasteners);
+
+  color(screw_color)
+    translate([
+        bb_xmax(bearing_bb)
+          + needle_coupler_screw_head_buffer,
+        bb_ycenter(needle_coupler_bb),
+        bb_zcenter(needle_coupler_bb)
+      ])
+    mov_x(M_screw_head_height(prismatic_joint_screw_size))
+    rot_y(-90)
+    M_screw(prismatic_joint_screw_size, needle_coupler_screw_length,
+            simplify = simplify_fasteners);
 }
