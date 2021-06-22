@@ -1,7 +1,7 @@
 /* [General Settings] */
 
 // Which model to render
-part = "all"; // ["all", "motor-mount", "sensor-mount", "L-bind", "bearing-mount", "motor-prismatic-coupler", "needle-prismatic-coupler"]
+part = "all"; // ["all", "motor-mount", "sensor-mount", "L-bind", "bearing-mount", "motor-prismatic-coupler", "needle-prismatic-coupler", "fasteners"]
 
 /* [Bounding Boxes (bb)] */
 
@@ -588,6 +588,14 @@ if (part == "all") {
   // TODO: figure out a way to rigidly fasten the bearing to its mount
   translate(bb_center(bearing_mount_bb)) bearing_mount();
   if (show_fasteners) { bearing_mount_screws(); }
+}
+
+if (part == "fasteners") {
+  L_brackets_screws();
+  motor_mount_screws();
+  sensor_mount_screws();
+  motor_coupler_screws();
+  bearing_mount_screws();
 }
 
 if (part == "motor-mount") {
