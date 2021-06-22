@@ -1,26 +1,29 @@
-module M_screw(size, length, pitch=-1, profile=4) {
+module M_screw(size, length, pitch=-1, profile=4, simplify=false) {
   //assert(size == 3 || size == 4 || size == 5 || size == 6, "Unsupported size given");
   used_pitch = pitch == -1 ? M_default_pitch(size) : pitch;
   head_height = M_screw_head_height(size);
   eps = 0.01;
   union() {
     translate([0, 0, head_height - eps])
-      screw_shaft(size, length + eps, used_pitch, profile=profile);
+      screw_shaft(size, length + eps, used_pitch, profile=profile,
+                  simplify=simplify);
     screw_hex_roundhead(
         M_screw_head_diameter(size),
         head_height,
-        M_screw_hex_radius(size));
+        M_screw_hex_radius(size),
+        simplify=simplify);
   }
 }
 
-module M_nut(size, pitch=-1, profile=4) {
+module M_nut(size, pitch=-1, profile=4, simplify=false) {
   //assert(size == 3 || size == 4 || size == 5 || size == 6, "Unsupported size given");
   used_pitch = pitch == -1 ? M_default_pitch(size) : pitch;
   nut(size,
       M_nut_inner_diameter(size),
       used_pitch,
       M_nut_height(size),
-      profile=profile);
+      profile=profile,
+      simplify=simplify);
 }
 
 module M_washer(size) {
@@ -90,36 +93,36 @@ function M_washer_inner_diameter(size) = lookup(size, [
     [6, 6.5]
   ]);
 
-module M3(length, pitch=0.5, profile=4) {
-  M_screw(3, length, pitch, profile);
+module M3(length, pitch=0.5, profile=4, simplify=false) {
+  M_screw(3, length, pitch, profile, simplify);
 }
 
-module M4(length, pitch=0.7, profile=4) {
-  M_screw(4, length, pitch, profile);
+module M4(length, pitch=0.7, profile=4, simplify=false) {
+  M_screw(4, length, pitch, profile, simplify);
 }
 
-module M5(length, pitch=0.8, profile=4) {
-  M_screw(5, length, pitch, profile);
+module M5(length, pitch=0.8, profile=4, simplify=false) {
+  M_screw(5, length, pitch, profile, simplify);
 }
 
-module M6(length, pitch=1.0, profile=4) {
-  M_screw(6, length, pitch, profile);
+module M6(length, pitch=1.0, profile=4, simplify=false) {
+  M_screw(6, length, pitch, profile, simplify);
 }
 
-module M3_nut(pitch=0.5, profile=4) {
-  M_nut(3, pitch, profile);
+module M3_nut(pitch=0.5, profile=4, simplify=false) {
+  M_nut(3, pitch, profile, simplify);
 }
 
-module M4_nut(pitch=0.7, profile=4) {
-  M_nut(4, pitch, profile);
+module M4_nut(pitch=0.7, profile=4, simplify=false) {
+  M_nut(4, pitch, profile, simplify);
 }
 
-module M5_nut(pitch=0.8, profile=4) {
-  M_nut(5, pitch, profile);
+module M5_nut(pitch=0.8, profile=4, simplify=false) {
+  M_nut(5, pitch, profile, simplify);
 }
 
-module M6_nut(pitch=1.0, profile=4) {
-  M_nut(6, pitch, profile);
+module M6_nut(pitch=1.0, profile=4, simplify=false) {
+  M_nut(6, pitch, profile, simplify);
 }
 
 module M3_washer() {
@@ -140,15 +143,22 @@ module M6_washer() {
 
 /// Internal functions
 
-module screw_hex_roundhead(width, height, hex_radius) {
+module screw_hex_roundhead(width, height, hex_radius, simplify=false) {
   eps = 0.01;
   r = 0.8;
   difference() {
-    rotate_extrude() {
-      hull() {
-          square([(width - 3) / 2, height]);
-        translate([width / 2 - r, height - r, 0])
-          circle(r);
+    if (simplify) {
+      union() {
+        translate([0, 0, height - r]) cylinder(d=width, h=r);
+        cylinder(d1=(width - 3), d2=width, h=height - r);
+      }
+    } else {
+      rotate_extrude() {
+        hull() {
+            square([(width - 3) / 2, height]);
+          translate([width / 2 - r, height - r, 0])
+            circle(r);
+        }
       }
     }
     translate([0, 0, -eps])
@@ -156,13 +166,17 @@ module screw_hex_roundhead(width, height, hex_radius) {
   }
 }
 
-module screw_shaft(size, height, pitch, profile=4) {
-  rotations = height / pitch;
-  linear_extrude(height=height, twist=-360*rotations)
-    screwslice(size, pitch, profile=profile);
+module screw_shaft(size, height, pitch, profile=4, simplify=false) {
+  if (simplify) {
+    cylinder(d=size, h=height);
+  } else {
+    rotations = height / pitch;
+    linear_extrude(height=height, twist=-360*rotations)
+      screwslice(size, pitch, profile=profile);
+  }
 }
 
-module nut(size, short_diameter, pitch, height, profile=4) {
+module nut(size, short_diameter, pitch, height, profile=4, simplify=false) {
   r = short_diameter / (2 * cos(30));
   eps = 0.01;
   b = 0.75 * sqrt(4 * height * height / (16 - pow(2 + sqrt(3), 2)));
@@ -171,11 +185,14 @@ module nut(size, short_diameter, pitch, height, profile=4) {
     difference() {
       cylinder(r=r, h=height, $fn=6);
       translate([0, 0, -eps])
-        screw_shaft(size, height + 2*eps, pitch, profile=profile);
+        screw_shaft(size, height + 2*eps, pitch, profile=profile,
+                    simplify=simplify);
     }
-    translate([0, 0, height/2])
-      scale([1, 1, intersect_zscale])
-      sphere(r=r);
+    if (!simplify) {
+      translate([0, 0, height/2])
+        scale([1, 1, intersect_zscale])
+        sphere(r=r);
+    }
   }
 }
 
