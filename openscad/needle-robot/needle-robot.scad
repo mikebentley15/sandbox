@@ -62,6 +62,12 @@ show_bearing_mount_bearing_part_bb = false;
 // printed mount for bearing (part around sensor)
 show_bearing_mount_sensor_part_bb = false;
 
+// printed joint from motor coupler to bearing
+show_prismatic_joint_bb = false;
+
+// printed coupler from bearing to needle
+show_needle_coupler_bb = false;
+
 
 /* [Printed Motor Mount] */
 
@@ -240,7 +246,7 @@ platform_color     = "#ffff33ff";
 bracket_color      = "#ddddddff";
 screw_color        = "#777777ff";
 nut_color          = "#b200a8ff";
-washer_color       = "#333333ff";
+washer_color       = "#b200a8ff";
 force_sensor_color = "#6cff6cff";
 motor_color        = "#56beffff";
 bearing_color      = "#ff00ffff";
@@ -566,6 +572,32 @@ bearing_mount_sensor_part_bb = bb(
 bearing_mount_bb = bb_join(bearing_mount_bearing_part_bb,
                            bearing_mount_sensor_part_bb);
 
+prismatic_joint_bb = bb( // TODO
+    center = [
+      0,
+      0,
+      0
+    ],
+    dim = [
+      0,
+      0,
+      0
+    ]
+  );
+
+needle_coupler_bb = bb(  // TODO
+    center = [
+      0,
+      0,
+      0
+    ],
+    dim = [
+      0,
+      0,
+      0
+    ]
+  );
+
 
 //
 // Actual generation
@@ -588,6 +620,9 @@ if (part == "all") {
   // TODO: figure out a way to rigidly fasten the bearing to its mount
   translate(bb_center(bearing_mount_bb)) bearing_mount();
   if (show_fasteners) { bearing_mount_screws(); }
+  translate(bb_center(prismatic_joint_bb)) prismatic_joint();
+  translate(bb_center(needle_coupler_bb)) needle_coupler();
+  if (show_fasteners) { needle_prismatic_screws(); }
 }
 
 if (part == "fasteners") {
@@ -618,8 +653,12 @@ if (part == "motor-prismatic-coupler") {
   motor_coupler(show_cutouts = show_cutouts);
 }
 
-if (part == "needle-prismatic-coupler") {
+if (part == "prismatic-joint") {
+  prismatic_joint(show_cutouts = show_cutouts);
+}
 
+if (part == "needle-coupler") {
+  needle_coupler(show_cutouts = show_cutouts);
 }
 
 
@@ -650,6 +689,8 @@ check_show_bb(show_bearing_bb, bearing_bb);
 check_show_bb(show_bearing_mount_bb, bearing_mount_bb);
 check_show_bb(show_bearing_mount_bearing_part_bb, bearing_mount_bearing_part_bb);
 check_show_bb(show_bearing_mount_sensor_part_bb, bearing_mount_sensor_part_bb);
+check_show_bb(show_prismatic_joint_bb, prismatic_joint_bb);
+check_show_bb(show_needle_coupler_bb, needle_coupler_bb);
 
 //
 // Helper functions
@@ -1420,4 +1461,16 @@ module bearing_mount_screws() {
     dupe_z(sensor_top_screw_distance)
     rot_y(90)
     M_screw(sensor_top_screw_size, 8, simplify=simplify_fasteners);
+}
+
+module prismatic_joint(show_cutouts = false) {
+
+}
+
+module needle_coupler(show_cutouts = false) {
+
+}
+
+module needle_prismatic_screws() {
+
 }
