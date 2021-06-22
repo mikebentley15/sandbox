@@ -620,7 +620,7 @@ bearing_to_bracket_distance =
       - L_bracket_thickness
       - bb_xmax(bearing_bb);
 
-needle_coupler_bb = bb(  // TODO
+needle_coupler_bb = bb(
     center = [
       bb_xmax(bearing_bb)
         + bearing_to_bracket_distance / 2
@@ -663,7 +663,6 @@ if (part == "all") {
   translate(bb_center(motor_coupler_bb)) motor_coupler();
   if (show_fasteners) { motor_coupler_screws(); }
   translate(bb_center(bearing_bb)) bearing();
-  // TODO: figure out a way to rigidly fasten the bearing to its mount
   translate(bb_center(bearing_mount_bb)) bearing_mount();
   if (show_fasteners) { bearing_mount_screws(); }
   translate(bb_center(prismatic_joint_bb)) prismatic_joint();
@@ -693,7 +692,8 @@ if (part == "L-bind") {
 }
 
 if (part == "bearing-mount") {
-  bearing_mount(show_cutouts = show_cutouts);
+  bearing_mount(sacrificial_bridging = sacrificial_bridging,
+                show_cutouts = show_cutouts);
 }
 
 if (part == "motor-prismatic-coupler") {
@@ -701,7 +701,8 @@ if (part == "motor-prismatic-coupler") {
 }
 
 if (part == "prismatic-joint") {
-  prismatic_joint(show_cutouts = show_cutouts);
+  prismatic_joint(sacrificial_bridging = sacrificial_bridging,
+                  show_cutouts = show_cutouts);
 }
 
 if (part == "needle-coupler") {
@@ -1353,7 +1354,7 @@ module bearing() {
   }
 }
 
-module bearing_mount(show_cutouts=false) {
+module bearing_mount(sacrificial_bridging = false, show_cutouts=false) {
   sensor_part_center =
       bb_center(bearing_mount_sensor_part_bb) - bb_center(bearing_mount_bb);
   bearing_part_center =
@@ -1377,6 +1378,11 @@ module bearing_mount(show_cutouts=false) {
       dim = bb_dim(bearing_bb)
           + 2 * bearing_mount_bearing_clearance * [1, 1, 1]
     );
+
+  if (sacrificial_bridging) {
+    color(printed_color_1)
+    bearing_mount_sacrificial_bridging();
+  }
 
   color(printed_color_1)
   difference() {
@@ -1528,8 +1534,21 @@ module bearing_mount(show_cutouts=false) {
         }
     }
   }
+}
 
-  // TODO: sacrificial bridging
+module bearing_mount_sacrificial_bridging() {
+  sensor_part_center =
+      bb_center(bearing_mount_sensor_part_bb) - bb_center(bearing_mount_bb);
+
+  translate(sensor_part_center + [1, 0, 0] * (
+      layer_height / 2
+        - bb_xdim(bearing_mount_sensor_part_bb) / 2
+    ))
+    cube([
+        layer_height,
+        bb_ydim(bearing_mount_sensor_part_bb),
+        bb_zdim(bearing_mount_sensor_part_bb)
+      ], center = true);
 }
 
 module bearing_mount_screws() {
@@ -1565,7 +1584,7 @@ module bearing_mount_screws() {
     }
 }
 
-module prismatic_joint(show_cutouts = false) {
+module prismatic_joint(sacrificial_bridging = false, show_cutouts = false) {
   inside_bearing_diameter = bb_zdim(prismatic_joint_bb)
                           - 2 * prismatic_joint_bearing_growth;
   local_nut_region_bb = bb(
@@ -1585,6 +1604,11 @@ module prismatic_joint(show_cutouts = false) {
         bb_zdim(prismatic_joint_bb)
       ]
     );
+
+  if (sacrificial_bridging) {
+    color(printed_color_1)
+    prismatic_joint_sacrificial_bridging();
+  }
 
   mov_x(- bb_xdim(prismatic_joint_bb) / 2)
   difference() {
@@ -1651,8 +1675,20 @@ module prismatic_joint(show_cutouts = false) {
                  + eps);
     }
   }
+}
 
-  // TODO: sacrificial bridging
+module prismatic_joint_sacrificial_bridging() {
+  mov_x(
+      bb_xdim(prismatic_joint_bb) / 2
+        - bb_xdim(bearing_bb) / 3
+        - prismatic_joint_nut_bearing_buffer
+        - 2 * prismatic_joint_nut_clearance
+        - M_nut_height(prismatic_joint_screw_size)
+    )
+    rot_y(-90)
+    cylinder(d = 0.75 * bb_zdim(prismatic_joint_bb),
+             h = layer_height,
+             center = false);
 }
 
 module needle_coupler(show_cutouts = false) {
