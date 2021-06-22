@@ -585,7 +585,9 @@ if (part == "all") {
   translate(bb_center(motor_coupler_bb)) motor_coupler();
   if (show_fasteners) { motor_coupler_screws(); }
   translate(bb_center(bearing_bb)) bearing();
+  // TODO: figure out a way to rigidly fasten the bearing to its mount
   translate(bb_center(bearing_mount_bb)) bearing_mount();
+  if (show_fasteners) { bearing_mount_screws(); }
 }
 
 if (part == "motor-mount") {
@@ -1395,4 +1397,19 @@ module bearing_mount(show_cutouts=false) {
           ], center = true);
     }
   }
+}
+
+module bearing_mount_screws() {
+  color(screw_color)
+  translate([
+      - M_screw_head_height(sensor_top_screw_size)
+        + bb_xmin(bearing_mount_sensor_part_bb),
+      bb_ycenter(bearing_mount_sensor_part_bb),
+      bb_zmax(sensor_bb)
+        - sensor_top_screw_offset_1
+        - sensor_top_screw_distance / 2
+    ])
+    dupe_z(sensor_top_screw_distance)
+    rot_y(90)
+    M_screw(sensor_top_screw_size, 8, simplify=simplify_fasteners);
 }
