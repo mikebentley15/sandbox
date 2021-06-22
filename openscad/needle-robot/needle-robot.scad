@@ -143,13 +143,20 @@ prismatic_joint_length              = 20;
 prismatic_joint_prism_clearance     = 0.25;
 prismatic_joint_nut_bearing_buffer  = 3;
 prismatic_joint_bearing_growth      = 3;
-prismatic_joint_screw_size          = 4;
+prismatic_joint_screw_size          = 3;
 prismatic_joint_screw_clearance     = 0.2;
 prismatic_joint_screw_depth         = 11;
 prismatic_joint_nut_clearance       = 0.3;
 
 
 /* [Printed Needle Coupler] */
+
+needle_coupler_bearing_growth       = 2;
+needle_coupler_screw_head_buffer    = 3;
+needle_coupler_screw_head_clearance = 0.5;
+needle_coupler_screw_length         = 16;
+//needle_coupler_hex_wrench_clearance = 0.5;
+needle_coupler_bracket_clearance    = 0.7;
 
 
 /* [Platform] */
@@ -608,16 +615,32 @@ prismatic_joint_bb = bb(
     ]
   );
 
+bearing_to_bracket_distance =
+    bb_xmax(L_brackets_bb)
+      - L_bracket_thickness
+      - bb_xmax(bearing_bb);
+
 needle_coupler_bb = bb(  // TODO
     center = [
-      0,
-      0,
-      0
+      bb_xmax(bearing_bb)
+        + bearing_to_bracket_distance / 2
+        + L_bracket_thickness / 2
+        + needle_coupler_bracket_clearance / 2
+        - bearing_thickness / 6,
+      bb_ycenter(bearing_bb),
+      bb_zcenter(bearing_bb)
     ],
     dim = [
-      0,
-      0,
-      0
+      L_bracket_thickness
+        + bearing_to_bracket_distance
+        + needle_coupler_bracket_clearance
+        + bearing_thickness / 3,
+      bearing_inner_diameter
+        - 2 * bearing_inner_clearance
+        + 2 * needle_coupler_bearing_growth,
+      bearing_inner_diameter
+        - 2 * bearing_inner_clearance
+        + 2 * needle_coupler_bearing_growth
     ]
   );
 
@@ -1633,7 +1656,111 @@ module prismatic_joint(show_cutouts = false) {
 }
 
 module needle_coupler(show_cutouts = false) {
+  // diameter inside of the bearing center
+  inside_bearing_diameter = bearing_inner_diameter
+                          - 2 * bearing_inner_clearance;
 
+  // diameter of the fat portion of this part
+  fat_diameter = inside_bearing_diameter
+                 + 2 * needle_coupler_bearing_growth;
+
+  // diameter when going through the L bracket in-between space
+  bracket_diameter = L_bracket_inbetween_space
+                   - 2 * needle_coupler_bracket_clearance;
+
+  // distance required to shrink the bracket at a 45 degree angle
+  bracket_shrink_distance = fat_diameter - bracket_diameter;
+
+  fat_length =
+      bearing_to_bracket_distance          // full distance
+        - needle_coupler_screw_head_buffer // growth region
+        - bracket_shrink_distance          // distance from fat to skinny
+        - needle_coupler_bracket_clearance // how early to be skinny
+        ;
+
+  echo(distance_behind_screw = fat_length
+                             - M_screw_head_height(prismatic_joint_screw_size));
+  echo(bracket_through_diameter = bracket_diameter);
+  assert(fat_length >= M_screw_head_height(prismatic_joint_screw_size)
+                       + needle_coupler_screw_head_buffer);
+
+  mov_x(- bb_xdim(needle_coupler_bb) / 2)
+  difference() {
+    // main body
+    color(printed_color_1)
+    rot_y(90)
+    union() {
+      cylinder(d = inside_bearing_diameter,
+               h = bearing_thickness / 3
+                 + eps);
+      mov_z(bearing_thickness / 3) {
+        cylinder(d1 = inside_bearing_diameter,
+                 d2 = fat_diameter,
+                 h = needle_coupler_screw_head_buffer
+                   + eps);
+        mov_z(needle_coupler_screw_head_buffer) {
+          cylinder(d = fat_diameter,
+                   h = fat_length
+                     + eps);
+          mov_z(fat_length) {
+            cylinder(d1 = fat_diameter,
+                     d2 = bracket_diameter,
+                     h = bracket_shrink_distance
+                       + eps);
+            mov_z(bracket_shrink_distance) {
+              cylinder(d = bracket_diameter,
+                       h = 2 * needle_coupler_bracket_clearance
+                         + L_bracket_thickness);
+            }
+          }
+        }
+      }
+    }
+
+    // stuff to subtract
+    hash_if(show_cutouts)
+    union() {
+      // screw shaft
+      mov_x(-eps)
+        rot_y(90)
+        cylinder(d = prismatic_joint_screw_size
+                   + 2 * prismatic_joint_screw_clearance,
+                 h = bearing_thickness / 3
+                   + needle_coupler_screw_head_buffer
+                   + 3 * eps);
+
+      // room for the screw head
+      mov_x(bearing_thickness / 3
+          + needle_coupler_screw_head_buffer)
+      {
+        head_hole_diameter =
+            M_screw_head_diameter(prismatic_joint_screw_size)
+              + 2 * needle_coupler_screw_head_clearance;
+        hull() {
+          union() {
+            rot_y(90)
+              cylinder(d = head_hole_diameter,
+                       h = fat_length);
+            cube_pcp(
+                fat_length,
+                head_hole_diameter,
+                head_hole_diameter
+              );
+          }
+          mov_xz(fat_length + bracket_shrink_distance,
+                 bracket_diameter / 2)
+          cube(0.1 * [1, 1, 1], center = true);
+        }
+      }
+
+      // room for a hex wrench
+      //mov_x(- eps)
+      //rot_y(90)
+      //cylinder(r = M_screw_hex_radius(prismatic_joint_screw_size)
+      //           + needle_coupler_hex_wrench_clearance,
+      //         h = bb_xdim(needle_coupler_bb) + 2 * eps);
+    }
+  }
 }
 
 module needle_prismatic_screws() {
