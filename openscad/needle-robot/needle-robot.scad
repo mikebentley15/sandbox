@@ -229,6 +229,7 @@ extrusion_width                     = 0.45;
 
 show_fasteners = true;
 show_cutouts = false;
+simplify_fasteners = true;
 eps = 0.02;
 $fn = 20;
 
@@ -698,7 +699,7 @@ module L_brackets_screws() {
       color(screw_color)
         mov_z(M_screw_head_height(platform_screw_size))
         rot_x(180)
-        M_screw(platform_screw_size, 12);
+        M_screw(platform_screw_size, 12, simplify=simplify_fasteners);
     }
 }
 
@@ -910,7 +911,7 @@ module motor_mount_screws() {
         mov_x(M_screw_head_height(motor_screw_size)
               + M_washer_thickness(motor_screw_size))
         rot_y(-90)
-        M_screw(motor_screw_size, 20);
+        M_screw(motor_screw_size, 20, simplify=simplify_fasteners);
     }
 }
 
@@ -1066,7 +1067,7 @@ module sensor_mount_screws() {
         mov_x(M_screw_head_height(sensor_bottom_screw_size)
               + M_washer_thickness(sensor_bottom_screw_size))
         rot_y(-90)
-        M_screw(sensor_bottom_screw_size, 20);
+        M_screw(sensor_bottom_screw_size, 20, simplify=simplify_fasteners);
       color(washer_color)
         rot_y(90)
         M_washer(sensor_bottom_screw_size);
@@ -1085,7 +1086,7 @@ module sensor_mount_screws() {
         mov_x(M_screw_head_height(sensor_bottom_screw_size)
               + M_washer_thickness(sensor_bottom_screw_size))
         rot_y(-90)
-        M_screw(sensor_bottom_screw_size, 16);
+        M_screw(sensor_bottom_screw_size, 16, simplify=simplify_fasteners);
       color(washer_color)
         rot_y(90)
         M_washer(sensor_bottom_screw_size);
@@ -1095,7 +1096,7 @@ module sensor_mount_screws() {
               + sensor_mount_nut_depth)
         rot_y(90)
         rot_z(30)
-        M_nut(sensor_bottom_screw_size);
+        M_nut(sensor_bottom_screw_size, simplify=simplify_fasteners);
     }
 }
 
@@ -1235,12 +1236,12 @@ module motor_coupler_screws() {
     mov_z(M_screw_head_height(motor_coupler_screw_size)
           + screw_nut_distance / 2)
       rot_x(180)
-      M_screw(motor_coupler_screw_size, 12);
+      M_screw(motor_coupler_screw_size, 12, simplify=simplify_fasteners);
     color(nut_color)
       mov_z(- M_nut_height(motor_coupler_screw_size)
             - screw_nut_distance / 2)
       rot_z(30)
-      M_nut(motor_coupler_screw_size);
+      M_nut(motor_coupler_screw_size, simplify=simplify_fasteners);
   }
 }
 
