@@ -582,7 +582,7 @@ bearing_mount_sensor_part_bb = bb(
 bearing_mount_bb = bb_join(bearing_mount_bearing_part_bb,
                            bearing_mount_sensor_part_bb);
 
-prismatic_joint_bb = bb( // TODO
+prismatic_joint_bb = bb(
     center = [
       bb_xmin(bearing_bb)
         - prismatic_joint_length / 2
@@ -654,6 +654,7 @@ if (part == "fasteners") {
   sensor_mount_screws();
   motor_coupler_screws();
   bearing_mount_screws();
+  needle_prismatic_screws();
 }
 
 if (part == "motor-mount") {
@@ -771,7 +772,8 @@ module L_brackets_screws() {
       color(washer_color)
         M_washer(platform_screw_size);
       color(screw_color)
-        mov_z(M_screw_head_height(platform_screw_size))
+        mov_z(M_screw_head_height(platform_screw_size)
+            + M_washer_thickness(platform_screw_size))
         rot_x(180)
         M_screw(platform_screw_size, 12, simplify=simplify_fasteners);
     }
@@ -1635,5 +1637,14 @@ module needle_coupler(show_cutouts = false) {
 }
 
 module needle_prismatic_screws() {
-
+  color(nut_color)
+    translate([
+        bb_xmin(bearing_bb)
+          - prismatic_joint_nut_bearing_buffer
+          - prismatic_joint_nut_clearance,
+        bb_ycenter(prismatic_joint_bb),
+        bb_zcenter(prismatic_joint_bb)
+      ])
+    rot_y(-90)
+    M_nut(prismatic_joint_screw_size, simplify = simplify_fasteners);
 }
