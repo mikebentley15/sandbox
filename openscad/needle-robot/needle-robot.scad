@@ -107,9 +107,6 @@ L_binder_wall_thickness    = 2;
 
 bearing_mount_sensor_wall            =  4;
 bearing_mount_sensor_clearance       =  0.2;
-bearing_mount_sensor_overhang        =  2;
-bearing_mount_sensor_overhang_height =  2;
-bearing_mount_sensor_wall_length     = 10;
 bearing_mount_screw_size             = 4;
 bearing_mount_screw_clearance        = 0.2;
 bearing_mount_screw_head_clearance   = 0.4;
@@ -117,10 +114,9 @@ bearing_mount_bearing_clearance      = 0.15;
 // extra buffer away from the sensor mount
 bearing_mount_bearing_sensor_x_buffer = 5;
 bearing_mount_bearing_wall_thickness = 3;
-bearing_mount_bearing_wall_height    = 5;
-bearing_mount_depth                  = 60;
 bearing_mount_center_hole_clearance  = 3;
-// TODO: others
+bearing_mount_nut_clearance          = 0.4;
+bearing_mount_nut_cavity_depth       = 0.75;
 
 
 /* [Printed Motor Prismatic Coupler] */
@@ -1363,6 +1359,20 @@ module bearing_mount(show_cutouts=false) {
               bb_zdim(bearing_mount_sensor_part_bb)
             ]);
       }
+
+      // extra reinforcement around retainer screws
+      translate(bearing_part_center
+          + [1,0,0] * bearing_mount_nut_cavity_depth / 2)
+        dupe_z(bb_zdim(bearing_bb)
+             + bearing_mount_screw_size
+             + 2 * bearing_mount_screw_clearance)
+        rot_y(90)
+        cylinder(d = bearing_mount_screw_size
+                   + 2 * bearing_mount_screw_clearance
+                   + 2 * bearing_mount_bearing_wall_thickness,
+                 h = bb_xdim(bearing_mount_bearing_part_bb)
+                     + bearing_mount_nut_cavity_depth,
+                 center = true);
     }
 
     hash_if(show_cutouts)
@@ -1444,6 +1454,26 @@ module bearing_mount(show_cutouts=false) {
             bb_zdim(bearing_mount_sensor_part_bb)
               + 2 * eps
           ], center = true);
+
+      // screws and nuts to rigidly mount bearing
+      translate(bb_center(local_bearing_bb)
+                + [1,0,0] * (bb_xdim(local_bearing_bb) / 2
+                           - bearing_mount_nut_cavity_depth))
+        dupe_z(
+          bb_zdim(local_bearing_bb)
+            + bearing_mount_screw_size
+            + 2 * bearing_mount_screw_clearance
+          )
+        rot_y(90) {
+          cylinder(d = bearing_mount_screw_size
+                     + 2 * bearing_mount_screw_clearance,
+                   h = bb_xdim(bearing_mount_bb),
+                   center = true);
+          cylinder(d = M_screw_head_diameter(bearing_mount_screw_size)
+                     + 2 * bearing_mount_screw_head_clearance,
+                   h = bb_xdim(bearing_mount_bb) / 2,
+                   $fn = 6);
+        }
     }
   }
 }
@@ -1461,6 +1491,24 @@ module bearing_mount_screws() {
     dupe_z(sensor_top_screw_distance)
     rot_y(90)
     M_screw(sensor_top_screw_size, 8, simplify=simplify_fasteners);
+
+  translate(bb_center(bearing_mount_bearing_part_bb)
+          - [1,0,0] * bb_xdim(bearing_mount_bearing_part_bb) / 2)
+    dupe_z(bb_zdim(bearing_bb)
+         + 2 * bearing_mount_screw_clearance
+         + bearing_mount_screw_size)
+    rot_y(90) {
+      color(screw_color)
+        mov_z(- M_screw_head_height(bearing_mount_screw_size)
+              - M_washer_thickness(bearing_mount_screw_size))
+        M_screw(bearing_mount_screw_size, 16, simplify=simplify_fasteners);
+      color(washer_color)
+        mov_z(- M_washer_thickness(bearing_mount_screw_size))
+        M_washer(bearing_mount_screw_size);
+      color(nut_color)
+        mov_z(bb_xdim(bearing_mount_bearing_part_bb))
+        M_nut(bearing_mount_screw_size, simplify=simplify_fasteners);
+    }
 }
 
 module prismatic_joint(show_cutouts = false) {
