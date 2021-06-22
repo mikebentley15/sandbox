@@ -1,7 +1,7 @@
 /* [General Settings] */
 
 // Which model to render
-part = "all"; // ["all", "motor-mount", "sensor-mount", "L-bind", "bearing-mount", "motor-prismatic-coupler", "needle-prismatic-coupler", "fasteners"]
+part = "all"; // ["all", "motor-mount", "sensor-mount", "L-bind", "bearing-mount", "motor-prismatic-coupler", "prismatic-joint", "needle-coupler", "fasteners"]
 
 /* [Bounding Boxes (bb)] */
 
@@ -114,7 +114,7 @@ bearing_mount_bearing_clearance      = 0.15;
 // extra buffer away from the sensor mount
 bearing_mount_bearing_sensor_x_buffer = 5;
 bearing_mount_bearing_wall_thickness = 3;
-bearing_mount_center_hole_clearance  = 3;
+bearing_mount_center_hole_clearance  = 3.5;
 bearing_mount_nut_clearance          = 0.4;
 bearing_mount_nut_cavity_depth       = 0.75;
 
@@ -137,7 +137,19 @@ motor_prismatic_inner_diameter  =  7;
 motor_coupler_mount_x_offset    =  5;
 
 
-/* [Printed Needle Prismatic Coupler] */
+/* [Printed Prismatic Joint] */
+
+prismatic_joint_length              = 20;
+prismatic_joint_prism_clearance     = 0.25;
+prismatic_joint_nut_bearing_buffer  = 3;
+prismatic_joint_bearing_growth      = 3;
+prismatic_joint_screw_size          = 4;
+prismatic_joint_screw_clearance     = 0.2;
+prismatic_joint_screw_depth         = 11;
+prismatic_joint_nut_clearance       = 0.3;
+
+
+/* [Printed Needle Coupler] */
 
 
 /* [Platform] */
@@ -215,9 +227,11 @@ sensor_top_screw_offset_2     = 20;
 
 /* [Bearing] */
 
-bearing_outer_diameter = 22;
-bearing_inner_diameter =  8;
-bearing_thickness      =  7;
+bearing_outer_diameter  = 22;
+bearing_inner_diameter  =  8;
+bearing_thickness       =  7;
+bearing_inner_clearance = 0.2;
+bearing_joining_screw_size = 4;
 
 
 /* [General Print Settings] */
@@ -570,14 +584,27 @@ bearing_mount_bb = bb_join(bearing_mount_bearing_part_bb,
 
 prismatic_joint_bb = bb( // TODO
     center = [
-      0,
-      0,
-      0
+      bb_xmin(bearing_bb)
+        - prismatic_joint_length / 2
+        - prismatic_joint_nut_bearing_buffer
+        - M_nut_height(prismatic_joint_screw_size) / 2
+        - prismatic_joint_nut_clearance
+        + bearing_thickness / 6,
+      bb_ycenter(bearing_bb),
+      bb_zcenter(bearing_bb)
     ],
     dim = [
-      0,
-      0,
-      0
+      prismatic_joint_length
+        + 2 * prismatic_joint_nut_bearing_buffer
+        + M_nut_height(prismatic_joint_screw_size)
+        + 2 * prismatic_joint_nut_clearance
+        + bearing_thickness / 3,
+      bearing_inner_diameter
+        - 2 * bearing_inner_clearance
+        + 2 * prismatic_joint_bearing_growth,
+      bearing_inner_diameter
+        - 2 * bearing_inner_clearance
+        + 2 * prismatic_joint_bearing_growth,
     ]
   );
 
@@ -1476,6 +1503,8 @@ module bearing_mount(show_cutouts=false) {
         }
     }
   }
+
+  // TODO: sacrificial bridging
 }
 
 module bearing_mount_screws() {
@@ -1512,7 +1541,93 @@ module bearing_mount_screws() {
 }
 
 module prismatic_joint(show_cutouts = false) {
+  inside_bearing_diameter = bb_zdim(prismatic_joint_bb)
+                          - 2 * prismatic_joint_bearing_growth;
+  local_nut_region_bb = bb(
+      center = [
+        prismatic_joint_length
+          + prismatic_joint_nut_bearing_buffer / 2
+          + M_nut_height(prismatic_joint_screw_size) / 2
+          + prismatic_joint_nut_clearance,
+        0,
+        0
+      ],
+      dim = [
+        prismatic_joint_nut_bearing_buffer
+          + M_nut_height(prismatic_joint_screw_size)
+          + 2 * prismatic_joint_nut_clearance,
+        bb_ydim(prismatic_joint_bb),
+        bb_zdim(prismatic_joint_bb)
+      ]
+    );
 
+  mov_x(- bb_xdim(prismatic_joint_bb) / 2)
+  difference() {
+
+    // main body
+    color(printed_color_1)
+    rot_y(90)
+    union() {
+      cylinder(d = motor_prismatic_inner_diameter
+                 - 2 * prismatic_joint_prism_clearance,
+               h = prismatic_joint_length + eps,
+               $fn = 6);
+      mov_z(prismatic_joint_length) {
+        cylinder(d = bb_zdim(prismatic_joint_bb),
+                 h = prismatic_joint_nut_bearing_buffer
+                   + M_nut_height(prismatic_joint_screw_size)
+                   + 2 * prismatic_joint_nut_clearance
+                   + eps);
+        mov_z(prismatic_joint_nut_bearing_buffer
+              + M_nut_height(prismatic_joint_screw_size)
+              + 2 * prismatic_joint_nut_clearance) {
+          cylinder(d1 = bb_zdim(prismatic_joint_bb),
+                   d2 = inside_bearing_diameter,
+                   h = prismatic_joint_nut_bearing_buffer
+                     + eps);
+          mov_z(prismatic_joint_nut_bearing_buffer)
+            cylinder(d = inside_bearing_diameter,
+                     h = bearing_thickness / 3);
+        }
+      }
+    }
+
+    // pieces to remove
+    hash_if(show_cutouts)
+    union() {
+      // nut cutout
+      mov_x(bb_xmax(local_nut_region_bb))
+      {
+        rot_y(-90)
+        cylinder(r = M_nut_outer_radius(prismatic_joint_screw_size)
+                   + prismatic_joint_nut_clearance / cos(30),
+                 h = M_nut_height(prismatic_joint_screw_size)
+                   + 2 * prismatic_joint_nut_clearance,
+                 $fn = 6);
+
+        mov_y(M_nut_inner_diameter(prismatic_joint_screw_size) / 2
+            + prismatic_joint_nut_clearance)
+        rot_z(180)
+        cube([
+            M_nut_height(prismatic_joint_screw_size)
+              + 2 * prismatic_joint_nut_clearance,
+            M_nut_inner_diameter(prismatic_joint_screw_size)
+              + 2 * prismatic_joint_nut_clearance,
+            bb_zdim(local_nut_region_bb)
+          ]);
+      }
+
+      // screw cutout
+      mov_x(bb_xdim(prismatic_joint_bb) + eps)
+      rot_y(-90)
+      cylinder(d = prismatic_joint_screw_size
+                 + 2 * prismatic_joint_screw_clearance,
+               h = prismatic_joint_screw_depth
+                 + eps);
+    }
+  }
+
+  // TODO: sacrificial bridging
 }
 
 module needle_coupler(show_cutouts = false) {
