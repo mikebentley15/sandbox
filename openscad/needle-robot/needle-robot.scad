@@ -685,7 +685,7 @@ needle_coupler_2_bb = bb(
         + M_nut_height(needle_coupler_bracket_screw_size)
         + needle_coupler_screw_head_buffer
         + M_screw_head_height(needle_coupler_bracket_screw_size) / 2
-        + needle_coupler_screw_head_clearance
+        + 2 * needle_coupler_screw_head_clearance
         + needle_coupler_coupling_width / 2,
       bb_ycenter(bearing_bb),
       bb_zcenter(bearing_bb)
@@ -768,11 +768,13 @@ if (part == "needle-coupler-prototype") {
 }
 
 if (part == "needle-coupler-1") {
-  needle_coupler_1(show_cutouts = show_cutouts);
+  needle_coupler_1(sacrificial_bridging = sacrificial_bridging,
+                   show_cutouts = show_cutouts);
 }
 
 if (part == "needle-coupler-2") {
-  needle_coupler_2(show_cutouts = show_cutouts);
+  needle_coupler_2(sacrificial_bridging = sacrificial_bridging,
+                   show_cutouts = show_cutouts);
 }
 
 
@@ -1856,7 +1858,7 @@ module needle_coupler_prototype(show_cutouts = false) {
 }
 
 // piece before the brackets
-module needle_coupler_1(show_cutouts = false) {
+module needle_coupler_1(sacrificial_bridging = false, show_cutouts = false) {
   // diameter of the fat portion of this part
   fat_diameter = bb_ydim(needle_coupler_1_bb);
 
@@ -1867,204 +1869,253 @@ module needle_coupler_1(show_cutouts = false) {
 
   // main body
   color(printed_color_1)
-  mov_x(- bb_xdim(needle_coupler_1_bb) / 2)
-  rot_y(90)
-  difference() {
-    union() {
-      cylinder(d = bearing_inner_diameter,
-               h = bb_xdim(bearing_bb) / 3
-                 + eps);
-      mov_z(bb_xdim(bearing_bb) / 3) {
-        cylinder(d1 = bearing_inner_diameter,
-                 d2 = fat_diameter,
-                 h = needle_coupler_screw_head_buffer
+  union() {
+    if (sacrificial_bridging) { needle_coupler_1_sacrificial_bridging(); }
+
+    mov_x(- bb_xdim(needle_coupler_1_bb) / 2)
+    rot_y(90)
+    difference() {
+      union() {
+        cylinder(d = bearing_inner_diameter,
+                 h = bb_xdim(bearing_bb) / 3
                    + eps);
-        mov_z(needle_coupler_screw_head_buffer)
-          cylinder(d = fat_diameter,
-                   h = fat_length);
+        mov_z(bb_xdim(bearing_bb) / 3) {
+          cylinder(d1 = bearing_inner_diameter,
+                   d2 = fat_diameter,
+                   h = needle_coupler_screw_head_buffer
+                     + eps);
+          mov_z(needle_coupler_screw_head_buffer)
+            cylinder(d = fat_diameter,
+                     h = fat_length);
+        }
       }
-    }
 
-    // to cut away
-    hash_if(show_cutouts)
-    union() {
-      // the smaller screw size is cutout the entire length
-      mov_z(-eps)
-        stretch_x(- fat_diameter)
-        cylinder(d = min(needle_coupler_bracket_screw_size,
-                         prismatic_joint_screw_size)
-                   + 2 * needle_coupler_screw_clearance,
-                 h = bb_xdim(needle_coupler_1_bb)
-                   + 2 * eps);
-
-      // the bigger screw size is cutout halfway with vertical cutout
-      stretch_x(- fat_diameter)
-      if (prismatic_joint_screw_size >= needle_coupler_bracket_screw_size) {
+      // to cut away
+      hash_if(show_cutouts)
+      union() {
+        // the smaller screw size is cutout the entire length
         mov_z(-eps)
-        cylinder(d = prismatic_joint_screw_size
-                   + 2 * needle_coupler_screw_clearance,
-                 h = bb_xdim(needle_coupler_1_bb) / 2
-                   + eps);
-      } else {
-        mov_z(bb_xdim(needle_coupler_1_bb) / 2)
-        cylinder(d = needle_coupler_bracket_screw_size
-                   + 2 * needle_coupler_screw_clearance,
-                 h = bb_xdim(needle_coupler_1_bb) / 2
-                   + eps);
+          stretch_x(- fat_diameter)
+          cylinder(d = min(needle_coupler_bracket_screw_size,
+                           prismatic_joint_screw_size)
+                     + 2 * needle_coupler_screw_clearance,
+                   h = bb_xdim(needle_coupler_1_bb)
+                     + 2 * eps);
+
+        // the bigger screw size is cutout halfway with vertical cutout
+        stretch_x(- fat_diameter)
+        if (prismatic_joint_screw_size != needle_coupler_bracket_screw_size) {
+          diameter_difference = abs(prismatic_joint_screw_size
+                                  - needle_coupler_bracket_screw_size);
+          if (prismatic_joint_screw_size >= needle_coupler_bracket_screw_size) {
+            mov_z(-eps)
+            cylinder(d = prismatic_joint_screw_size
+                       + 2 * needle_coupler_screw_clearance,
+                     h = bb_xdim(needle_coupler_1_bb) / 2
+                       - diameter_difference / 2
+                       + eps);
+          } else {
+            mov_z(bb_xdim(needle_coupler_1_bb) / 2
+                + diameter_difference / 2)
+            cylinder(d = needle_coupler_bracket_screw_size
+                       + 2 * needle_coupler_screw_clearance,
+                     h = bb_xdim(needle_coupler_1_bb) / 2
+                       - diameter_difference / 2
+                       + eps);
+          }
+          // a nice 45 degree angle transition
+          mov_z(bb_xdim(needle_coupler_1_bb) / 2)
+            cylinder(d1 = prismatic_joint_screw_size
+                        + 2 * needle_coupler_screw_clearance,
+                     d2 = needle_coupler_bracket_screw_size
+                        + 2 * needle_coupler_screw_clearance,
+                     h = diameter_difference + 2 * eps,
+                     center = true);
+        }
+
+        // cutout for the screw head going through the bearing
+        stretch_x(- fat_diameter)
+          mov_z(bb_xdim(bearing_bb) / 3
+              + needle_coupler_screw_head_buffer)
+          cylinder(d = M_washer_outer_diameter(prismatic_joint_screw_size)
+                     + 2 * needle_coupler_screw_head_clearance,
+                   h = M_screw_head_height(prismatic_joint_screw_size)
+                     + M_washer_thickness(prismatic_joint_screw_size)
+                     + 2 * needle_coupler_screw_head_clearance);
+
+        // cutout for the nut for the screw going through the L brackets
+        stretch_x(- fat_diameter)
+          mov_z(bb_xdim(needle_coupler_1_bb)
+              - needle_coupler_screw_head_buffer)
+          rot_y(180)
+          cylinder(r = M_nut_outer_radius(needle_coupler_bracket_screw_size)
+                     + needle_coupler_screw_head_clearance,
+                   h = M_nut_height(needle_coupler_bracket_screw_size)
+                     + 2 * needle_coupler_screw_head_clearance,
+                   $fn = 6);
       }
-
-      // cutout for the screw head going through the bearing
-      stretch_x(- fat_diameter)
-        mov_z(bb_xdim(bearing_bb) / 3
-            + needle_coupler_screw_head_buffer)
-        cylinder(d = M_washer_outer_diameter(prismatic_joint_screw_size)
-                   + 2 * needle_coupler_screw_head_clearance,
-                 h = M_screw_head_height(prismatic_joint_screw_size)
-                   + M_washer_thickness(prismatic_joint_screw_size)
-                   + 2 * needle_coupler_screw_head_clearance);
-
-      // cutout for the nut for the screw going through the L brackets
-      stretch_x(- fat_diameter)
-        mov_z(bb_xdim(needle_coupler_1_bb)
-            - needle_coupler_screw_head_buffer)
-        rot_y(180)
-        cylinder(r = M_nut_outer_radius(needle_coupler_bracket_screw_size)
-                   + needle_coupler_screw_head_clearance,
-                 h = M_nut_height(needle_coupler_bracket_screw_size)
-                   + 2 * needle_coupler_screw_head_clearance,
-                 $fn = 6);
     }
   }
 }
 
+module needle_coupler_1_sacrificial_bridging() {
+  mov_x(bb_xdim(needle_coupler_1_bb) / 2
+      - needle_coupler_screw_head_buffer
+      - 2 * needle_coupler_screw_head_clearance
+      - M_nut_height(needle_coupler_bracket_screw_size))
+  rot_y(-90)
+  cylinder(d = bb_zdim(needle_coupler_1_bb),
+           h = layer_height);
+
+  mov_x(- bb_xdim(needle_coupler_1_bb) / 2
+        + bb_xdim(bearing_bb) / 3
+        + needle_coupler_screw_head_buffer)
+  rot_y(-90)
+  cylinder(d1 = bb_zdim(needle_coupler_1_bb),
+           d2 = bb_zdim(needle_coupler_1_bb)  // 45 degree angle
+              - 2 * layer_height,
+           h = layer_height);
+}
+
 // piece after the brackets connected to needle_coupler_1 with a screw
-module needle_coupler_2(show_cutouts = false) {
+module needle_coupler_2(sacrificial_bridging = false, show_cutouts = false) {
   color(printed_color_1)
   mov_x(- bb_xdim(needle_coupler_2_bb) / 2)
-  difference() {
-    local_coupling_screw_center = [
-        bb_xdim(needle_coupler_2_bb)
-          - needle_coupler_coupling_width / 2,
-        needle_coupler_coupling_diameter / 2
-          + needle_coupler_coupling_screw_size / 2
-          + needle_coupler_screw_clearance,
-        0
-      ];
-
-    // main body
-    union() {
-      // piece holding screw through the L brackets
-      rot_y(90)
-      cylinder(d = bb_zdim(needle_coupler_2_bb),
-               h = bb_xdim(needle_coupler_2_bb)
-                 - needle_coupler_coupling_width);
-
-      // piece for coupling with the needle
-      mov_x(bb_xdim(needle_coupler_2_bb)
-          - needle_coupler_coupling_width
-          - eps)
-      rot_y(90)
-      cylinder(d = needle_coupler_coupling_diameter,
-               h = needle_coupler_coupling_width
-                 + eps);
-
-      // screw for coupling with the needle
-      translate(local_coupling_screw_center)
-      stretch_y(- needle_coupler_coupling_diameter / 2)
-      cylinder(d = needle_coupler_coupling_screw_size
-                 + 2 * needle_coupler_screw_clearance
-                 + 2 * needle_coupler_coupling_screw_buffer,
-               h = needle_coupler_slit_size
-                 + 2 * needle_coupler_coupling_screw_buffer,
-               center = true);
-    }
-
-    // cut outs
-    hash_if(show_cutouts)
-    union() {
-      // screw shaft vertical cutout
-      stretch_z(bb_zdim(needle_coupler_2_bb))
-      mov_x(-eps)
-      rot_y(90)
-      cylinder(d = needle_coupler_bracket_screw_size
-                 + 2 * needle_coupler_screw_clearance,
-               h = needle_coupler_screw_head_buffer
-                 + 2 * eps);
-
-      // full screw shaft cutout
-      mov_x(-eps)
-      rot_y(90)
-      cylinder(d = needle_coupler_bracket_screw_size
-                 + 2 * needle_coupler_screw_clearance,
-               h = bb_xdim(needle_coupler_2_bb)
-                 + 2 * eps);
-
-      // screw head and washer cutout
-      stretch_z(bb_zdim(needle_coupler_2_bb))
-      mov_x(needle_coupler_screw_head_buffer)
-      rot_y(90)
-      cylinder(d = M_washer_outer_diameter(needle_coupler_bracket_screw_size)
-                 + 2 * needle_coupler_screw_clearance,
-               h = M_washer_thickness(needle_coupler_bracket_screw_size)
-                 + M_screw_head_height(needle_coupler_bracket_screw_size)
-                 + 2 * needle_coupler_screw_clearance);
-
-      // one layer gap for top half of needle coupling portion
-      translate([
+  union() {
+    if (sacrificial_bridging) { needle_coupler_2_sacrificial_bridging(); }
+    difference() {
+      local_coupling_screw_center = [
           bb_xdim(needle_coupler_2_bb)
-            - needle_coupler_coupling_width,
-          - bb_ydim(needle_coupler_2_bb) / 2,
+            - needle_coupler_coupling_width / 2,
+          needle_coupler_coupling_diameter / 2
+            + needle_coupler_coupling_screw_size / 2
+            + needle_coupler_screw_clearance,
           0
-        ])
-      cube([
-          layer_height,
-          bb_ydim(needle_coupler_2_bb),
-          bb_zdim(needle_coupler_2_bb)
-        ]);
+        ];
 
-      // slit in needle coupling portion
-      translate([
-          bb_xdim(needle_coupler_2_bb)
-            - needle_coupler_coupling_width,
-          0,
-          - needle_coupler_slit_size / 2
-        ])
-      cube([
-          needle_coupler_coupling_width
-            + eps,
-          bb_ydim(needle_coupler_2_bb),
-          needle_coupler_slit_size
-        ]);
+      // main body
+      union() {
+        // piece holding screw through the L brackets
+        rot_y(90)
+        cylinder(d = bb_zdim(needle_coupler_2_bb),
+                 h = bb_xdim(needle_coupler_2_bb)
+                   - needle_coupler_coupling_width);
 
-      // coupling screw hole
-      translate(local_coupling_screw_center)
-      cylinder(d = needle_coupler_coupling_screw_size
-                 + 2 * needle_coupler_screw_clearance,
-               h = 8,
-               center = true);
+        // piece for coupling with the needle
+        mov_x(bb_xdim(needle_coupler_2_bb)
+            - needle_coupler_coupling_width
+            - eps)
+        rot_y(90)
+        cylinder(d = needle_coupler_coupling_diameter,
+                 h = needle_coupler_coupling_width
+                   + eps);
 
-      // screw head and washer for needle coupling portion
-      translate(local_coupling_screw_center)
-      mov_z(needle_coupler_slit_size / 2
-          + needle_coupler_coupling_screw_buffer)
-      //cylinder(d = M_screw_head_diameter(needle_coupler_coupling_screw_size)
-      cylinder(d = M_washer_outer_diameter(needle_coupler_coupling_screw_size)
-                 + 2 * needle_coupler_screw_head_clearance,
-               h = bb_zdim(needle_coupler_2_bb) / 2);
+        // screw for coupling with the needle
+        translate(local_coupling_screw_center)
+        stretch_y(- needle_coupler_coupling_diameter / 2)
+        cylinder(d = needle_coupler_coupling_screw_size
+                   + 2 * needle_coupler_screw_clearance
+                   + 2 * needle_coupler_coupling_screw_buffer,
+                 h = needle_coupler_slit_size
+                   + 2 * needle_coupler_coupling_screw_buffer,
+                 center = true);
+      }
 
-      // nut for needle coupling portion
-      translate(local_coupling_screw_center)
-      mov_z(- needle_coupler_slit_size / 2
-            - needle_coupler_coupling_screw_buffer)
-      rot_y(180)
-      cylinder(r = M_nut_outer_radius(needle_coupler_coupling_screw_size)
-                 + needle_coupler_screw_head_clearance,
-               h = M_nut_height(needle_coupler_coupling_screw_size),
-               $fn = 6);
+      // cut outs
+      hash_if(show_cutouts)
+      union() {
+        // screw shaft vertical cutout
+        stretch_z(bb_zdim(needle_coupler_2_bb))
+        mov_x(-eps)
+        rot_y(90)
+        cylinder(d = needle_coupler_bracket_screw_size
+                   + 2 * needle_coupler_screw_clearance,
+                 h = needle_coupler_screw_head_buffer
+                   + 2 * eps);
+
+        // full screw shaft cutout
+        mov_x(-eps)
+        rot_y(90)
+        cylinder(d = needle_coupler_bracket_screw_size
+                   + 2 * needle_coupler_screw_clearance,
+                 h = bb_xdim(needle_coupler_2_bb)
+                   + 2 * eps);
+
+        // screw head and washer cutout
+        stretch_z(bb_zdim(needle_coupler_2_bb))
+        mov_x(needle_coupler_screw_head_buffer)
+        rot_y(90)
+        cylinder(d = M_washer_outer_diameter(needle_coupler_bracket_screw_size)
+                   + 2 * needle_coupler_screw_clearance,
+                 h = M_washer_thickness(needle_coupler_bracket_screw_size)
+                   + M_screw_head_height(needle_coupler_bracket_screw_size)
+                   + 2 * needle_coupler_screw_head_clearance);
+
+        // one layer gap for top half of needle coupling portion
+        translate([
+            bb_xdim(needle_coupler_2_bb)
+              - needle_coupler_coupling_width,
+            - bb_ydim(needle_coupler_2_bb) / 2,
+            0
+          ])
+        cube([
+            layer_height,
+            bb_ydim(needle_coupler_2_bb),
+            bb_zdim(needle_coupler_2_bb)
+          ]);
+
+        // slit in needle coupling portion
+        translate([
+            bb_xdim(needle_coupler_2_bb)
+              - needle_coupler_coupling_width,
+            0,
+            - needle_coupler_slit_size / 2
+          ])
+        cube([
+            needle_coupler_coupling_width
+              + eps,
+            bb_ydim(needle_coupler_2_bb),
+            needle_coupler_slit_size
+          ]);
+
+        // coupling screw hole
+        translate(local_coupling_screw_center)
+        cylinder(d = needle_coupler_coupling_screw_size
+                   + 2 * needle_coupler_screw_clearance,
+                 h = 8,
+                 center = true);
+
+        // screw head and washer for needle coupling portion
+        translate(local_coupling_screw_center)
+        mov_z(needle_coupler_slit_size / 2
+            + needle_coupler_coupling_screw_buffer)
+        //cylinder(d = M_screw_head_diameter(needle_coupler_coupling_screw_size)
+        cylinder(d = M_washer_outer_diameter(needle_coupler_coupling_screw_size)
+                   + 2 * needle_coupler_screw_head_clearance,
+                 h = bb_zdim(needle_coupler_2_bb) / 2);
+
+        // nut for needle coupling portion
+        translate(local_coupling_screw_center)
+        mov_z(- needle_coupler_slit_size / 2
+              - needle_coupler_coupling_screw_buffer)
+        rot_y(180)
+        cylinder(r = M_nut_outer_radius(needle_coupler_coupling_screw_size)
+                   + needle_coupler_screw_head_clearance,
+                 h = M_nut_height(needle_coupler_coupling_screw_size),
+                 $fn = 6);
+      }
     }
   }
+}
 
-  // TODO: sacrificial bridging
+module needle_coupler_2_sacrificial_bridging() {
+  mov_x(needle_coupler_screw_head_buffer
+      + 2 * needle_coupler_screw_head_clearance
+      + M_washer_thickness(needle_coupler_bracket_screw_size)
+      + M_screw_head_height(needle_coupler_bracket_screw_size))
+  rot_y(90)
+  cylinder(d = bb_zdim(needle_coupler_2_bb),
+           h = layer_height);
 }
 
 module needle_prismatic_screws() {
