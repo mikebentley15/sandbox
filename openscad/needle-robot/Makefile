@@ -11,7 +11,9 @@ MODELS         += motor-prismatic-coupler.stl
 MODELS         += motor-prismatic-coupler.stl
 MODELS         += prismatic-joint.stl
 MODELS         += prismatic-joint-nobridge.stl
-MODELS         += needle-coupler.stl
+MODELS         += needle-coupler-prototype.stl
+MODELS         += needle-coupler-1.stl
+MODELS         += needle-coupler-2.stl
 MODELS         += ${TEST_FILE:%.scad=%.stl}
 OPENSCAD_VARS   = -D '$$fn=200'
 
