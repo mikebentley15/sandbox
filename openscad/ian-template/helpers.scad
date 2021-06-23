@@ -71,6 +71,13 @@ module rot_dupe_x(a, i) { for (j=[1:i]) { rot_x(a*j) children(); } }
 module rot_dupe_y(a, i) { for (j=[1:i]) { rot_y(a*j) children(); } }
 module rot_dupe_z(a, i) { for (j=[1:i]) { rot_z(a*j) children(); } }
 
+// stretch with the given displacement
+module stretch(displacement)
+  { hull() { children(); translate(displacement) children(); } }
+module stretch_x(dx) { stretch([dx, 0, 0]) children(); }
+module stretch_y(dy) { stretch([0, dy, 0]) children(); }
+module stretch_z(dz) { stretch([0, 0, dz]) children(); }
+
 // cube_[pcn][pcn][pcn] is aligned [p]ositive [c]enter or [n]egative for x y z
 module cube_ppp(x, y, z) { mov_xyz(   0,    0,    0) cube(size=[x, y, z]); }
 module cube_ppc(x, y, z) { mov_xyz(   0,    0, -z/2) cube(size=[x, y, z]); }
