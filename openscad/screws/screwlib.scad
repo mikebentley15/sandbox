@@ -208,16 +208,26 @@ module washer(outer_diameter, inner_diameter, thickness) {
 }
 
 module screwslice(size, pitch, profile=4) {
-  $fn = $fn < 3 ? 24 : $fn;
-  H = .5 * pitch * pow(3, .5);
-  r1 = size / 2 - H;
-  d = 360 / $fn;
-  p =
-    [ for (i = [0:$fn]) [
-      sin(d * i) * (r1 + (threadprofile(profile, d * i) * H)),
-      cos(d * i) * (r1 + (threadprofile(profile, d * i) * H))]
-    ];
-  polygon(p);
+  if (profile == 5) {
+    union() {
+      circle(d = 0.85 * size);
+      difference() {
+        circle(d = size);
+        translate([- 0.75 * size, 0, 0]) square(1.5 * size);
+      }
+    }
+  } else {
+    $fn = $fn < 3 ? 24 : $fn;
+    H = .5 * pitch * pow(3, .5);
+    r1 = size / 2 - H;
+    d = 360 / $fn;
+    p =
+      [ for (i = [0:$fn]) [
+        sin(d * i) * (r1 + (threadprofile(profile, d * i) * H)),
+        cos(d * i) * (r1 + (threadprofile(profile, d * i) * H))]
+      ];
+    polygon(p);
+  }
 }
 
 function threadprofile(n, d) =
