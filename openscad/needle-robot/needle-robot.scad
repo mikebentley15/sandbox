@@ -1,7 +1,7 @@
 /* [General Settings] */
 
 // Which model to render
-part = "all"; // ["all", "motor-mount", "sensor-mount", "L-bind", "bearing-mount", "motor-prismatic-coupler", "prismatic-joint", "needle-coupler-prototype", "needle-coupler-1", "needle-coupler-2", "fasteners"]
+part = "all"; // ["all", "wide-base-feet", "motor-mount", "sensor-mount", "L-bind", "bearing-mount", "motor-prismatic-coupler", "prismatic-joint", "needle-coupler-prototype", "needle-coupler-1", "needle-coupler-2", "fasteners"]
 
 /* [Bounding Boxes (bb)] */
 
@@ -101,6 +101,9 @@ show_base_linear_motor_bb = false;
 // box part of the base linear actuator's motor
 show_base_linear_motor_box_bb = false;
 
+// wide base feet
+show_wide_base_feet_bb = false;
+
 
 /* [Printed Motor Mount] */
 
@@ -199,6 +202,27 @@ needle_coupler_slit_size                =  1.5;
 needle_coupler_coupling_diameter        = 10;
 needle_coupler_coupling_screw_size      =  3;
 needle_coupler_coupling_screw_buffer    =  1.3;
+
+
+/* [Printed Wide Base Feet] */
+
+// distance between screw and base bottom
+wide_base_feet_screw_buffer             = 2.5;
+// extra distance in y for each side
+wide_base_feet_depth_buffer             = 20;
+// how much to wrap in height around base bottom
+wide_base_feet_wrap_height              =  5;
+// how much height to give after the screw countersink on bottom
+wide_base_feet_countersink_extra_depth  =  1;
+wide_base_feet_screw_size               =  4;
+wide_base_feet_screw_length             =  8;
+wide_base_feet_screw_clearance          =  0.2;
+wide_base_feet_screw_head_clearance     =  0.4;
+wide_base_feet_screw_distance_y         = 28.7;
+wide_base_feet_screw_distance_x         = 28.7;
+// buffer on each side of the screws in the x-direction
+wide_base_feet_screw_x_buffer           = 15;
+wide_base_feet_base_clearance           = 0.3;
 
 
 /* [Base Linear Actuator] */
@@ -381,8 +405,7 @@ use <screwlib.scad>
 // independently of other objects.
 
 platform_bb = bb(
-    center=[platform_width/2, platform_depth/2, platform_height/2],
-    //center = [0, 0, 0],
+    center = [0, 0, 0],
     dim = [platform_width, platform_depth, platform_height]
   );
 
@@ -881,6 +904,29 @@ base_bb = bb_join(
     )
   );
 
+wide_base_feet_bb = bb(
+    center = [
+      bb_xcenter(base_foot_bb),
+      bb_ycenter(base_foot_bb),
+      bb_zmin(base_foot_bb)
+        + wide_base_feet_wrap_height / 2
+        - wide_base_feet_countersink_extra_depth / 2
+        - M_screw_head_height(wide_base_feet_screw_size) / 2
+        - M_washer_thickness(wide_base_feet_screw_size) / 2
+        - wide_base_feet_screw_buffer / 2
+    ],
+    dim = [
+      bb_xdim(base_foot_bb),
+      bb_ydim(base_foot_bb)
+        + 2 * wide_base_feet_depth_buffer,
+      wide_base_feet_countersink_extra_depth
+        + M_screw_head_height(wide_base_feet_screw_size)
+        + M_washer_thickness(wide_base_feet_screw_size)
+        + wide_base_feet_screw_buffer
+        + wide_base_feet_wrap_height
+    ]
+  );
+
 
 //
 // Actual generation
@@ -888,6 +934,8 @@ base_bb = bb_join(
 
 if (part == "all") {
   translate(bb_center(base_bb)) base_linear_actuator();
+  translate(bb_center(wide_base_feet_bb)) wide_base_feet();
+  if (show_fasteners) { wide_base_feet_screws(); }
   translate(bb_center(platform_bb)) platform();
   translate(bb_center(L_brackets_bb)) L_brackets();
   if (show_fasteners) { L_brackets_screws(); }
@@ -916,6 +964,11 @@ if (part == "fasteners") {
   motor_coupler_screws();
   bearing_mount_screws();
   needle_prismatic_screws();
+  wide_base_feet_screws();
+}
+
+if (part == "wide-base-feet") {
+  wide_base_feet(show_cutouts = show_cutouts);
 }
 
 if (part == "motor-mount") {
@@ -999,6 +1052,7 @@ check_show_bb(show_base_right_wall_bb, base_right_wall_bb);
 check_show_bb(show_base_left_wall_bb, base_left_wall_bb);
 check_show_bb(show_base_mid_wall_bb, base_mid_wall_bb);
 check_show_bb(show_base_motor_coupler_bb, base_motor_coupler_bb);
+check_show_bb(show_wide_base_feet_bb, wide_base_feet_bb);
 
 
 //
@@ -1060,6 +1114,94 @@ module base_linear_actuator() {
     // right wall
     translate(bb_center(base_right_wall_bb))
     cube(bb_dim(base_right_wall_bb), center = true);
+  }
+}
+
+module wide_base_feet(show_cutouts = false) {
+  base_foot_width = wide_base_feet_screw_distance_x
+                  + 2 * wide_base_feet_screw_x_buffer;
+  dupe_x(bb_xdim(wide_base_feet_bb)
+       - base_foot_width)
+    wide_base_foot(show_cutouts = show_cutouts);
+}
+
+module wide_base_foot(show_cutouts = false) {
+  base_foot_width = wide_base_feet_screw_distance_x
+                  + 2 * wide_base_feet_screw_x_buffer;
+
+  color(printed_color_1)
+  difference() {
+    // main body
+    union() {
+      cube([
+          base_foot_width,
+          bb_ydim(wide_base_feet_bb),
+          bb_zdim(wide_base_feet_bb)
+        ], center = true);
+    }
+
+    // cutouts
+    hash_if(show_cutouts)
+    union() {
+      // cutout for base foot
+      mov_z(bb_zdim(wide_base_feet_bb) / 2
+          - wide_base_feet_wrap_height / 2
+          + eps)
+        cube([
+            base_foot_width
+              + 2 * eps,
+            bb_ydim(base_foot_bb)
+              + 2 * wide_base_feet_base_clearance,
+            wide_base_feet_wrap_height
+              + eps
+          ], center = true);
+
+      // screw holes
+      dupe_x(wide_base_feet_screw_distance_x)
+      dupe_y(wide_base_feet_screw_distance_y)
+      union() {
+        // screw shaft
+        cylinder(d = wide_base_feet_screw_size
+                   + 2 * wide_base_feet_screw_clearance,
+                 h = bb_zdim(wide_base_feet_bb)
+                   + 2 * eps,
+                 center = true);
+
+        // channel for washer
+        mov_z(bb_zdim(wide_base_feet_bb) / 2
+            - wide_base_feet_wrap_height
+            - wide_base_feet_screw_buffer)
+        rot_y(180)
+        cylinder(d = M_washer_outer_diameter(wide_base_feet_screw_size)
+                   + wide_base_feet_screw_head_clearance,
+                 h = bb_zdim(wide_base_feet_bb));
+      }
+    }
+  }
+}
+
+module wide_base_feet_screws() {
+  base_foot_width = wide_base_feet_screw_distance_x
+                  + 2 * wide_base_feet_screw_x_buffer;
+
+  translate(bb_center(wide_base_feet_bb))
+  dupe_x(bb_xdim(wide_base_feet_bb)
+       - base_foot_width)
+  dupe_x(wide_base_feet_screw_distance_x)
+  dupe_y(wide_base_feet_screw_distance_y)
+  mov_z(bb_zdim(wide_base_feet_bb) / 2
+      - wide_base_feet_wrap_height
+      - wide_base_feet_screw_buffer)
+  union() {
+    color(screw_color)
+      mov_z(- M_screw_head_height(wide_base_feet_screw_size)
+            - M_washer_thickness(wide_base_feet_screw_size))
+      M_screw(wide_base_feet_screw_size,
+              wide_base_feet_screw_length,
+              simplify = simplify_fasteners);
+    color(washer_color)
+      rot_y(180)
+      M_washer(wide_base_feet_screw_size);
   }
 }
 
