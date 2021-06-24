@@ -74,6 +74,33 @@ show_needle_coupler_1_bb = false;
 // printed coupler from bearing to needle (2nd piece after the bracket)
 show_needle_coupler_2_bb = false;
 
+// full linear actuator at the base
+show_base_bb = false;
+
+// bottom of the base linear actuator
+show_base_foot_bb = false;
+
+// lead screw part of the base's linear actuator
+show_base_lead_screw_bb = false;
+
+// left wall of the base linear actuator (where forward is right)
+show_base_left_wall_bb = false;
+
+// wall in the middle of the base between the coupler and lead screw
+show_base_mid_wall_bb = false;
+
+// right wall of the base linear actuator (where forward is right)
+show_base_right_wall_bb = false;
+
+// motor coupler between linear motor and base lead screw
+show_base_motor_coupler_bb = false;
+
+// motor part of the base's linear actuator
+show_base_linear_motor_bb = false;
+
+// box part of the base linear actuator's motor
+show_base_linear_motor_box_bb = false;
+
 
 /* [Printed Motor Mount] */
 
@@ -157,21 +184,52 @@ prismatic_joint_nut_clearance       = 0.4;
 
 /* [Printed Needle Coupler] */
 
-needle_coupler_bearing_growth           = 3;
-needle_coupler_screw_clearance          = 0.2;
-needle_coupler_screw_head_buffer        = 3;
-needle_coupler_screw_head_clearance     = 0.4;
+needle_coupler_bearing_growth           =  3;
+needle_coupler_screw_clearance          =  0.2;
+needle_coupler_screw_head_buffer        =  3;
+needle_coupler_screw_head_clearance     =  0.4;
 needle_coupler_bearing_screw_length     = 16;
-needle_coupler_bracket_axial_clearance  = 1.0;
-needle_coupler_bracket_radial_clearance = 0.7;
-needle_coupler_bracket_screw_size       = 4;
+needle_coupler_bracket_axial_clearance  =  1.0;
+needle_coupler_bracket_radial_clearance =  0.7;
+needle_coupler_bracket_screw_size       =  4;
 needle_coupler_bracket_screw_length     = 20;
-needle_coupler_coupling_width           = 8;
+needle_coupler_coupling_width           =  8;
 // for coupling the needle, the slit size
-needle_coupler_slit_size                = 1.5;
+needle_coupler_slit_size                =  1.5;
 needle_coupler_coupling_diameter        = 10;
-needle_coupler_coupling_screw_size      = 3;
-needle_coupler_coupling_screw_buffer    = 1.3;
+needle_coupler_coupling_screw_size      =  3;
+needle_coupler_coupling_screw_buffer    =  1.3;
+
+
+/* [Base Linear Actuator] */
+
+base_platform_z_offset            =   1.0;
+
+base_lead_screw_mid_wall_drop     =   6.5;
+base_lead_screw_diameter          =  16;
+base_lead_screw_length            = 260;
+base_lead_screw_pitch             =   5;
+
+base_left_wall_height             =  70;
+base_left_wall_width              =   8;
+base_left_wall_depth              =  56;
+
+base_motor_coupler_section_width  =  35;
+base_motor_coupler_diameter       =  19.5;
+base_motor_coupler_length         =  24;
+base_motor_coupler_after_diameter =   8;
+
+base_mid_wall_height              =  32;
+base_mid_wall_width               =   9;
+base_mid_wall_depth               =  43;
+
+base_right_wall_height            =  57;
+base_right_wall_width             =   8;
+base_right_wall_depth             =  43;
+
+base_foot_height                  =  25;
+base_foot_depth                   =  43;
+
 
 /* [Platform] */
 
@@ -273,6 +331,7 @@ $fn = 20;
 
 /* [Colors] */
 
+base_color         = "#00ffffff";
 platform_color     = "#ffff33ff";
 bracket_color      = "#ddddddff";
 screw_color        = "#777777ff";
@@ -701,12 +760,134 @@ needle_coupler_2_bb = bb(
     ]
   );
 
+base_lead_screw_bb = bb(
+    center = [
+      bb_xcenter(platform_bb),
+      bb_ycenter(platform_bb),
+      bb_zmax(platform_bb)
+        - base_lead_screw_mid_wall_drop
+        - base_platform_z_offset
+        - base_lead_screw_diameter / 2
+    ],
+    dim = [
+      base_lead_screw_length,
+      base_lead_screw_diameter,
+      base_lead_screw_diameter
+    ]
+  );
+
+base_mid_wall_bb = bb(
+    center = [
+      bb_xmin(base_lead_screw_bb)
+        - base_mid_wall_width / 2,
+      bb_ycenter(base_lead_screw_bb),
+      bb_zmax(base_lead_screw_bb)
+        - base_mid_wall_height / 2
+        + base_lead_screw_mid_wall_drop
+    ],
+    dim = [
+      base_mid_wall_width,
+      base_mid_wall_depth,
+      base_mid_wall_height
+    ]
+  );
+
+base_right_wall_bb = bb(
+    center = [
+      bb_xmax(base_lead_screw_bb)
+        + base_right_wall_width / 2,
+      bb_ycenter(base_lead_screw_bb),
+      bb_zmax(base_lead_screw_bb)
+        - base_right_wall_height / 2
+        + base_lead_screw_mid_wall_drop
+    ],
+    dim = [
+      base_right_wall_width,
+      base_right_wall_depth,
+      base_right_wall_height
+    ]
+  );
+
+base_left_wall_bb = bb(
+    center = [
+      bb_xmin(base_mid_wall_bb)
+        - base_left_wall_width / 2
+        - base_motor_coupler_section_width,
+      bb_ycenter(base_lead_screw_bb),
+      bb_zmin(base_right_wall_bb)
+        + base_left_wall_height / 2
+    ],
+    dim = [
+      base_left_wall_width,
+      base_left_wall_depth,
+      base_left_wall_height
+    ]
+  );
+
+base_foot_bb = bb(
+    center = [
+      bb_xmax(base_left_wall_bb)
+        + base_motor_coupler_section_width / 2
+        + bb_xdim(base_mid_wall_bb) / 2
+        + bb_xdim(base_lead_screw_bb) / 2,
+      bb_ycenter(base_left_wall_bb),
+      bb_zmin(base_left_wall_bb)
+        + base_foot_height / 2
+    ],
+    dim = [
+      base_motor_coupler_section_width
+        + bb_xdim(base_mid_wall_bb)
+        + bb_xdim(base_lead_screw_bb),
+      base_foot_depth,
+      base_foot_height
+    ]
+  );
+
+base_motor_coupler_bb = bb(
+    center = [
+      bb_xcenter(base_left_wall_bb) / 2
+        + bb_xcenter(base_mid_wall_bb) / 2,
+      bb_ycenter(base_lead_screw_bb),
+      bb_zcenter(base_lead_screw_bb)
+    ],
+    dim = [
+      base_motor_coupler_length,
+      base_motor_coupler_diameter,
+      base_motor_coupler_diameter
+    ]
+  );
+
+base_linear_motor_box_bb = bb(
+    center = [
+      bb_xmin(base_left_wall_bb)
+        - bb_xdim(motor_box_bb) / 2,
+      bb_ycenter(base_lead_screw_bb),
+      bb_zcenter(base_lead_screw_bb)
+    ],
+    dim = bb_dim(motor_box_bb)
+  );
+
+base_linear_motor_bb = bb(
+    center = bb_center(base_linear_motor_box_bb)
+           + [motor_shaft_length / 2, 0, 0],
+    dim = bb_dim(motor_bb)
+  );
+
+base_bb = bb_join(
+    base_linear_motor_bb,
+    bb_join(
+      base_left_wall_bb,
+      base_right_wall_bb
+    )
+  );
+
 
 //
 // Actual generation
 //
 
 if (part == "all") {
+  translate(bb_center(base_bb)) base_linear_actuator();
   translate(bb_center(platform_bb)) platform();
   translate(bb_center(L_brackets_bb)) L_brackets();
   if (show_fasteners) { L_brackets_screws(); }
@@ -809,6 +990,16 @@ check_show_bb(show_prismatic_joint_bb, prismatic_joint_bb);
 check_show_bb(show_needle_coupler_prototype_bb, needle_coupler_prototype_bb);
 check_show_bb(show_needle_coupler_1_bb, needle_coupler_1_bb);
 check_show_bb(show_needle_coupler_2_bb, needle_coupler_2_bb);
+check_show_bb(show_base_bb, base_bb);
+check_show_bb(show_base_lead_screw_bb, base_lead_screw_bb);
+check_show_bb(show_base_linear_motor_bb, base_linear_motor_bb);
+check_show_bb(show_base_linear_motor_box_bb, base_linear_motor_box_bb);
+check_show_bb(show_base_foot_bb, base_foot_bb);
+check_show_bb(show_base_right_wall_bb, base_right_wall_bb);
+check_show_bb(show_base_left_wall_bb, base_left_wall_bb);
+check_show_bb(show_base_mid_wall_bb, base_mid_wall_bb);
+check_show_bb(show_base_motor_coupler_bb, base_motor_coupler_bb);
+
 
 //
 // Helper functions
@@ -817,6 +1008,58 @@ check_show_bb(show_needle_coupler_2_bb, needle_coupler_2_bb);
 module check_show_bb(cond, bb) {
   if (cond) {
     show_bb(bb);
+  }
+}
+
+module base_linear_actuator() {
+  color(base_color)
+  translate(- bb_center(base_bb))
+  union() {
+    // motor
+    translate(bb_center(base_linear_motor_bb))
+    motor();
+
+    // left wall
+    translate(bb_center(base_left_wall_bb))
+    cube(bb_dim(base_left_wall_bb), center=true);
+
+    // coupler section
+    translate(bb_center(base_motor_coupler_bb))
+    rot_y(90)
+    cylinder(d = base_motor_coupler_diameter,
+             h = bb_xdim(base_motor_coupler_bb),
+             center = true);
+
+    // shaft from the coupler to the lead screw
+    translate(bb_center(base_motor_coupler_bb))
+    rot_y(90)
+    cylinder(d = base_motor_coupler_after_diameter,
+             h = abs(bb_xcenter(base_motor_coupler_bb)
+                   - bb_xcenter(base_mid_wall_bb)));
+
+    // mid wall
+    translate(bb_center(base_mid_wall_bb))
+    cube(bb_dim(base_mid_wall_bb), center = true);
+
+    // lead screw
+    translate(bb_center(base_lead_screw_bb))
+    mov_x(- bb_xdim(base_lead_screw_bb) / 2)
+    rot_y(90)
+    screw_shaft(
+        size     = bb_zdim(base_lead_screw_bb),
+        height   = bb_xdim(base_lead_screw_bb),
+        pitch    = base_lead_screw_pitch,
+        simplify = simplify_fasteners,
+        profile  = 5
+      );
+
+    // foot
+    translate(bb_center(base_foot_bb))
+    cube(bb_dim(base_foot_bb), center = true);
+
+    // right wall
+    translate(bb_center(base_right_wall_bb))
+    cube(bb_dim(base_right_wall_bb), center = true);
   }
 }
 
