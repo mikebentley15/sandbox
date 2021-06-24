@@ -355,7 +355,7 @@ $fn = 20;
 
 /* [Colors] */
 
-base_color         = "#00ffffff";
+base_color         = "#ffaa33ff";
 platform_color     = "#ffff33ff";
 bracket_color      = "#ddddddff";
 screw_color        = "#777777ff";
