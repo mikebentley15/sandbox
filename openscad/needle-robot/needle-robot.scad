@@ -1,7 +1,7 @@
 /* [General Settings] */
 
 // Which model to render
-part = "all"; // ["all", "wide-base-feet", "motor-mount", "sensor-mount", "L-bind", "bearing-mount", "motor-prismatic-coupler", "prismatic-joint", "needle-coupler-prototype", "needle-coupler-1", "needle-coupler-2", "fasteners"]
+part = "all"; // ["all", "wide-base-foot", "motor-mount", "sensor-mount", "L-bind", "bearing-mount", "motor-prismatic-coupler", "prismatic-joint", "needle-coupler-prototype", "needle-coupler-1", "needle-coupler-2", "fasteners"]
 
 /* [Bounding Boxes (bb)] */
 
@@ -967,12 +967,14 @@ if (part == "fasteners") {
   wide_base_feet_screws();
 }
 
-if (part == "wide-base-feet") {
-  wide_base_feet(show_cutouts = show_cutouts);
+if (part == "wide-base-foot") {
+  wide_base_foot(sacrificial_bridging = sacrificial_bridging,
+                 show_cutouts = show_cutouts);
 }
 
 if (part == "motor-mount") {
-  motor_mount(sacrificial_bridging=sacrificial_bridging, show_cutouts=show_cutouts);
+  motor_mount(sacrificial_bridging = sacrificial_bridging,
+              show_cutouts = show_cutouts);
 }
 
 if (part == "sensor-mount") {
@@ -1125,56 +1127,68 @@ module wide_base_feet(show_cutouts = false) {
     wide_base_foot(show_cutouts = show_cutouts);
 }
 
-module wide_base_foot(show_cutouts = false) {
+module wide_base_foot(sacrificial_bridging = false, show_cutouts = false) {
   base_foot_width = wide_base_feet_screw_distance_x
                   + 2 * wide_base_feet_screw_x_buffer;
 
   color(printed_color_1)
-  difference() {
-    // main body
-    union() {
+  union() {
+    if (sacrificial_bridging) {
+      mov_z(- layer_height / 2
+            + bb_zdim(wide_base_feet_bb) / 2
+            - wide_base_feet_wrap_height)
       cube([
           base_foot_width,
           bb_ydim(wide_base_feet_bb),
-          bb_zdim(wide_base_feet_bb)
+          layer_height
         ], center = true);
     }
-
-    // cutouts
-    hash_if(show_cutouts)
-    union() {
-      // cutout for base foot
-      mov_z(bb_zdim(wide_base_feet_bb) / 2
-          - wide_base_feet_wrap_height / 2
-          + eps)
-        cube([
-            base_foot_width
-              + 2 * eps,
-            bb_ydim(base_foot_bb)
-              + 2 * wide_base_feet_base_clearance,
-            wide_base_feet_wrap_height
-              + eps
-          ], center = true);
-
-      // screw holes
-      dupe_x(wide_base_feet_screw_distance_x)
-      dupe_y(wide_base_feet_screw_distance_y)
+    difference() {
+      // main body
       union() {
-        // screw shaft
-        cylinder(d = wide_base_feet_screw_size
-                   + 2 * wide_base_feet_screw_clearance,
-                 h = bb_zdim(wide_base_feet_bb)
-                   + 2 * eps,
-                 center = true);
+        cube([
+            base_foot_width,
+            bb_ydim(wide_base_feet_bb),
+            bb_zdim(wide_base_feet_bb)
+          ], center = true);
+      }
 
-        // channel for washer
+      // cutouts
+      hash_if(show_cutouts)
+      union() {
+        // cutout for base foot
         mov_z(bb_zdim(wide_base_feet_bb) / 2
-            - wide_base_feet_wrap_height
-            - wide_base_feet_screw_buffer)
-        rot_y(180)
-        cylinder(d = M_washer_outer_diameter(wide_base_feet_screw_size)
-                   + wide_base_feet_screw_head_clearance,
-                 h = bb_zdim(wide_base_feet_bb));
+            - wide_base_feet_wrap_height / 2
+            + eps)
+          cube([
+              base_foot_width
+                + 2 * eps,
+              bb_ydim(base_foot_bb)
+                + 2 * wide_base_feet_base_clearance,
+              wide_base_feet_wrap_height
+                + eps
+            ], center = true);
+
+        // screw holes
+        dupe_x(wide_base_feet_screw_distance_x)
+        dupe_y(wide_base_feet_screw_distance_y)
+        union() {
+          // screw shaft
+          cylinder(d = wide_base_feet_screw_size
+                     + 2 * wide_base_feet_screw_clearance,
+                   h = bb_zdim(wide_base_feet_bb)
+                     + 2 * eps,
+                   center = true);
+
+          // channel for washer
+          mov_z(bb_zdim(wide_base_feet_bb) / 2
+              - wide_base_feet_wrap_height
+              - wide_base_feet_screw_buffer)
+          rot_y(180)
+          cylinder(d = M_washer_outer_diameter(wide_base_feet_screw_size)
+                     + wide_base_feet_screw_head_clearance,
+                   h = bb_zdim(wide_base_feet_bb));
+        }
       }
     }
   }

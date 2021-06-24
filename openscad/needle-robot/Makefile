@@ -14,6 +14,7 @@ MODELS         += prismatic-joint-nobridge.stl
 MODELS         += needle-coupler-prototype.stl
 MODELS         += needle-coupler-1.stl
 MODELS         += needle-coupler-2.stl
+MODELS         += wide-base-foot.stl
 MODELS         += ${TEST_FILE:%.scad=%.stl}
 OPENSCAD_VARS   = -D '$$fn=200'
 
