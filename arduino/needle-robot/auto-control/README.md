@@ -41,6 +41,15 @@ the text commands.
 Note: all number values are 32-bit integer values.  They are at a small enough
 resolution that integer values are sufficient.
 
+For text commands, the maximum message size to the arduino is 35 bytes
+(currently).  The maximum message size from the arduino to the host is 75 bytes
+(currently) for a single message.
+
+For binary commands, the maximum message size to the arduino is 12 bytes
+(currently).  The maximum message size from the arduino to the host is 24 bytes
+(currently).
+
+
 ### Supported text commands
 
 None yet.
