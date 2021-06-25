@@ -218,8 +218,8 @@ wide_base_feet_screw_size               =  4;
 wide_base_feet_screw_length             =  8;
 wide_base_feet_screw_clearance          =  0.2;
 wide_base_feet_screw_head_clearance     =  0.4;
-wide_base_feet_screw_distance_y         = 28.7;
-wide_base_feet_screw_distance_x         = 28.7;
+wide_base_feet_screw_distance_y         = 29.92;
+wide_base_feet_screw_distance_x         = 29.92;
 // buffer on each side of the screws in the x-direction
 wide_base_feet_screw_x_buffer           = 15;
 wide_base_feet_base_clearance           = 0.3;
@@ -1134,9 +1134,10 @@ module wide_base_foot(sacrificial_bridging = false, show_cutouts = false) {
   color(printed_color_1)
   union() {
     if (sacrificial_bridging) {
-      mov_z(- layer_height / 2
+      mov_z(+ layer_height / 2
             + bb_zdim(wide_base_feet_bb) / 2
-            - wide_base_feet_wrap_height)
+            - wide_base_feet_wrap_height
+            - wide_base_feet_screw_buffer)
       cube([
           base_foot_width,
           bb_ydim(wide_base_feet_bb),
