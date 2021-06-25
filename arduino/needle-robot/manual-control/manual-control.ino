@@ -24,6 +24,7 @@
 
 #include "EventLoop.h"
 #include "StepperMotor.h"
+#include "TimeReporter.h"
 
 #include <HX711.h>
 
@@ -34,7 +35,12 @@
 //
 // global constants
 //
-const unsigned long BAUD = 9600;
+
+//const unsigned long BAUD = 9600;
+//const unsigned long BAUD = 115200;
+const unsigned long BAUD = 230400;
+//const unsigned long BAUD = 250000;
+//const unsigned long BAUD = 500000;
 
 // defines stepper motor pins
 const int LINEAR_STEP_PIN = 2;
@@ -83,6 +89,25 @@ uint32_t event_status_period = 1000000;
 
 
 //
+// timers
+//
+
+enum TimerType : int {
+  TIMER_SETUP,
+  TIMER_READ_SERIAL,
+  TIMER_EVENT_STATUS,
+  TIMER_READ_FORCE,
+  //TIMER_ROTARY_MOTOR_HALF_STEP,
+  //TIMER_LINEAR_MOTOR_HALF_STEP,
+  TIMER_TEMPORARY,
+  TIMER_COUNT
+};
+
+const int timer_buffer = 100;
+TimeReporter<TIMER_COUNT, timer_buffer> stopwatch;
+
+
+//
 // function forward declarations
 //
 
@@ -100,8 +125,11 @@ bool read_serial(RegisteredEventBase *event);
 //
 
 void setup() {
+  stopwatch.start(TIMER_SETUP);
+
   // Setup the serial port and print instructions
   Serial.begin(BAUD);
+  auto write_buffer_size = Serial.availableForWrite();
 
   Serial.println("Manual motor control with force readings");
   Serial.println();
@@ -113,6 +141,10 @@ void setup() {
   Serial.println("- press 'c' to increase linear velocity");
   Serial.println();
   Serial.println("Note: decreasing past zero makes it go in reverse");
+  Serial.println();
+  Serial.print("  (serial write buffer: ");
+  Serial.print(write_buffer_size);
+  Serial.println(")");
 
   // Setup the stepper motor pins as Outputs
   rotary_motor.setup(ROTARY_STEP_PIN, ROTARY_DIR_PIN);
@@ -128,10 +160,21 @@ void setup() {
   //eventloop.schedule(1, read_serial); // can use serialEvent() instead
   eventloop.schedule(event_status_period, event_status);
 
+  // Give names for timers
+  stopwatch.set_name(TIMER_SETUP                  , "setup");
+  stopwatch.set_name(TIMER_READ_SERIAL            , "read_serial");
+  stopwatch.set_name(TIMER_EVENT_STATUS           , "event_status");
+  stopwatch.set_name(TIMER_READ_FORCE             , "read_force");
+  //stopwatch.set_name(TIMER_ROTARY_MOTOR_HALF_STEP , "rotary_motor_half_step");
+  //stopwatch.set_name(TIMER_LINEAR_MOTOR_HALF_STEP , "linear_motor_half_step");
+  stopwatch.set_name(TIMER_TEMPORARY              , "temporary");
+
   Serial.println();
   Serial.println("Setup complete");
   Serial.println();
   Serial.println("force-events,rotary-events,linear-events");
+
+  stopwatch.stop(TIMER_SETUP);
 }
 
 void loop() {
@@ -151,6 +194,8 @@ void serialEvent() {
 bool event_status(RegisteredEventBase *event) {
   UNUSED_VAR(event);
 
+  stopwatch.start(TIMER_EVENT_STATUS);
+
   uint32_t force_evt_freq  = force_events  * 1000000 / event_status_period;
   uint32_t rotary_evt_freq = rotary_events * 1000000 / event_status_period;
   uint32_t linear_evt_freq = linear_events * 1000000 / event_status_period;
@@ -164,39 +209,64 @@ bool event_status(RegisteredEventBase *event) {
   Serial.print(rotary_evt_freq);
   Serial.print("\t");
   Serial.print(linear_evt_freq);
+  Serial.print("\t");
+  Serial.print(linear_velocity);
+  Serial.print(" mHz\t");
+  Serial.print(rotary_velocity);
+  Serial.print(" mHz");
   Serial.println();
+
+  stopwatch.stop(TIMER_EVENT_STATUS);
+
   return false;
 }
 
 bool read_force(RegisteredEventBase *event) {
   UNUSED_VAR(event);
 
+  stopwatch.start(TIMER_READ_FORCE);
+
   force_events++;
   loadcell.get_units();
   //Serial.print("< force = ");
   //Serial.print(loadcell.get_units() * 1000);
   //Serial.println(" g >");
+
+  stopwatch.stop(TIMER_READ_FORCE);
+
   return false;
 }
 
 bool rotary_motor_half_step(RegisteredEventBase *event) {
   UNUSED_VAR(event);
 
+  //stopwatch.start(TIMER_ROTARY_MOTOR_HALF_STEP);
+
   rotary_events++;
   rotary_motor.toggle_pulse();
+
+  //stopwatch.stop(TIMER_ROTARY_MOTOR_HALF_STEP);
+
   return false;
 }
 
 bool linear_motor_half_step(RegisteredEventBase *event) {
   UNUSED_VAR(event);
 
+  //stopwatch.start(TIMER_LINEAR_MOTOR_HALF_STEP);
+
   linear_events++;
   linear_motor.toggle_pulse();
+
+  //stopwatch.stop(TIMER_LINEAR_MOTOR_HALF_STEP);
+
   return false;
 }
 
 bool read_serial(RegisteredEventBase *event) {
   UNUSED_VAR(event);
+
+  stopwatch.start(TIMER_READ_SERIAL);
 
   enum UpdateType {
     UT_NONE,
@@ -219,9 +289,11 @@ bool read_serial(RegisteredEventBase *event) {
 
     if (utype == UT_LINEAR) {
       uint32_t call_freq = abs(linear_velocity) * 2 * steps_per_rotation / 1000;
-      Serial.print("< linear motor velocity = ");
-      Serial.print(linear_velocity);
-      Serial.println(" mHz >");
+      stopwatch.start(TIMER_TEMPORARY);
+      //Serial.print("< linear motor velocity = ");
+      //Serial.print(linear_velocity);
+      //Serial.println(" mHz >");
+      stopwatch.stop(TIMER_TEMPORARY);
       if (linear_motor_event == nullptr) {
         if (linear_velocity != 0) {
           linear_motor_event = eventloop.schedule_frequency(
@@ -244,9 +316,9 @@ bool read_serial(RegisteredEventBase *event) {
 
     if (utype == UT_ROTARY) {
       uint32_t call_freq = abs(rotary_velocity) * 2 * steps_per_rotation / 1000;
-      Serial.print("< rotary motor velocity = ");
-      Serial.print(rotary_velocity);
-      Serial.println(" mHz >");
+      //Serial.print("< rotary motor velocity = ");
+      //Serial.print(rotary_velocity);
+      //Serial.println(" mHz >");
       if (rotary_motor_event == nullptr) {
         if (rotary_velocity != 0) {
           rotary_motor_event = eventloop.schedule_frequency(
@@ -266,6 +338,8 @@ bool read_serial(RegisteredEventBase *event) {
       }
     }
   }
+
+  stopwatch.stop(TIMER_READ_SERIAL);
 
   return false;
 }
