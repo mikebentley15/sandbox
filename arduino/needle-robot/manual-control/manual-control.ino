@@ -27,9 +27,14 @@
 
 #include <HX711.h>
 
+#ifndef UNUSED_VAR
+#define UNUSED_VAR(x) (void)x
+#endif
+
 //
 // global constants
 //
+const unsigned long BAUD = 9600;
 
 // defines stepper motor pins
 const int LINEAR_STEP_PIN = 2;
@@ -96,7 +101,8 @@ bool read_serial(RegisteredEventBase *event);
 
 void setup() {
   // Setup the serial port and print instructions
-  Serial.begin(9600);
+  Serial.begin(BAUD);
+
   Serial.println("Manual motor control with force readings");
   Serial.println();
   Serial.println("- press 'a' to decrease linear velocity");
@@ -119,7 +125,7 @@ void setup() {
 
   // Setup the callback events
   eventloop.schedule(86000, read_force);
-  eventloop.schedule(1, read_serial);
+  //eventloop.schedule(1, read_serial); // can use serialEvent() instead
   eventloop.schedule(event_status_period, event_status);
 
   Serial.println();
@@ -132,7 +138,19 @@ void loop() {
   eventloop.update();
 }
 
+// This is a special function that is automatically called at the end of
+// loop(), but only if there is data to read from the serial port.
+void serialEvent() {
+  while (Serial.available()) {
+    read_serial(nullptr);
+  }
+}
+
+
+
 bool event_status(RegisteredEventBase *event) {
+  UNUSED_VAR(event);
+
   uint32_t force_evt_freq  = force_events  * 1000000 / event_status_period;
   uint32_t rotary_evt_freq = rotary_events * 1000000 / event_status_period;
   uint32_t linear_evt_freq = linear_events * 1000000 / event_status_period;
@@ -151,6 +169,8 @@ bool event_status(RegisteredEventBase *event) {
 }
 
 bool read_force(RegisteredEventBase *event) {
+  UNUSED_VAR(event);
+
   force_events++;
   loadcell.get_units();
   //Serial.print("< force = ");
@@ -160,18 +180,24 @@ bool read_force(RegisteredEventBase *event) {
 }
 
 bool rotary_motor_half_step(RegisteredEventBase *event) {
+  UNUSED_VAR(event);
+
   rotary_events++;
   rotary_motor.toggle_pulse();
   return false;
 }
 
 bool linear_motor_half_step(RegisteredEventBase *event) {
+  UNUSED_VAR(event);
+
   linear_events++;
   linear_motor.toggle_pulse();
   return false;
 }
 
 bool read_serial(RegisteredEventBase *event) {
+  UNUSED_VAR(event);
+
   enum UpdateType {
     UT_NONE,
     UT_LINEAR,
@@ -191,7 +217,6 @@ bool read_serial(RegisteredEventBase *event) {
       case 'c': utype = UT_ROTARY; rotary_velocity += motor_increment; break;
     }
 
-    uint32_t call_freq;
     if (utype == UT_LINEAR) {
       uint32_t call_freq = abs(linear_velocity) * 2 * steps_per_rotation / 1000;
       Serial.print("< linear motor velocity = ");
@@ -208,6 +233,7 @@ bool read_serial(RegisteredEventBase *event) {
       } else {
         linear_motor_event->period_micros = 1000000 / call_freq;
       }
+
       // set the direction
       if (linear_velocity < 0) {
         linear_motor.go_backward();

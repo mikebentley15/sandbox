@@ -27,7 +27,7 @@ template <uint16_t NUM_EVENTS = 50>
 class EventLoop {
 public:
   EventLoop(void) {
-    for (int i = 0; i < NUM_EVENTS; ++i) {
+    for (uint16_t i = 0; i < NUM_EVENTS; ++i) {
       registered_events[i] = nullptr;
     }
   }
@@ -46,7 +46,7 @@ public:
       int16_t repeats = -1)
   {
     // find the next empty spot
-    int first_empty = find_event(nullptr);
+    auto first_empty = find_event(nullptr);
     if (first_empty == NUM_EVENTS) {
       return nullptr;
     }
@@ -82,7 +82,7 @@ public:
 
   /// Register the event.  Return true if successful (otherwise we're full)
   bool add_event(RegisteredEventBase *event) {
-    int empty_idx = find_event(nullptr); // find the next empty event
+    auto empty_idx = find_event(nullptr); // find the next empty event
     if (empty_idx < NUM_EVENTS) {
       registered_events[empty_idx] = event;
       return true;
@@ -93,7 +93,7 @@ public:
 
   // remove event from event loop
   bool remove_event(RegisteredEventBase *event) {
-    int idx = find_event(event);
+    auto idx = find_event(event);
     if (idx < NUM_EVENTS) {
       return remove_event(idx);
     }
@@ -106,7 +106,7 @@ public:
    */
   uint16_t update(void) {
     uint16_t count = 0;
-    for (int16_t i = 0; i < NUM_EVENTS; ++i) {
+    for (uint16_t i = 0; i < NUM_EVENTS; ++i) {
       if (registered_events[i] != nullptr) {
         count += (update(i) == true) ? 1 : 0;
       }
@@ -115,8 +115,8 @@ public:
   }
 
 private:
-  int find_event(RegisteredEventBase *event) {
-    for (int i = 0; i < NUM_EVENTS; ++i) {
+  uint16_t find_event(RegisteredEventBase *event) {
+    for (uint16_t i = 0; i < NUM_EVENTS; ++i) {
       if (registered_events[i] == event) {
         return i;
       }
@@ -124,11 +124,11 @@ private:
     return NUM_EVENTS;
   }
 
-  bool is_valid_idx(int16_t idx) {
-    return 0 <= idx && idx < NUM_EVENTS;
+  bool is_valid_idx(uint16_t idx) {
+    return idx < NUM_EVENTS;
   }
 
-  bool remove_event(int16_t idx) {
+  bool remove_event(uint16_t idx) {
     // check for valid index
     if (!is_valid_idx(idx)) {
       return false;
@@ -146,7 +146,7 @@ private:
   }
 
   // Content in the event loop
-  bool update(int16_t idx) {
+  bool update(uint16_t idx) {
     // check for valid index
     if (!is_valid_idx(idx)) {
       return false;
