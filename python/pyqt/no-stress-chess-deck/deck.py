@@ -3,6 +3,9 @@
 Classes for representing the playing deck state for No Stress Chess.  If you
 call this script as a program, then it imitates drawing from the deck using a
 command-line interface.
+
+Author:   Michael Bentley
+Date:     03 June 2021
 '''
 
 from enum import Enum
