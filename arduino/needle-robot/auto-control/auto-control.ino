@@ -55,6 +55,7 @@ const uint32_t linear_pitch = 5000; // micrometers
 MessageParser parser;
 MessageSender sender(Serial);
 EventLoop<10> eventloop;
+Evt *stream_state_event = nullptr;
 
 int32_t linear_abs = 0; // micrometers
 int32_t rotary_abs = 0; // milli-degrees
@@ -69,6 +70,7 @@ uint32_t force_read_interval = 90000; // microseconds between, ~11 Hz
 // function declarations
 //
 
+void send_state();
 
 
 //
@@ -97,6 +99,10 @@ void setup() {
     sender.sendHelpCommand("stream-force",
         "Set the auto-streaming of force measurements\r\n"
         " @param on|off: turn streaming on or off.");
+    sender.sendHelpCommand("stream-state-on",
+        "Turn on the auto-streaming of states\r\n"
+        " @param interval (32-bit unsigned): how often to print the state..");
+
   });
 
   parser.setSettingsCallback([]() {
@@ -107,11 +113,7 @@ void setup() {
     sender.sendSetting("force sensor interval", force_read_interval);
   });
 
-  parser.setStateCallback([]() {
-    sender.sendCurrentState(linear_abs, rotary_abs,
-                            linear_vel, rotary_vel,
-                            force);
-  });
+  parser.setStateCallback(send_state);
 
   parser.setSendBinaryCallback([](bool on) {
     sender.set_binary(on);
@@ -119,6 +121,14 @@ void setup() {
 
   parser.setStreamForceCallback([](bool on) {
     stream_force = on;
+  });
+
+  parser.setStreamStateOnCallback([](uint32_t interval) {
+    if (stream_state_event != nullptr) {
+      eventloop.remove_event(stream_state_event);
+    }
+    stream_state_event = eventloop.schedule(interval,
+        [](Evt*) -> bool { send_state(); return false; });
   });
 
 
@@ -169,3 +179,8 @@ void serialEvent() {
   }
 }
 
+void send_state() {
+    sender.sendCurrentState(linear_abs, rotary_abs,
+                            linear_vel, rotary_vel,
+                            force);
+}

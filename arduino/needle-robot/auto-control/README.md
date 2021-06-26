@@ -149,6 +149,15 @@ For binary commands, the maximum message size to the arduino is 12 bytes
     readings to the host from the Arduino as `<force/{force-sensor-reading}>`
     messages.
 
+- `<stream-state-on/{interval}>`
+  - Tells the arduino to stream `<current-state/...>` messages at a particular
+    `{interval}` in microseconds.
+  - Example: `<stream-state-on/1000000>` will cause the arduino to send the
+    `<current-state/...>` message once every second.
+
+- `<stream-state-off>`
+  - turn off streaming of state from arduino
+
 
 ### Supported text messages from the arduino
 
@@ -171,15 +180,6 @@ For binary commands, the maximum message size to the arduino is 12 bytes
 
 
 ### Text commands yet to be supported
-
-- `<stream-state-on/{interval}>`
-  - Tells the arduino to stream `<current-state/...>` messages at a particular
-    `{interval}` in microseconds.
-  - Example: `<stream-state-on/1000000>` will cause the arduino to send the
-    `<current-state/...>` message once every second.
-
-- `<stream-state-off>`
-  - turn off streaming of state from arduino
 
 - `<linear-abs/{position}/{speed}>`
   - rotate the linear motor such that it moves the linear platform to the

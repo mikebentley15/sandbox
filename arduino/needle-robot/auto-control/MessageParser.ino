@@ -2,6 +2,7 @@
 #include "serial_assert.h"
 
 #include <string.h> // for strcmp()
+#include <stdlib.h> // for strtoul()
 
 bool MessageParser::append(char input) {
   (void)input; // unused
@@ -128,6 +129,12 @@ void MessageParser::parse_text(const char *data) {
   } else if (0 == strncmp(data, "stream-force", 12)) {
     serial_assert(data[12] == '/', "MessageParser: parse error");
     this->_stream_force_callback(this->parse_on_off(data + 13));
+  } else if (0 == strncmp(data, "stream-state-on", 15)) {
+    serial_assert(data[15] == '/', "MessageParser: parse error");
+    uint32_t interval = strtoul(data + 16, nullptr, 10);
+    this->_stream_state_on_callback(interval);
+  } else if (0 == strcmp(data, "stream-state-off")) {
+    this->_stream_state_off_callback();
   } else {
 #   ifndef NDEBUG
     Serial.print("MessageParser: Warning: unrecognized text command: <");
