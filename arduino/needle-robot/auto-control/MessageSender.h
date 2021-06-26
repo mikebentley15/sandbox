@@ -14,6 +14,9 @@ public:
   Stream& out() { return _out; }
   const Stream& out() const { return _out; }
 
+  void set_binary(bool turn_on) { _is_binary = turn_on; }
+  bool is_binary() const { return _is_binary; }
+
   template <typename A, typename B>
   void sendHelpCommand(const A &name, const B &description) {
     _out.write("<help-command/");
@@ -36,17 +39,43 @@ public:
                         int32_t rotary_vel,
                         int32_t force_reading)
   {
-    _out.write("<current-state/");
-    _out.print(linear_abs);    _out.write('/');
-    _out.print(rotary_abs);    _out.write('/');
-    _out.print(linear_vel);    _out.write('/');
-    _out.print(rotary_vel);    _out.write('/');
-    _out.print(force_reading); _out.write('>');
-    _out.println();
+    if (_is_binary) {
+      _out.write("<Bs");
+      this->send_binary_32bit(linear_abs);
+      this->send_binary_32bit(rotary_abs);
+      this->send_binary_32bit(linear_vel);
+      this->send_binary_32bit(rotary_vel);
+      this->send_binary_32bit(force_reading);
+      _out.write('>');
+    } else {
+      _out.write("<current-state/");
+      _out.print(linear_abs);    _out.write('/');
+      _out.print(rotary_abs);    _out.write('/');
+      _out.print(linear_vel);    _out.write('/');
+      _out.print(rotary_vel);    _out.write('/');
+      _out.print(force_reading); _out.write('>');
+      _out.println();
+    }
+  }
+
+private:
+  void send_binary_32bit(int32_t val) {
+    _out.write(int8_t(val >> 24));
+    _out.write(int8_t(val >> 16));
+    _out.write(int8_t(val >> 8));
+    _out.write(int8_t(val));
+  }
+
+  void send_binary_32bit(uint32_t val) {
+    _out.write(uint8_t(val >> 24));
+    _out.write(uint8_t(val >> 16));
+    _out.write(uint8_t(val >> 8));
+    _out.write(uint8_t(val));
   }
 
 private:
   Stream &_out;
+  bool _is_binary;
 };
 
 #endif // MessageSender_h

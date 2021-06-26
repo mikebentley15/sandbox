@@ -122,6 +122,19 @@ void MessageParser::parse_text(const char *data) {
     if (this->_state_callback != nullptr) {
       this->_state_callback();
     }
+  } else if (0 == strncmp(data, "send-binary", 11)) {
+    serial_assert(data[11] == '/', "MessageParser: parse error");
+    if (0 == strcmp(data + 12, "on")) {
+      this->_send_binary_callback(true);
+    } else if (0 == strcmp(data + 12, "off")) {
+      this->_send_binary_callback(false);
+    } else {
+#     ifndef NDEBUG
+      Serial.print("MessageParser: Warning: must be on or off: ");
+      Serial.print(data + 12);
+      Serial.println();
+#     endif
+    }
   } else {
 #   ifndef NDEBUG
     Serial.print("MessageParser: Warning: unrecognized text command: <");

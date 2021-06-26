@@ -21,7 +21,10 @@ currently taken up in the buffer is obtained by `Serial.available()`.
 
 ### Does the baud rate effect speed of serial port function calls?
 
-Both the reading and writing have buffers.  The read buffer is 64 bytes large.  Reading a character from the read buffer is very fast and is independent from the baud rate.  You know there is something in the read buffer using `Serial.available()`.  A higher baud rate will have two effects on reading:
+Both the reading and writing have buffers.  The read buffer is 64 bytes large.
+Reading a character from the read buffer is very fast and is independent from
+the baud rate.  You know there is something in the read buffer using
+`Serial.available()`.  A higher baud rate will have two effects on reading:
 
 1. characters come in faster, and can therefore be parsed more quickly
 2. if characters come in faster than they are read, the buffer can overflow and
@@ -130,6 +133,13 @@ For binary commands, the maximum message size to the arduino is 12 bytes
     clockwise on the rotary motor, and 53.4 milli Newtons, which equates to
     about 5.45 grams of mass with the force of gravity.
 
+- `<send-binary/[on|off]>`
+  - Set the binary send type on or off.  Off means to send as plain text.
+    This is only applicable to the message types that are implemented in both
+    text and binary format.
+  - Example: `<send-binary/on>` tells the arduino to send messages in binary
+    format instead of the default text format.
+
 
 ### Supported text messages from the arduino
 
@@ -148,12 +158,6 @@ For binary commands, the maximum message size to the arduino is 12 bytes
 
 
 ### Text commands yet to be supported
-
-- `<send-type/[binary|text]>`
-  - Set the send type to either binary or text.  This is only applicable to the
-    message types that are implemented in both text and binary format.
-  - Example: `<send-type/binary>` tells the arduino to send messages in binary
-    format instead of the default text format.
 
 - `<stream-force/[on|off]>`
   - Tells the arduino to turn on or off the streaming of the force sensor
@@ -267,7 +271,19 @@ None yet
 
 ### Supported binary messages from the arduino
 
-None yet.
+- `s`: current state, equal to `current-state` text command
+  - payload of 20 bytes
+  - `linear-abs-position` (32-bit signed integer): absolute linear position
+    from home position in micrometers
+  - `rotary-abs-position` (32-bit signed integer): absolute clockwise rotation
+    from home position in milli-degrees
+  - `linear-velocity` (32-bit signed integer): velocity of linear actuator in
+    micrometers per second
+  - `rotary-velocity` (32-bit signed integer): clockwise angular velocity in
+    milli-degrees per second
+  - `force-sensor-reading` (32-bit signed integer): last force sensor reading
+    in micro-Newtons.
+
 
 ### Binary commands yet to be supported
 
@@ -305,19 +321,6 @@ None yet.
 - `f`: force sensor reading, equal to `force` text command
   - payload of 4 bytes
   - `force-sensor-reading`
-
-- `s`: current state, equal to `current-state` text command
-  - payload of 20 bytes
-  - `linear-abs-position` (32-bit signed integer): absolute linear position
-    from home position in micrometers
-  - `rotary-abs-position` (32-bit signed integer): absolute clockwise rotation
-    from home position in milli-degrees
-  - `linear-velocity` (32-bit signed integer): velocity of linear actuator in
-    micrometers per second
-  - `rotary-velocity` (32-bit signed integer): clockwise angular velocity in
-    milli-degrees per second
-  - `force-sensor-reading` (32-bit signed integer): last force sensor reading
-    in micro-Newtons.
 
 
 ## TODO Notes

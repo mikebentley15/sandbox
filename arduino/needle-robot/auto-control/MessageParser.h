@@ -16,9 +16,10 @@
 class MessageParser {
 public:
   using Callback_noargs = void();
-  using Callback_S = void(int32_t);
-  using Callback_U = void(uint32_t);
-  using Callback_SU = void(int32_t, uint32_t);
+  using Callback_bool   = void(bool);
+  using Callback_S      = void(int32_t);
+  using Callback_U      = void(uint32_t);
+  using Callback_SU     = void(int32_t, uint32_t);
   enum class OutputType { TEXT, BINARY };
 
 public:
@@ -32,6 +33,7 @@ public:
   void setHelpCallback(Callback_noargs *cb) { _help_callback = cb; }
   void setSettingsCallback(Callback_noargs *cb) { _settings_callback = cb; }
   void setStateCallback(Callback_noargs *cb) { _state_callback = cb; }
+  void setSendBinaryCallback(Callback_bool *cb) { _send_binary_callback = cb; }
 
 private:
   enum class ParseState {
@@ -59,9 +61,10 @@ private:
   ParseState _parse_state = ParseState::WAITING;
 
   // callbacks
-  Callback_noargs *_help_callback = nullptr;
-  Callback_noargs *_settings_callback = nullptr;
-  Callback_noargs *_state_callback = nullptr;
+  Callback_noargs *_help_callback        = nullptr;
+  Callback_noargs *_settings_callback    = nullptr;
+  Callback_noargs *_state_callback       = nullptr;
+  Callback_bool   *_send_binary_callback = nullptr;
 };
 
 #endif // MessageParser_h
