@@ -19,13 +19,60 @@ Taken from [here](https://forum.arduino.cc/t/what-are-the-effects-of-baud-rate/4
 The serial receive buffer can only hold 64 bytes.  The number of bytes
 currently taken up in the buffer is obtained by `Serial.available()`.
 
-### Dpes tje baud rate effect speed of serial port function calls?
+### Does the baud rate effect speed of serial port function calls?
 
-TODO: run an experiment
+Both the reading and writing have buffers.  The read buffer is 64 bytes large.  Reading a character from the read buffer is very fast and is independent from the baud rate.  You know there is something in the read buffer using `Serial.available()`.  A higher baud rate will have two effects on reading:
+
+1. characters come in faster, and can therefore be parsed more quickly
+2. if characters come in faster than they are read, the buffer can overflow and
+   portions of the message through the serial port can be lost.  If this is
+   happening, you may be able to reduce the sizes or frequency of messages
+   being sent, reduce the baud rate, or increase the buffer size for the serial
+   ports.
+
+The write buffer is 63 bytes large.  Writing a character is very fast and is
+independent from the baud rate **only if** you do no exceed the write buffer
+size.  You can know how much space is in the write buffer with
+`Serial.availableForWrite()`.  A higher baud rate will increase the speed with
+which the write buffer will be written to the serial port.  So if you are
+writing often or larger quantities than 63 bytes, then the baud rate will cause
+blocking on write operations.
+
+
+### Can we increase the serial buffer size?
+
+It does not look like an easy thing to do.  The file
+`/usr/share/arduino/hardware/archlinux-arduino/avr/cores/arduino/HardwareSerial.h`
+has two macro-defined variables called `SERIAL_TX_BUFFER_SIZE` and
+`SERIAL_RX_BUFFER_SIZE` which are the serial buffer sizes for sending and
+receiving respectively (I think).  Some places online have suggested to
+manually edit the values in this file, which is part of the Arduino IDE
+installation (I would not recommend this approach).
+
+Others have suggested that the compilation be given new values on the
+command-line to override the ones specified in `HardwareSerial.h`.  This would
+certainly work, but I don't see a way to specify the compiler flags on the
+command-line through the Arduino IDE.
+
+There are ways to specify command-line compiler flags using `platform.txt` for
+the specific platform you are targetting.  This also requires you to modify
+system-installed files.  You can place a `platform.local.txt` that overrides
+values of the `platform.txt` file, but again in a system-installation location.
+You can copy the hardware specification into a directory in your home and make
+changes there.  Like these other suggested solutions, this will be applied to
+all sketches for that particular hardware architecture, which may or may not be
+what you want (it's certainly not what I want).
+
+Otherwise, there is a project to compile and push arduino sketches from a
+Makefile (the package is called `arduino-mk`).  Or you can have the IDE give
+verbose output on the exact commands that are executed, then you can copy,
+paste into the terminal, and then modify the command before executing.
+
 
 ### What is the most efficient way to read from the serial port in Arduino code?
 
-Is it one character at a time?  Or many characters at a time?
+One character at a time only when `Serial.available()` returns a number bigger
+than zero.  In such a case, you are reading from a ring buffer.
 
 
 ## Commands
@@ -51,14 +98,6 @@ For binary commands, the maximum message size to the arduino is 12 bytes
 
 
 ### Supported text commands
-
-None yet.
-
-### Supported text messages from the arduino
-
-None yet.
-
-### Text commands yet to be supported
 
 - `<help>`
   - send the possible commands with their descriptions over the serial port.
@@ -90,6 +129,25 @@ None yet.
     second backwards velocity on the linear actuator, 18 degrees per second
     clockwise on the rotary motor, and 53.4 milli Newtons, which equates to
     about 5.45 grams of mass with the force of gravity.
+
+
+### Supported text messages from the arduino
+
+- `<help-command/{command}/{description}>`
+  - Describes an available text command.
+  - Many of these are given in response to the `<help>` command
+
+- `<setting/{name}/{value}>`
+  - Gives the name for a setting and its value.
+  - Many of these are given in response to the `<settings>` command
+
+- `<current-state/{linear-abs-position}/{rotary-abs-position}/{linear-velocity}/{rotary-velocity}/{force-sensor-reading}>`
+  - Gives the current state
+  - In response to `<state>` command
+  - Can be output at regular intervals as well
+
+
+### Text commands yet to be supported
 
 - `<send-type/[binary|text]>`
   - Set the send type to either binary or text.  This is only applicable to the
@@ -166,19 +224,6 @@ None yet.
     second).
 
 ### Text messages from the arduino yet to be supported
-
-- `<help-command/{command}/{description}>`
-  - Describes an available text command.
-  - Many of these are given in response to the `<help>` command
-
-- `<setting/{name}/{value}>`
-  - Gives the name for a setting and its value.
-  - Many of these are given in response to the `<settings>` command
-
-- `<current-state/{linear-abs-position}/{rotary-abs-position}/{linear-velocity}/{rotary-velocity}/{force-sensor-reading}>`
-  - Gives the current state
-  - In response to `<state>` command
-  - Can be output at regular intervals as well
 
 - `<force/{force-sensor-reading}>`
   - Gives just the force sensor reading
