@@ -58,6 +58,18 @@ public:
     }
   }
 
+  void sendForce(int32_t force_reading) {
+    if (_is_binary) {
+      _out.write("<Bf");
+      this->send_binary_32bit(force_reading);
+      _out.write('>');
+    } else {
+      _out.write("<force/");
+      _out.print(force_reading);  _out.write('>');
+      _out.println();
+    }
+  }
+
 private:
   void send_binary_32bit(int32_t val) {
     _out.write(int8_t(val >> 24));

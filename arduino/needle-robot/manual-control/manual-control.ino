@@ -26,7 +26,11 @@
 #include "StepperMotor.h"
 #include "TimeReporter.h"
 
+// ignore warnings when include HX711.h
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wexpansion-to-defined"
 #include <HX711.h>
+#pragma GCC diagnostic pop
 
 #ifndef UNUSED_VAR
 #define UNUSED_VAR(x) (void)x

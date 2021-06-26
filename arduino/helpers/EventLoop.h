@@ -6,10 +6,10 @@ struct RegisteredEventBase;
 // callback function type
 // if callback returns true, will remove the registered event
 // if it returns false, then keep the registered event for later
-using callback_t = bool (*)(RegisteredEventBase*);
+using event_callback_t = bool(RegisteredEventBase*);
 
 struct RegisteredEventBase {
-  callback_t callback;        // callback function
+  event_callback_t *callback; // callback function
   int repeats;                // event repeats.  negative means forever
   uint32_t period_micros;     // microseconds between triggers
   unsigned long last_trigger; // last time this was triggered (from micros())
@@ -42,7 +42,7 @@ public:
    **/
   RegisteredEventBase* schedule(
       uint32_t period_micros,
-      callback_t callback,
+      event_callback_t *callback,
       int16_t repeats = -1)
   {
     // find the next empty spot
@@ -68,7 +68,7 @@ public:
 
   RegisteredEventBase* schedule_frequency(
       uint32_t frequency, // Hz
-      callback_t callback,
+      event_callback_t *callback,
       int16_t repeats = -1)
   {
     uint32_t period_micros = 1000000 / frequency;
@@ -76,7 +76,7 @@ public:
   }
 
   // call callback only once after 'after' time
-  RegisteredEventBase* once(callback_t callback, unsigned long after) {
+  RegisteredEventBase* once(event_callback_t *callback, unsigned long after) {
     return schedule(after, callback, 1);
   }
 

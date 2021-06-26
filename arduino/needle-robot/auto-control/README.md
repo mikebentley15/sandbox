@@ -140,6 +140,15 @@ For binary commands, the maximum message size to the arduino is 12 bytes
   - Example: `<send-binary/on>` tells the arduino to send messages in binary
     format instead of the default text format.
 
+- `<stream-force/[on|off]>`
+  - Tells the arduino to turn on or off the streaming of the force sensor
+    readings.  Turning it on means that every time a new force sensor reading
+    is available, it will be sent from the arduino as
+    `<force/{force-sensor-reading}>` messages.
+  - Example: `<stream-force/on>` will turn on streaming of force sensor
+    readings to the host from the Arduino as `<force/{force-sensor-reading}>`
+    messages.
+
 
 ### Supported text messages from the arduino
 
@@ -156,17 +165,12 @@ For binary commands, the maximum message size to the arduino is 12 bytes
   - In response to `<state>` command
   - Can be output at regular intervals as well
 
+- `<force/{force-sensor-reading}>`
+  - Gives just the force sensor reading
+  - Can be output at regular intervals
+
 
 ### Text commands yet to be supported
-
-- `<stream-force/[on|off]>`
-  - Tells the arduino to turn on or off the streaming of the force sensor
-    readings.  Turning it on means that every time a new force sensor reading
-    is available, it will be sent from the arduino as
-    `<force/{force-sensor-reading}>` messages.
-  - Example: `<stream-force/on>` will turn on streaming of force sensor
-    readings to the host from the Arduino as `<force/{force-sensor-reading}>`
-    messages.
 
 - `<stream-state-on/{interval}>`
   - Tells the arduino to stream `<current-state/...>` messages at a particular
@@ -229,9 +233,7 @@ For binary commands, the maximum message size to the arduino is 12 bytes
 
 ### Text messages from the arduino yet to be supported
 
-- `<force/{force-sensor-reading}>`
-  - Gives just the force sensor reading
-  - Can be output at regular intervals
+None for now.
 
 ### Binary format
 
@@ -284,6 +286,10 @@ None yet
   - `force-sensor-reading` (32-bit signed integer): last force sensor reading
     in micro-Newtons.
 
+- `f`: force sensor reading, equal to `force` text command
+  - payload of 4 bytes
+  - `force-sensor-reading`
+
 
 ### Binary commands yet to be supported
 
@@ -318,9 +324,7 @@ None yet
 
 ### Binary messages from the arduino yet to be supported
 
-- `f`: force sensor reading, equal to `force` text command
-  - payload of 4 bytes
-  - `force-sensor-reading`
+None for now.
 
 
 ## TODO Notes

@@ -34,6 +34,7 @@ public:
   void setSettingsCallback(Callback_noargs *cb) { _settings_callback = cb; }
   void setStateCallback(Callback_noargs *cb) { _state_callback = cb; }
   void setSendBinaryCallback(Callback_bool *cb) { _send_binary_callback = cb; }
+  void setStreamForceCallback(Callback_bool *cb) { _stream_force_callback = cb; }
 
 private:
   enum class ParseState {
@@ -50,6 +51,8 @@ private:
 
   void parse_binary(const char *data);
 
+  bool parse_on_off(const char *data);
+
 private:
   // parsing internal variables
   Array<char, 100> _buffer;  // message buffer for current message, without
@@ -61,10 +64,11 @@ private:
   ParseState _parse_state = ParseState::WAITING;
 
   // callbacks
-  Callback_noargs *_help_callback        = nullptr;
-  Callback_noargs *_settings_callback    = nullptr;
-  Callback_noargs *_state_callback       = nullptr;
-  Callback_bool   *_send_binary_callback = nullptr;
+  Callback_noargs *_help_callback         = nullptr;
+  Callback_noargs *_settings_callback     = nullptr;
+  Callback_noargs *_state_callback        = nullptr;
+  Callback_bool   *_send_binary_callback  = nullptr;
+  Callback_bool   *_stream_force_callback = nullptr;
 };
 
 #endif // MessageParser_h

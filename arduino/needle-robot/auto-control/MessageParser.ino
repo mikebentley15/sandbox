@@ -124,17 +124,10 @@ void MessageParser::parse_text(const char *data) {
     }
   } else if (0 == strncmp(data, "send-binary", 11)) {
     serial_assert(data[11] == '/', "MessageParser: parse error");
-    if (0 == strcmp(data + 12, "on")) {
-      this->_send_binary_callback(true);
-    } else if (0 == strcmp(data + 12, "off")) {
-      this->_send_binary_callback(false);
-    } else {
-#     ifndef NDEBUG
-      Serial.print("MessageParser: Warning: must be on or off: ");
-      Serial.print(data + 12);
-      Serial.println();
-#     endif
-    }
+    this->_send_binary_callback(this->parse_on_off(data + 12));
+  } else if (0 == strncmp(data, "stream-force", 12)) {
+    serial_assert(data[12] == '/', "MessageParser: parse error");
+    this->_stream_force_callback(this->parse_on_off(data + 13));
   } else {
 #   ifndef NDEBUG
     Serial.print("MessageParser: Warning: unrecognized text command: <");
@@ -147,4 +140,19 @@ void MessageParser::parse_text(const char *data) {
 
 void MessageParser::parse_binary(const char *data) {
   (void)data; // unused
+}
+
+bool MessageParser::parse_on_off(const char *data) {
+  if (0 == strncmp(data, "on", 2)) {
+    return true;
+  } else if (0 == strncmp(data, "off", 3)) {
+    return false;
+  } else {
+#   ifndef NDEBUG
+    Serial.print("MessageParser: Warning: must be on or off: ");
+    Serial.print(data);
+    Serial.println();
+#   endif
+  }
+  return false;
 }
