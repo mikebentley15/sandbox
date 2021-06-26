@@ -26,7 +26,11 @@
 #include "MessageSender.h"
 #include "EventLoop.h"
 
+// ignore warnings when include HX711.h
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wexpansion-to-defined"
 #include <HX711.h>
+#pragma GCC diagnostic pop
 
 #ifndef UNUSED_VAR
 #define UNUSED_VAR(x) (void)x
@@ -111,6 +115,11 @@ void setup() {
     sender.sendSetting("linear pitch", linear_pitch);
     sender.sendSetting("stream force", stream_force);
     sender.sendSetting("force sensor interval", force_read_interval);
+    sender.sendSetting("stream state", stream_state_event != nullptr);
+    if (stream_state_event != nullptr) {
+      sender.sendSetting("stream state interval",
+                         stream_state_event->period_micros);
+    }
   });
 
   parser.setStateCallback(send_state);
