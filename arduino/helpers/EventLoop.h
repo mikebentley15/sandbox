@@ -32,6 +32,11 @@ public:
     }
   }
 
+  bool contains(RegisteredEventBase* event) {
+    if (event == nullptr) { return false; }
+    return (NUM_EVENTS != this->find_event(event));
+  }
+
   /** Creates an event and registers it.
    *
    * If successful returns the event, otherwise returns nullptr.

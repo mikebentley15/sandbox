@@ -25,12 +25,21 @@ public:
     _out.println();
   }
 
-  template <typename A, typename B>
-  void sendSetting(const A &name, const B &value) {
+  template <typename T>
+  void sendSetting(const char *name, const T &value) {
     _out.write("<setting/");
     _out.print(name);  _out.write('/');
     _out.print(value); _out.write('>');
     _out.println();
+  }
+
+  template <typename T>
+  void sendSetting(const String &name, const T &value) {
+    sendSetting(name.c_str(), value);
+  }
+
+  void sendSetting(const char *name, bool value) {
+    sendSetting(name, (value ? "on" : "off"));
   }
 
   void sendCurrentState(int32_t linear_abs,
