@@ -43,7 +43,6 @@
 //const unsigned long BAUD = 9600;
 //const unsigned long BAUD = 115200;
 const unsigned long BAUD = 230400;
-//const unsigned long BAUD = 250000;
 //const unsigned long BAUD = 500000;
 
 // defines stepper motor pins
