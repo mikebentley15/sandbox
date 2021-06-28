@@ -59,8 +59,13 @@ struct Ratio {
 const unsigned long BAUD = 230400;
 //const unsigned long BAUD = 500000;
 
+const uint32_t linear_pitch = 5000; // micrometers / rev
+const uint32_t steps_per_revolution = 200; // steps / rev
+const uint32_t microns_per_step = linear_pitch / steps_per_revolution;
+const uint32_t angle_per_step = 360000 / steps_per_revolution;
+const uint32_t linear_to_angular = angle_per_step / microns_per_step;
+
 const uint16_t max_events = 10;
-const uint32_t linear_pitch = 5000; // micrometers
 const uint32_t force_read_interval = 100000; // ~10 Hz
 
 // defines stepper motor pins
@@ -178,10 +183,28 @@ void setup() {
 
   rotary_motor_event.callback = [](Event*) {
     rotary_motor.toggle_pulse();
+
+    // update the state
+    if (!rotary_motor.pulse_is_high()) { // then it moved
+      if (rotary_motor.forward) {
+        rotary_abs += angle_per_step;
+      } else {
+        rotary_abs -= angle_per_step;
+      }
+    }
   };
 
   linear_motor_event.callback = [](Event*) {
     linear_motor.toggle_pulse();
+
+    // update the state
+    if (!linear_motor.pulse_is_high()) { // then it moved
+      if (linear_motor.forward) {
+        linear_abs += microns_per_step;
+      } else {
+        linear_abs -= microns_per_step;
+      }
+    }
   };
 
   // register events that are to always go
