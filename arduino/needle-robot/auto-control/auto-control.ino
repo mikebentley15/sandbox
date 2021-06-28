@@ -25,6 +25,7 @@
 #include "MessageParser.h"
 #include "MessageSender.h"
 #include "EventLoop.h"
+#include "StepperMotor.h"
 
 // ignore warnings when include HX711.h
 #pragma GCC diagnostic push
@@ -86,14 +87,17 @@ const int32_t max_angular_acceleration = 2 * 360000; // 2 Hz / sec
 //
 
 HX711 loadcell;
+StepperMotor rotary_motor;
+StepperMotor linear_motor;
 
 MessageParser parser;
 MessageSender sender(Serial);
 EventLoop<max_events> eventloop;
 
-using Evt = RegisteredEventBase;
-Evt stream_state_event;
-Evt force_read_event;
+Event stream_state_event;
+Event force_read_event;
+Event rotary_motor_event;
+Event linear_motor_event;
 
 // current state
 int32_t linear_abs = 0; // micrometers
@@ -145,8 +149,9 @@ void setup() {
   loadcell.tare(10); // number of times to average.  blocking call
   Serial.println("done");
 
-  // TODO: for motors, manage max acceleration and max angular velocity
-  // TODO: for motors, calculate next pulse time inside of the class
+  // Setup the stepper motor pins as outputs
+  rotary_motor.setup(ROTARY_STEP_PIN, ROTARY_DIR_PIN);
+  linear_motor.setup(LINEAR_STEP_PIN, LINEAR_DIR_PIN);
 
   //
   // timed events
@@ -154,10 +159,9 @@ void setup() {
 
   // setup events for when we want to activate them
 
-  stream_state_event.callback =
-      [](Evt*) -> bool { send_state(); return false; };
+  stream_state_event.callback = [](Event*) { send_state(); };
 
-  force_read_event.callback = [](Evt*) -> bool {
+  force_read_event.callback = [](Event*) {
     if (loadcell.is_ready()) {
       raw_force = loadcell.read();
       // floating-point computation
@@ -170,7 +174,14 @@ void setup() {
         sender.sendForce(force);
       }
     }
-    return false;
+  };
+
+  rotary_motor_event.callback = [](Event*) {
+    rotary_motor.toggle_pulse();
+  };
+
+  linear_motor_event.callback = [](Event*) {
+    linear_motor.toggle_pulse();
   };
 
   // register events that are to always go

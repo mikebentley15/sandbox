@@ -3,19 +3,18 @@
 
 struct RegisteredEventBase;
 
-// callback function type
-// if callback returns true, will remove the registered event
-// if it returns false, then keep the registered event for later
-using event_callback_t = bool(RegisteredEventBase*);
+struct Event {
+  // callback function.  Note, it is safe to call EventLoop.remove_event(event)
+  // within this callback if it should not be called anymore.
+  using Callback = void(Event*);
 
-struct RegisteredEventBase {
-  event_callback_t *callback; // callback function
+  Callback *callback;         // callback function
   int repeats;                // event repeats.  negative means forever
   uint32_t period_micros;     // microseconds between triggers
   unsigned long last_trigger; // last time this was triggered (from micros())
   bool auto_delete;           // delete automatically when it's time to be removed
 
-  RegisteredEventBase(void) {
+  Event(void) {
     repeats = -1;
     period_micros = 0;
     last_trigger = micros();
@@ -32,7 +31,7 @@ public:
     }
   }
 
-  bool contains(RegisteredEventBase* event) {
+  bool contains(Event* event) {
     if (event == nullptr) { return false; }
     return (NUM_EVENTS != this->find_event(event));
   }
@@ -45,9 +44,9 @@ public:
    * @param callback: callback function
    * @param repeats: how many times to trigger (negative means forever)
    **/
-  RegisteredEventBase* schedule(
+  Event* schedule(
       uint32_t period_micros,
-      event_callback_t *callback,
+      Event::Callback *callback,
       int16_t repeats = -1)
   {
     // find the next empty spot
@@ -57,7 +56,7 @@ public:
     }
 
     // create the event
-    RegisteredEventBase *event = new RegisteredEventBase();
+    Event *event = new Event();
     event->callback = callback;
     event->repeats = repeats;
     event->period_micros = period_micros;
@@ -71,9 +70,9 @@ public:
     return event;
   }
 
-  RegisteredEventBase* schedule_frequency(
+  Event* schedule_frequency(
       uint32_t frequency, // Hz
-      event_callback_t *callback,
+      Event::Callback *callback,
       int16_t repeats = -1)
   {
     uint32_t period_micros = 1000000 / frequency;
@@ -81,12 +80,12 @@ public:
   }
 
   // call callback only once after 'after' time
-  RegisteredEventBase* once(event_callback_t *callback, unsigned long after) {
+  Event* once(Event::Callback *callback, unsigned long after) {
     return schedule(after, callback, 1);
   }
 
   /// Register the event.  Return true if successful (otherwise we're full)
-  bool add_event(RegisteredEventBase *event) {
+  bool add_event(Event *event) {
     auto empty_idx = find_event(nullptr); // find the next empty event
     if (empty_idx < NUM_EVENTS) {
       registered_events[empty_idx] = event;
@@ -97,7 +96,7 @@ public:
   }
 
   // remove event from event loop
-  bool remove_event(RegisteredEventBase *event) {
+  bool remove_event(Event *event) {
     auto idx = find_event(event);
     if (idx < NUM_EVENTS) {
       return remove_event(idx);
@@ -109,18 +108,16 @@ public:
    *
    * Check the times and call events.  Returns the number of triggered events.
    */
-  uint16_t update(void) {
-    uint16_t count = 0;
+  void update(void) {
     for (uint16_t i = 0; i < NUM_EVENTS; ++i) {
       if (registered_events[i] != nullptr) {
-        count += (update(i) == true) ? 1 : 0;
+        this->update(i);
       }
     }
-    return count;
   }
 
 private:
-  uint16_t find_event(RegisteredEventBase *event) {
+  uint16_t find_event(Event *event) {
     for (uint16_t i = 0; i < NUM_EVENTS; ++i) {
       if (registered_events[i] == event) {
         return i;
@@ -139,7 +136,7 @@ private:
       return false;
     }
 
-    RegisteredEventBase *event = registered_events[idx];
+    Event *event = registered_events[idx];
     if (event == nullptr) {
       return false;
     }
@@ -151,26 +148,30 @@ private:
   }
 
   // Content in the event loop
-  bool update(uint16_t idx) {
+  void update(uint16_t idx) {
     // check for valid index
     if (!is_valid_idx(idx)) {
-      return false;
+      return;
     }
 
     // check for valid event
-    RegisteredEventBase *event = registered_events[idx];
+    Event *event = registered_events[idx];
     if (event == nullptr) {
-      return false;
+      return;
     }
 
     // check if the event triggers on timing
     unsigned long now = micros();
     unsigned long delta = now - event->last_trigger;
     if (delta >= event->period_micros) {
+      // rather than when it was really triggered, mark when it ideally should
+      // have been triggered.  This is to allow the next one to "catch up" if
+      // this one was late.
       event->last_trigger = now - delta + event->period_micros;
-      if ((event->callback)(event)) { // call callback
-        remove_event(idx);
-      } else {
+
+      // make it safe for the callback to call remove_event(
+      event->callback(event);
+      if (event == registered_events[idx]) { // it's still there
         if (event->repeats > 0) {
           event->repeats -= 1;
         }
@@ -178,15 +179,11 @@ private:
           remove_event(idx);
         }
       }
-      return true; // triggered
     }
-
-    // else, no triggering
-    return false;
   }
 
 private:
-  RegisteredEventBase* registered_events[NUM_EVENTS]; // event array
+  Event* registered_events[NUM_EVENTS]; // event array
 };
 
 #endif // EVENT_LOOP_H

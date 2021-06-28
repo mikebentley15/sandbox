@@ -184,6 +184,7 @@ For binary commands, the maximum message size to the arduino is 12 bytes
 TODO: tare the force sensor
 TODO: change the force sensor calibration factor?
 TODO: get raw force sensor value?
+TODO: set maximum motor angular acceleration
 
 - `<linear-abs/{position}/{speed}>`
   - rotate the linear motor such that it moves the linear platform to the

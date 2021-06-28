@@ -77,10 +77,10 @@ StepperMotor rotary_motor;
 StepperMotor linear_motor;
 EventLoop<10> eventloop;
 
-RegisteredEventBase *rotary_motor_event = nullptr;
-RegisteredEventBase *linear_motor_event = nullptr;
-//RegisteredEventBase *read_force_event = nullptr;
-//RegisteredEventBase *read_serial_event = nullptr;
+Event *rotary_motor_event = nullptr;
+Event *linear_motor_event = nullptr;
+//Event *read_force_event = nullptr;
+//Event *read_serial_event = nullptr;
 
 int32_t linear_velocity = 0; // mHz (rotations per millisecond)
 int32_t rotary_velocity = 0; // mHz (rotations per millisecond)
@@ -116,11 +116,11 @@ TimeReporter<TIMER_COUNT, timer_buffer> stopwatch;
 
 void setup();
 void loop();
-bool event_status(RegisteredEventBase *event);
-bool read_force(RegisteredEventBase *event);
-bool rotary_motor_half_step(RegisteredEventBase *event);
-bool linear_motor_half_step(RegisteredEventBase *event);
-bool read_serial(RegisteredEventBase *event);
+void event_status(Event *event);
+void read_force(Event *event);
+void rotary_motor_half_step(Event *event);
+void linear_motor_half_step(Event *event);
+void read_serial(Event *event);
 
 
 //
@@ -194,7 +194,7 @@ void serialEvent() {
 
 
 
-bool event_status(RegisteredEventBase *event) {
+void event_status(Event *event) {
   UNUSED_VAR(event);
 
   stopwatch.start(TIMER_EVENT_STATUS);
@@ -220,11 +220,9 @@ bool event_status(RegisteredEventBase *event) {
   Serial.println();
 
   stopwatch.stop(TIMER_EVENT_STATUS);
-
-  return false;
 }
 
-bool read_force(RegisteredEventBase *event) {
+void read_force(Event *event) {
   UNUSED_VAR(event);
 
   stopwatch.start(TIMER_READ_FORCE);
@@ -236,11 +234,9 @@ bool read_force(RegisteredEventBase *event) {
   //Serial.println(" g >");
 
   stopwatch.stop(TIMER_READ_FORCE);
-
-  return false;
 }
 
-bool rotary_motor_half_step(RegisteredEventBase *event) {
+void rotary_motor_half_step(Event *event) {
   UNUSED_VAR(event);
 
   //stopwatch.start(TIMER_ROTARY_MOTOR_HALF_STEP);
@@ -249,11 +245,9 @@ bool rotary_motor_half_step(RegisteredEventBase *event) {
   rotary_motor.toggle_pulse();
 
   //stopwatch.stop(TIMER_ROTARY_MOTOR_HALF_STEP);
-
-  return false;
 }
 
-bool linear_motor_half_step(RegisteredEventBase *event) {
+void linear_motor_half_step(Event *event) {
   UNUSED_VAR(event);
 
   //stopwatch.start(TIMER_LINEAR_MOTOR_HALF_STEP);
@@ -262,11 +256,9 @@ bool linear_motor_half_step(RegisteredEventBase *event) {
   linear_motor.toggle_pulse();
 
   //stopwatch.stop(TIMER_LINEAR_MOTOR_HALF_STEP);
-
-  return false;
 }
 
-bool read_serial(RegisteredEventBase *event) {
+void read_serial(Event *event) {
   UNUSED_VAR(event);
 
   stopwatch.start(TIMER_READ_SERIAL);
@@ -343,6 +335,4 @@ bool read_serial(RegisteredEventBase *event) {
   }
 
   stopwatch.stop(TIMER_READ_SERIAL);
-
-  return false;
 }
