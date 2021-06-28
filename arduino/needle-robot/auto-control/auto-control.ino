@@ -61,7 +61,7 @@ const unsigned long BAUD = 230400;
 
 const uint16_t max_events = 10;
 const uint32_t linear_pitch = 5000; // micrometers
-const uint32_t force_read_interval = 90000; // ~11 Hz
+const uint32_t force_read_interval = 100000; // ~10 Hz
 
 // defines stepper motor pins
 const int LINEAR_STEP_PIN = 2;
@@ -75,7 +75,7 @@ const int LOADCELL_SCK_PIN  = 12;
 
 // found using calibrate-force-sensor sketch
 //const float calibration_factor = 418110.f;  // 1 / grams
-const Ratio<uint32_t> calibration_ratio {5973, 140}; // 1 / micro newtons (uN)
+const Ratio<int32_t> calibration_ratio {5973, 140}; // 1 / micro newtons (uN)
 const float calibration_factor = float(calibration_ratio.a) / calibration_ratio.b;
 
 const int32_t max_angular_velocity     = 5 * 360000; // 5 Hz
@@ -188,6 +188,7 @@ void setup() {
   force_read_event.period_micros = force_read_interval;
   force_read_event.last_trigger = micros(); // now
   eventloop.add_event(&force_read_event);
+
 
   //
   // callbacks for commands to the serial port
