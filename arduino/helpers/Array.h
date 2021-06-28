@@ -1,7 +1,7 @@
 #ifndef Array_h
 #define Array_h
 
-#include "move.h"
+#include "mockstd.h"
 
 // similar to std::array<> (but simpler)
 template<typename T, int _N>
