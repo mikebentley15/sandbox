@@ -215,6 +215,11 @@ void setup() {
         " @param interval (32-bit unsigned): how often to print the state");
     sender.sendHelpCommand("stream-state-off",
         "Turn off the auto-streaming of states");
+    sender.sendHelpCommand("tare",
+        "Tare the loadcell force sensor to zero.  This blocks everything\r\n"
+        " (including motors and force readings) for about 500 ms.  At the\r\n"
+        " beginning of tare, a <tare-starting> will be sent.  At the end\r\n"
+        " of tare, a <tare-finished> will be sent.");
   });
 
   // user sends <settings>
@@ -267,6 +272,13 @@ void setup() {
   // user sends <stream-state-off>
   parser.setStreamStateOffCallback([]() {
     eventloop.remove_event(&stream_state_event);
+  });
+
+  // user sends <tare>
+  parser.setTareCallback([]() {
+    sender.sendTareStarting();
+    loadcell.tare(5);
+    sender.sendTareFinished();
   });
 
 

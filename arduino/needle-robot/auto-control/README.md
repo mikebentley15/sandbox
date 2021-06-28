@@ -133,6 +133,13 @@ For binary commands, the maximum message size to the arduino is 12 bytes
     clockwise on the rotary motor, and 53.4 milli Newtons, which equates to
     about 5.45 grams of mass with the force of gravity.
 
+- `<tare>`
+  - tares the force sensor (sets the current average reading to the zero
+    point).  This will report with a `<tare-starting>` message followed by a
+    `<tare-finished>` message.  It averages five readings, which results in a
+    block of about 500 ms (during which all other processing stops, including
+    motors and sensor readings).
+
 - `<send-binary/[on|off]>`
   - Set the binary send type on or off.  Off means to send as plain text.
     This is only applicable to the message types that are implemented in both

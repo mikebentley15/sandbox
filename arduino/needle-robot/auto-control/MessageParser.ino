@@ -150,6 +150,11 @@ void MessageParser::parse_text(const char *data) {
       this->_stream_state_off_callback();
     }
 
+  } else if (0 == strcmp(data, "tare")) {
+    if (this->_tare_callback != nullptr) {
+      this->_tare_callback();
+    }
+
   } else {
 #   ifndef NDEBUG
     Serial.print("MessageParser: Warning: unrecognized text command: <");

@@ -7,8 +7,6 @@ from collections import namedtuple
 from dataclasses import dataclass
 from enum import IntEnum
 
-GameState = namedtuple('GameState', 'player,x11,x12,x13,x21,x22,x23,x31,x32,x33')
-
 class Player(IntEnum):
     EMPTY = 0
     P1 = 1

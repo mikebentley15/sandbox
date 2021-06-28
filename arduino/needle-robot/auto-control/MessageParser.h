@@ -37,6 +37,7 @@ public:
   void setStreamForceCallback(Callback_bool *cb) { _stream_force_callback = cb; }
   void setStreamStateOnCallback(Callback_U *cb) { _stream_state_on_callback = cb; }
   void setStreamStateOffCallback(Callback_noargs *cb) { _stream_state_off_callback = cb; }
+  void setTareCallback(Callback_noargs *cb) { _tare_callback = cb; }
 
 private:
   enum class ParseState {
@@ -73,6 +74,7 @@ private:
   Callback_bool   *_stream_force_callback     = nullptr;
   Callback_U      *_stream_state_on_callback  = nullptr;
   Callback_noargs *_stream_state_off_callback = nullptr;
+  Callback_noargs *_tare_callback             = nullptr;
 };
 
 #endif // MessageParser_h

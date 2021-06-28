@@ -79,6 +79,9 @@ public:
     }
   }
 
+  void sendTareStarting() { _out.write("<tare-starting>"); }
+  void sendTareFinished() { _out.write("<tare-finished>"); }
+
 private:
   void send_binary_32bit(int32_t val) {
     _out.write(int8_t(val >> 24));
