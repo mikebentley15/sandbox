@@ -185,6 +185,14 @@ For binary commands, the maximum message size to the arduino is 12 bytes
   - Gives just the force sensor reading
   - Can be output at regular intervals
 
+- `<tare-starting>`
+  - beginning of taring the force sensor.  This blocks all other processing
+    including command parsing, force sensing, motor control, etc.
+  - blocks for about 500 ms
+
+- `<tare-finished>`
+  - given after the taring of the force sensor is completed.  Other processing
+    can now take place.
 
 ### Text commands yet to be supported
 

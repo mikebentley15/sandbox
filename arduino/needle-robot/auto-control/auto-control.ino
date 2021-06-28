@@ -279,6 +279,7 @@ void setup() {
     sender.sendTareStarting();
     loadcell.tare(5);
     sender.sendTareFinished();
+    eventloop.reset();
   });
 
 

@@ -116,6 +116,22 @@ public:
     }
   }
 
+  /** Resets all repeating events to now
+   *
+   * Specifically sets last_triggered() to now
+   *
+   * Useful after doing a long blocking thing so that the events do not try to
+   * aggressively "catch up".
+   */
+  void reset(void) {
+    for (uint16_t i = 0; i < NUM_EVENTS; ++i) {
+      auto event = registered_events[i];
+      if (event != nullptr && event->repeats != 0) {
+        event->last_trigger = micros(); // now
+      }
+    }
+  }
+
 private:
   uint16_t find_event(Event *event) {
     for (uint16_t i = 0; i < NUM_EVENTS; ++i) {
@@ -167,7 +183,11 @@ private:
       // rather than when it was really triggered, mark when it ideally should
       // have been triggered.  This is to allow the next one to "catch up" if
       // this one was late.
-      event->last_trigger = now - delta + event->period_micros;
+      // However, if it is late by more than the period, truncate to being one
+      // period behind.
+      unsigned long offset = min(event->period_micros,
+                                 delta - event->period_micros);
+      event->last_trigger = now - offset;
 
       // make it safe for the callback to call remove_event(
       event->callback(event);
