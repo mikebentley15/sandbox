@@ -162,6 +162,11 @@ void setup() {
   // timed events
   //
 
+  stream_state_event.auto_delete = false;
+  force_read_event  .auto_delete = false;
+  rotary_motor_event.auto_delete = false;
+  linear_motor_event.auto_delete = false;
+
   // setup events for when we want to activate them
 
   stream_state_event.callback = [](Event*) { send_state(); };
@@ -319,12 +324,43 @@ void setup() {
 
   parser.setLinearVelocityCallback([](int32_t v) {
     linear_vel = v;
-    // TODO: start or change linear motor event
+    if (v == 0) {
+      if (eventloop.contains(&linear_motor_event)) {
+        eventloop.remove_event(&linear_motor_event);
+      }
+    } else {
+      // TODO: handle acceleration
+      int32_t angular_vel = v * int32_t(linear_to_angular);
+      linear_motor_event.period_micros
+          = linear_motor.micros_per_pulse(abs(angular_vel)) / 2;
+      if ((v > 0) != linear_motor.forward) {
+        linear_motor.toggle_direction();
+      }
+      if (!eventloop.contains(&linear_motor_event)) {
+        linear_motor_event.last_trigger = micros(); // now
+        eventloop.add_event(&linear_motor_event);
+      }
+    }
   });
 
   parser.setRotaryVelocityCallback([](int32_t v) {
     rotary_vel = v;
-    // TODO: start or change rotary motor event
+    if (v == 0) {
+      if (eventloop.contains(&rotary_motor_event)) {
+        eventloop.remove_event(&rotary_motor_event);
+      }
+    } else {
+      // TODO: handle acceleration
+      rotary_motor_event.period_micros
+          = rotary_motor.micros_per_pulse(abs(v)) / 2;
+      if ((v > 0) != rotary_motor.forward) {
+        rotary_motor.toggle_direction();
+      }
+      if (!eventloop.contains(&rotary_motor_event)) {
+        rotary_motor_event.last_trigger = micros(); // now
+        eventloop.add_event(&rotary_motor_event);
+      }
+    }
   });
 
 

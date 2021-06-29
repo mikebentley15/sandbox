@@ -56,6 +56,7 @@ public:
       this->send_binary_32bit(rotary_vel);
       this->send_binary_32bit(force_reading);
       _out.write('>');
+      _out.println();
     } else {
       _out.write("<current-state/");
       _out.print(linear_abs);    _out.write('/');
@@ -72,6 +73,7 @@ public:
       _out.write("<Bf");
       this->send_binary_32bit(force_reading);
       _out.write('>');
+      _out.println();
     } else {
       _out.write("<force/");
       _out.print(force_reading);  _out.write('>');
