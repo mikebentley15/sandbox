@@ -110,7 +110,7 @@ int32_t rotary_abs = 0; // milli-degrees
 int32_t linear_vel = 0; // micrometers / sec
 int32_t rotary_vel = 0; // milli-degrees / sec
 int32_t raw_force  = 0; // raw force sensor value
-int32_t force = 0;      // micro-Newtons
+int32_t force      = 0; // micro-Newtons
 
 // desired state
 int32_t des_linear_abs = 0; // micrometers
@@ -332,19 +332,19 @@ void setup() {
   // temporary debug values
   //
 
-  // temporary debug values for the five state variables
-  auto set_byte_vals = [](int32_t &val, uint8_t a, uint8_t b, uint8_t c, uint8_t d) {
-    val = (int32_t(a) << 24)
-        + (int32_t(b) << 16)
-        + (int32_t(c) <<  8)
-        +  int32_t(d);
-  };
+  //// temporary debug values for the five state variables
+  //auto set_byte_vals = [](int32_t &val, uint8_t a, uint8_t b, uint8_t c, uint8_t d) {
+  //  val = (int32_t(a) << 24)
+  //      + (int32_t(b) << 16)
+  //      + (int32_t(c) <<  8)
+  //      +  int32_t(d);
+  //};
 
-  set_byte_vals(linear_abs, ' ', 'H', 'e', 'l');
-  set_byte_vals(rotary_abs, 'l', 'o', ' ', 'W');
-  set_byte_vals(linear_vel, 'o', 'r', 'l', 'd');
-  set_byte_vals(rotary_vel, ',', ' ', 'f', 'r');
-  set_byte_vals(force,      'i', 'e', 'n', 'd');
+  //set_byte_vals(linear_abs, ' ', 'H', 'e', 'l');
+  //set_byte_vals(rotary_abs, 'l', 'o', ' ', 'W');
+  //set_byte_vals(linear_vel, 'o', 'r', 'l', 'd');
+  //set_byte_vals(rotary_vel, ',', ' ', 'f', 'r');
+  //set_byte_vals(force,      'i', 'e', 'n', 'd');
 
   Serial.println("setup() finished");
 }
