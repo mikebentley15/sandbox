@@ -218,7 +218,7 @@ void setup() {
     }
   };
 
-  rotary_motor_event.callback = [](Event*) {
+  rotary_motor_event.callback = [](Event *e) {
     rotary_motor.toggle_pulse();
 
     // update the state
@@ -229,9 +229,11 @@ void setup() {
         rotary_abs -= angle_per_step;
       }
     }
+
+    if (e && e->repeats == 1) { rotary_vel = 0; }
   };
 
-  linear_motor_event.callback = [](Event*) {
+  linear_motor_event.callback = [](Event *e) {
     linear_motor.toggle_pulse();
 
     // update the state
@@ -242,6 +244,9 @@ void setup() {
         linear_abs -= microns_per_step;
       }
     }
+
+    // if we're on the last repeat, zero out velocity
+    if (e && e->repeats == 1) { linear_vel = 0; }
   };
 
   // register events that are to always go
