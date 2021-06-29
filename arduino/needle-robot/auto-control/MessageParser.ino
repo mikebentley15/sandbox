@@ -114,122 +114,22 @@ int MessageParser::payload_size(char message_type) const {
 void MessageParser::parse_text(const char *data) {
   if (data == nullptr) { return; }
 
-  if (0 == strcmp(data, "help")) {
-    if (this->_help_callback != nullptr) {
-      this->_help_callback();
-    }
-
-  } else if (0 == strcmp(data, "settings")) {
-    if (this->_settings_callback != nullptr) {
-      this->_settings_callback();
-    }
-
-  } else if (0 == strcmp(data, "state")) {
-    if (this->_state_callback != nullptr) {
-      this->_state_callback();
-    }
-
-  } else if (0 == strncmp(data, "send-binary", 11)) {
-    serial_assert(data[11] == '/', "MessageParser: parse error");
-    if (this->_send_binary_callback != nullptr) {
-      this->_send_binary_callback(this->parse_on_off(data + 12));
-    }
-
-  } else if (0 == strncmp(data, "stream-force", 12)) {
-    serial_assert(data[12] == '/', "MessageParser: parse error");
-    if (this->_stream_force_callback != nullptr) {
-      this->_stream_force_callback(this->parse_on_off(data + 13));
-    }
-
-  } else if (0 == strncmp(data, "stream-state-on", 15)) {
-    serial_assert(data[15] == '/', "MessageParser: parse error");
-    uint32_t interval = strtoul(data + 16, nullptr, 10);
-    if (this->_stream_state_on_callback != nullptr) {
-      this->_stream_state_on_callback(interval);
-    }
-
-  } else if (0 == strcmp(data, "stream-state-off")) {
-    if (this->_stream_state_off_callback != nullptr) {
-      this->_stream_state_off_callback();
-    }
-
-  } else if (0 == strcmp(data, "tare")) {
-    if (this->_tare_callback != nullptr) {
-      this->_tare_callback();
-    }
-
-  // TODO: refactor to reuse code
-  } else if (0 == strncmp(data, "linear-abs", 10)) {
-    serial_assert(data[10] == '/', "MessageParser: parse error");
-    const char *p = data + 11;
-    char *p_end;
-    int32_t pos = strtol(p, &p_end, 10);
-    p = p_end;
-    serial_assert(p[0] == '/', "MessageParser: parse error");
-    uint32_t vel = strtoul(p+1, &p_end, 10);
-    p = p_end;
-    serial_assert(p[0] == '\0', "MessageParser: parse error");
-    if (this->_linear_abs_callback != nullptr) {
-      this->_linear_abs_callback(pos, vel);
-    }
-
-  } else if (0 == strncmp(data, "linear-rel", 10)) {
-    serial_assert(data[10] == '/', "MessageParser: parse error");
-    const char *p = data + 11;
-    char *p_end;
-    int32_t pos = strtol(p, &p_end, 10);
-    p = p_end;
-    serial_assert(p[0] == '/', "MessageParser: parse error");
-    uint32_t vel = strtoul(p+1, &p_end, 10);
-    p = p_end;
-    serial_assert(p[0] == '\0', "MessageParser: parse error");
-    if (this->_linear_rel_callback != nullptr) {
-      this->_linear_rel_callback(pos, vel);
-    }
-
-  } else if (0 == strncmp(data, "linear-velocity", 15)) {
-    serial_assert(data[15] == '/', "MessageParser: parse error");
-    int32_t velocity = strtol(data + 16, nullptr, 10);
-    if (this->_linear_velocity_callback != nullptr) {
-      this->_linear_velocity_callback(velocity);
-    }
-
-  } else if (0 == strncmp(data, "rotary-abs", 10)) {
-    serial_assert(data[10] == '/', "MessageParser: parse error");
-    const char *p = data + 11;
-    char *p_end;
-    int32_t pos = strtol(p, &p_end, 10);
-    p = p_end;
-    serial_assert(p[0] == '/', "MessageParser: parse error");
-    uint32_t vel = strtoul(p+1, &p_end, 10);
-    p = p_end;
-    serial_assert(p[0] == '\0', "MessageParser: parse error");
-    if (this->_rotary_abs_callback != nullptr) {
-      this->_rotary_abs_callback(pos, vel);
-    }
-
-  } else if (0 == strncmp(data, "rotary-rel", 10)) {
-    serial_assert(data[10] == '/', "MessageParser: parse error");
-    const char *p = data + 11;
-    char *p_end;
-    int32_t pos = strtol(p, &p_end, 10);
-    p = p_end;
-    serial_assert(p[0] == '/', "MessageParser: parse error");
-    uint32_t vel = strtoul(p+1, &p_end, 10);
-    p = p_end;
-    serial_assert(p[0] == '\0', "MessageParser: parse error");
-    if (this->_rotary_rel_callback != nullptr) {
-      this->_rotary_rel_callback(pos, vel);
-    }
-
-  } else if (0 == strncmp(data, "rotary-velocity", 15)) {
-    serial_assert(data[15] == '/', "MessageParser: parse error");
-    int32_t velocity = strtol(data + 16, nullptr, 10);
-    if (this->_rotary_velocity_callback != nullptr) {
-      this->_rotary_velocity_callback(velocity);
-    }
-
-  } else {
+  // basically, we know how to parse by the callback type
+       if (parse_text_cmd(data, "help"            , _help_cb            )) {}
+  else if (parse_text_cmd(data, "settings"        , _settings_cb        )) {}
+  else if (parse_text_cmd(data, "state"           , _state_cb           )) {}
+  else if (parse_text_cmd(data, "send-binary"     , _send_binary_cb     )) {}
+  else if (parse_text_cmd(data, "stream-force"    , _stream_force_cb    )) {}
+  else if (parse_text_cmd(data, "stream-state-on" , _stream_state_on_cb )) {}
+  else if (parse_text_cmd(data, "stream-state-off", _stream_state_off_cb)) {}
+  else if (parse_text_cmd(data, "tare"            , _tare_cb            )) {}
+  else if (parse_text_cmd(data, "linear-abs"      , _linear_abs_cb      )) {}
+  else if (parse_text_cmd(data, "linear-rel"      , _linear_rel_cb      )) {}
+  else if (parse_text_cmd(data, "linear-velocity" , _linear_velocity_cb )) {}
+  else if (parse_text_cmd(data, "rotary-abs"      , _rotary_abs_cb      )) {}
+  else if (parse_text_cmd(data, "rotary-rel"      , _rotary_rel_cb      )) {}
+  else if (parse_text_cmd(data, "rotary-velocity" , _rotary_velocity_cb )) {}
+  else {
 #   ifndef NDEBUG
     Serial.print("MessageParser: Warning: unrecognized text command: <");
     Serial.print(data);
@@ -242,60 +142,15 @@ void MessageParser::parse_text(const char *data) {
 void MessageParser::parse_binary(const char *data) {
   // we're given the full message, so data should start with B then the binary
   // type
-
+  // we know how to parse based on the type of the callback
+  auto bin = data + 2;
   switch (data[1]) {
-    case 'A': { // linear abs
-      if (this->_linear_abs_callback != nullptr) {
-        int32_t  pos = this->parse_binary_signed32(data + 2);
-        uint32_t vel = this->parse_binary_unsigned32(data + 6);
-        this->_linear_abs_callback(pos, vel);
-      }
-      break;
-    }
-
-    case 'B': { // linear rel
-      if (this->_linear_rel_callback != nullptr) {
-        int32_t  pos = this->parse_binary_signed32(data + 2);
-        uint32_t vel = this->parse_binary_unsigned32(data + 6);
-        this->_linear_rel_callback(pos, vel);
-      }
-      break;
-    }
-
-    case 'C': { // linear velocity
-      if (this->_linear_velocity_callback != nullptr) {
-        int32_t velocity = this->parse_binary_signed32(data + 2);
-        this->_linear_velocity_callback(velocity);
-      }
-      break;
-    }
-
-    case 'D': { // rotary abs
-      if (this->_rotary_abs_callback != nullptr) {
-        int32_t  pos = this->parse_binary_signed32(data + 2);
-        uint32_t vel = this->parse_binary_unsigned32(data + 6);
-        this->_rotary_abs_callback(pos, vel);
-      }
-      break;
-    }
-
-    case 'E': { // rotary rel
-      if (this->_rotary_rel_callback != nullptr) {
-        int32_t  pos = this->parse_binary_signed32(data + 2);
-        uint32_t vel = this->parse_binary_unsigned32(data + 6);
-        this->_rotary_rel_callback(pos, vel);
-      }
-      break;
-    }
-
-    case 'F': { // rotary velocity
-      if (this->_rotary_velocity_callback != nullptr) {
-        int32_t velocity = this->parse_binary_signed32(data + 2);
-        this->_rotary_velocity_callback(velocity);
-      }
-      break;
-    }
-
+    case 'A': parse_bin_cmd(bin, _linear_abs_cb     ); break;
+    case 'B': parse_bin_cmd(bin, _linear_rel_cb     ); break;
+    case 'C': parse_bin_cmd(bin, _linear_velocity_cb); break;
+    case 'D': parse_bin_cmd(bin, _rotary_abs_cb     ); break;
+    case 'E': parse_bin_cmd(bin, _rotary_rel_cb     ); break;
+    case 'F': parse_bin_cmd(bin, _rotary_velocity_cb); break;
     default: {
 #     ifndef NDEBUG
       Serial.print("MessageParser: Warning: unrecognized binary command: '");
@@ -306,38 +161,4 @@ void MessageParser::parse_binary(const char *data) {
       break;
     }
   }
-}
-
-bool MessageParser::parse_on_off(const char *data) const {
-  if (0 == strncmp(data, "on", 2)) {
-    return true;
-  } else if (0 == strncmp(data, "off", 3)) {
-    return false;
-  } else {
-#   ifndef NDEBUG
-    Serial.print("MessageParser: Warning: must be on or off: ");
-    Serial.print(data);
-    Serial.println();
-#   endif
-  }
-  return false;
-}
-
-int32_t  MessageParser::parse_binary_signed32(const char *data) const {
-  uint32_t uval = this->parse_binary_unsigned32(data);
-  int32_t val;
-  // this assumes the binary representation of the sender is the same as the
-  // binary representation on this platform for a signed integer.
-  memcpy(&val, &uval, sizeof(uval));
-  return val;
-}
-
-uint32_t MessageParser::parse_binary_unsigned32(const char *data) const {
-  uint8_t copy[4];
-  memcpy(copy, data, 4);
-  uint32_t uval = (uint32_t(copy[0]) << 24) |
-                  (uint32_t(copy[1]) << 16) |
-                  (uint32_t(copy[2]) <<  8) |
-                   uint32_t(copy[3]);
-  return uval;
 }
