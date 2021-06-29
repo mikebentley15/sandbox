@@ -1,7 +1,7 @@
 #include "MessageParser.h"
 #include "serial_assert.h"
 
-#include <string.h> // for strcmp()
+#include <string.h> // for strcmp() and memcpy()
 #include <stdlib.h> // for strtoul()
 
 bool MessageParser::append(char input) {
@@ -58,7 +58,7 @@ bool MessageParser::append(char input) {
         break;
       }
 
-      auto payload = this->payload_size(_buffer[1]);
+      auto payload = this->payload_size(this->_buffer[1]);
       if (payload < 0) { // unsupported binary command
 #       ifndef NDEBUG
         Serial.print("MessageParser: Warning: unrecognized binary command: '");
@@ -103,8 +103,9 @@ bool MessageParser::append(char input) {
 int MessageParser::payload_size(char message_type) const {
   (void)message_type; // unused
   switch (message_type) {
-    default:
-      return -1;  // signal that it's an unsupported message type
+    case 'C': return  4;
+    case 'F': return  4;
+    default:  return -1;  // signal that it's an unsupported message type
   }
 }
 
@@ -155,6 +156,20 @@ void MessageParser::parse_text(const char *data) {
       this->_tare_callback();
     }
 
+  } else if (0 == strncmp(data, "linear-velocity", 15)) {
+    serial_assert(data[15] == '/', "MessageParser: parse error");
+    int32_t velocity = strtol(data + 16, nullptr, 10);
+    if (this->_linear_velocity_callback != nullptr) {
+      this->_linear_velocity_callback(velocity);
+    }
+
+  } else if (0 == strncmp(data, "rotary-velocity", 15)) {
+    serial_assert(data[15] == '/', "MessageParser: parse error");
+    int32_t velocity = strtol(data + 16, nullptr, 10);
+    if (this->_rotary_velocity_callback != nullptr) {
+      this->_rotary_velocity_callback(velocity);
+    }
+
   } else {
 #   ifndef NDEBUG
     Serial.print("MessageParser: Warning: unrecognized text command: <");
@@ -166,10 +181,40 @@ void MessageParser::parse_text(const char *data) {
 }
 
 void MessageParser::parse_binary(const char *data) {
+  // we're given the full message, so data should start with B then the binary
+  // type
+
+  switch (data[1]) {
+    case 'C': { // linear velocity
+      if (this->_linear_velocity_callback != nullptr) {
+        int32_t velocity = this->parse_binary_signed32(data + 2);
+        this->_linear_velocity_callback(velocity);
+      }
+      break;
+    }
+
+    case 'F': { // rotary velocity
+      if (this->_rotary_velocity_callback != nullptr) {
+        int32_t velocity = this->parse_binary_signed32(data + 2);
+        this->_rotary_velocity_callback(velocity);
+      }
+      break;
+    }
+
+    default: {
+#     ifndef NDEBUG
+      Serial.print("MessageParser: Warning: unrecognized binary command: '");
+      Serial.print(data[1]);
+      Serial.print("'");
+      Serial.println();
+#     endif
+      break;
+    }
+  }
   (void)data; // unused
 }
 
-bool MessageParser::parse_on_off(const char *data) {
+bool MessageParser::parse_on_off(const char *data) const {
   if (0 == strncmp(data, "on", 2)) {
     return true;
   } else if (0 == strncmp(data, "off", 3)) {
@@ -182,4 +227,23 @@ bool MessageParser::parse_on_off(const char *data) {
 #   endif
   }
   return false;
+}
+
+int32_t  MessageParser::parse_binary_signed32(const char *data) const {
+  uint32_t uval = this->parse_binary_unsigned32(data);
+  int32_t val;
+  // this assumes the binary representation of the sender is the same as the
+  // binary representation on this platform for a signed integer.
+  memcpy(&val, &uval, sizeof(uval));
+  return val;
+}
+
+uint32_t MessageParser::parse_binary_unsigned32(const char *data) const {
+  uint8_t copy[4];
+  memcpy(copy, data, 4);
+  uint32_t uval = (uint32_t(copy[0]) << 24) |
+                  (uint32_t(copy[1]) << 16) |
+                  (uint32_t(copy[2]) <<  8) |
+                   uint32_t(copy[3]);
+  return uval;
 }

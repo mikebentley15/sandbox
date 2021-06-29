@@ -185,7 +185,7 @@ void setup() {
     rotary_motor.toggle_pulse();
 
     // update the state
-    if (!rotary_motor.pulse_is_high()) { // then it moved
+    if (!rotary_motor.pulse_is_high) { // then it moved
       if (rotary_motor.forward) {
         rotary_abs += angle_per_step;
       } else {
@@ -198,7 +198,7 @@ void setup() {
     linear_motor.toggle_pulse();
 
     // update the state
-    if (!linear_motor.pulse_is_high()) { // then it moved
+    if (!linear_motor.pulse_is_high) { // then it moved
       if (linear_motor.forward) {
         linear_abs += microns_per_step;
       } else {
@@ -243,19 +243,31 @@ void setup() {
         " (including motors and force readings) for about 500 ms.  At the\r\n"
         " beginning of tare, a <tare-starting> will be sent.  At the end\r\n"
         " of tare, a <tare-finished> will be sent.");
+    sender.sendHelpCommand("linear-velocity",
+        "Rotate the linear motor so that the linear lead screw actuates the\r\n"
+        " platform by the given velocity in micrometers per second.\r\n"
+        " @param velocity (32-bit signed): velocity of linear platform.\r\n"
+        "     Give a negative value to go backwards.");
+    sender.sendHelpCommand("rotary-velocity",
+        "Rotate the rotary motor by the given angular velocity in \r\n"
+        " milli-degrees per second.\r\n"
+        " @param velocity (32-bit signed): angular velocity clockwise.\r\n"
+        "     Give a negative value to go counter-clockwise.");
   });
 
   // user sends <settings>
   parser.setSettingsCallback([]() {
     sender.sendSetting("baud rate", BAUD);
     sender.sendSetting("binary output", sender.is_binary());
-    sender.sendSetting("linear pitch", linear_pitch);
     sender.sendSetting("stream force", stream_force);
     sender.sendSetting("force sensor interval", force_read_event.period_micros);
+    sender.sendSetting("linear pitch", linear_pitch);
     sender.sendSetting("linear step pin", LINEAR_STEP_PIN);
     sender.sendSetting("linear dir pin", LINEAR_DIR_PIN);
+    sender.sendSetting("linear velocity", linear_vel);
     sender.sendSetting("rotary step pin", ROTARY_STEP_PIN);
     sender.sendSetting("rotary dir pin", ROTARY_DIR_PIN);
+    sender.sendSetting("rotary velocity", rotary_vel);
     sender.sendSetting("loadcell dout pin", LOADCELL_DOUT_PIN);
     sender.sendSetting("loadcell sck pin", LOADCELL_SCK_PIN);
     sender.sendSetting("loadcell calibration factor", calibration_factor);
@@ -303,6 +315,16 @@ void setup() {
     loadcell.tare(5);
     sender.sendTareFinished();
     eventloop.reset();
+  });
+
+  parser.setLinearVelocityCallback([](int32_t v) {
+    linear_vel = v;
+    // TODO: start or change linear motor event
+  });
+
+  parser.setRotaryVelocityCallback([](int32_t v) {
+    rotary_vel = v;
+    // TODO: start or change rotary motor event
   });
 
 

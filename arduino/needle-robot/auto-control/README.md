@@ -165,6 +165,22 @@ For binary commands, the maximum message size to the arduino is 12 bytes
 - `<stream-state-off>`
   - turn off streaming of state from arduino
 
+- `<linear-velocity/{velocity}>`
+  - Move at the given velocity until given a new linear command, meaning does
+    not stop at a particular location, just moves at a constant speed.  It is
+    velocity instead of speed because you can give a negative value to make it
+    move backwards.  It is in units of micrometers per second.
+  - Example: `<linear-velocity/-2150>` will move backwards at 2.15 mm/s until a
+    new command is given.
+
+- `<rotary-velocity/{velocity}>`
+  - rotate the rotary motor at the given `{velocity}` given in milli-degrees
+    per second.  A positive value will move clockwise and a negative value will
+    move counter-clockwise.
+  - Example: `<rotary-velocity/-180000>` will command it to move
+    counter-clockwise at 0.5 revolutions per second (or -180 degrees per
+    second).
+
 
 ### Supported text messages from the arduino
 
@@ -218,14 +234,6 @@ TODO: set maximum motor angular acceleration
   - Example: `<linear-rel/-500/750>` will move backwards by 0.5 mm, and will
     move there at a maximum speed of 0.75 mm per second.
 
-- `<linear-velocity/{velocity}>`
-  - Move at the given velocity until given a new linear command, meaning does
-    not stop at a particular location, just moves at a constant speed.  It is
-    velocity instead of speed because you can give a negative value to make it
-    move backwards.  It is in units of micrometers per second.
-  - Example: `<linear-velocity/-2150>` will move backwards at 2.15 mm/s until a
-    new command is given.
-
 - `<rotary-abs/{position}/{speed}>`
   - rotate the rotary motor to the given `{position}` in milli-degrees.  This
     value can be larger than 360,000 which will mean past one full rotation.
@@ -243,13 +251,6 @@ TODO: set maximum motor angular acceleration
     resolution with 32-bits, you can specify up to 5.9 kHz which is much faster
     than this little motor can achieve).
 
-- `<rotary-velocity/{velocity}>`
-  - rotate the rotary motor at the given `{velocity}` given in milli-degrees
-    per second.  A positive value will move clockwise and a negative value will
-    move counter-clockwise.
-  - Example: `<rotary-velocity/-180000>` will command it to move
-    counter-clockwise at 0.5 revolutions per second (or -180 degrees per
-    second).
 
 ### Text messages from the arduino yet to be supported
 
@@ -287,9 +288,11 @@ partial readability of binary messages within a serial terminal.  In the
 documentation below, I specify just the command code followed by the arguments
 (with their respective sizes) and explanation.
 
+
 ### Supported binary commands
 
 None yet
+
 
 ### Supported binary messages from the arduino
 

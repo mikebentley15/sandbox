@@ -38,6 +38,8 @@ public:
   void setStreamStateOnCallback(Callback_U *cb) { _stream_state_on_callback = cb; }
   void setStreamStateOffCallback(Callback_noargs *cb) { _stream_state_off_callback = cb; }
   void setTareCallback(Callback_noargs *cb) { _tare_callback = cb; }
+  void setLinearVelocityCallback(Callback_S *cb) { _linear_velocity_callback = cb; }
+  void setRotaryVelocityCallback(Callback_S *cb) { _rotary_velocity_callback = cb; }
 
 private:
   enum class ParseState {
@@ -54,7 +56,10 @@ private:
 
   void parse_binary(const char *data);
 
-  bool parse_on_off(const char *data);
+  bool parse_on_off(const char *data) const;
+
+  int32_t  parse_binary_signed32   (const char *data) const;
+  uint32_t parse_binary_unsigned32 (const char *data) const;
 
 private:
   // parsing internal variables
@@ -75,6 +80,8 @@ private:
   Callback_U      *_stream_state_on_callback  = nullptr;
   Callback_noargs *_stream_state_off_callback = nullptr;
   Callback_noargs *_tare_callback             = nullptr;
+  Callback_S      *_linear_velocity_callback  = nullptr;
+  Callback_S      *_rotary_velocity_callback  = nullptr;
 };
 
 #endif // MessageParser_h
