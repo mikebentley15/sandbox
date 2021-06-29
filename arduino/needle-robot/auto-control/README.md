@@ -165,6 +165,23 @@ For binary commands, the maximum message size to the arduino is 12 bytes
 - `<stream-state-off>`
   - turn off streaming of state from arduino
 
+- `<linear-abs/{position}/{speed}>`
+  - rotate the linear motor such that it moves the linear platform to the
+    `{position}` micrometer absolute location (relative to the point it's at
+    when the arduino starts up).  Move at the specified `{speed}` micrometers
+    per second.
+  - Example: `<linear-abs/0/750>` will move to the zero position (i.e., where
+    it was when the arduino started up), and will move there at a speed of 750
+    micrometers per second.
+
+- `<linear-rel/{position}/{speed}>`
+  - rotate the linear motor such that it moves the linear platform to the
+    `{position}` micrometer location forward from the current position.  Move
+    at the specified `{speed}` micrometers per second.  Give a negative number
+    for `{position}` to move backwards.
+  - Example: `<linear-rel/-500/750>` will move backwards by 0.5 mm, and will
+    move there at a maximum speed of 0.75 mm per second.
+
 - `<linear-velocity/{velocity}>`
   - Move at the given velocity until given a new linear command, meaning does
     not stop at a particular location, just moves at a constant speed.  It is
@@ -180,6 +197,23 @@ For binary commands, the maximum message size to the arduino is 12 bytes
   - Example: `<rotary-velocity/-180000>` will command it to move
     counter-clockwise at 0.5 revolutions per second (or -180 degrees per
     second).
+
+- `<rotary-abs/{position}/{speed}>`
+  - rotate the rotary motor to the given `{position}` in milli-degrees.  This
+    value can be larger than 360,000 which will mean past one full rotation.
+    From the home position, you can command five full rotations clockwise by
+    passing the value 1,800,000 for the position.  The `{speed}` is given as
+    millidegrees per second.
+  - Example: `<rotary-abs/1800000/36000>` will rotate clockwise for five full
+    rotations from the home position at a speed of 0.1 revolutions per second
+    (or 36 degrees per second).
+
+- `<rotary-rel/{position}/{speed}>`
+  - Rotate the rotary motor `{position}` millidegrees clockwise from where it
+    currently is (give a negative number to go counter-clockwise) at the given
+    `{speed}` in millidegrees per second (so 360000 is 1 Hz, which at this
+    resolution with 32-bits, you can specify up to 5.9 kHz which is much faster
+    than this little motor can achieve).
 
 
 ### Supported text messages from the arduino
@@ -212,44 +246,11 @@ For binary commands, the maximum message size to the arduino is 12 bytes
 
 ### Text commands yet to be supported
 
-TODO: tare the force sensor
 TODO: change the force sensor calibration factor?
 TODO: get raw force sensor value?
 TODO: set maximum motor angular acceleration
-
-- `<linear-abs/{position}/{speed}>`
-  - rotate the linear motor such that it moves the linear platform to the
-    `{position}` micrometer absolute location (relative to the point it's at
-    when the arduino starts up).  Move at the specified `{speed}` micrometers
-    per second.
-  - Example: `<linear-abs/0/750>` will move to the zero position (i.e., where
-    it was when the arduino started up), and will move there at a speed of 750
-    micrometers per second.
-
-- `<linear-rel/{position}/{speed}>`
-  - rotate the linear motor such that it moves the linear platform to the
-    `{position}` micrometer location forward from the current position.  Move
-    at the specified `{speed}` micrometers per second.  Give a negative number
-    for `{position}` to move backwards.
-  - Example: `<linear-rel/-500/750>` will move backwards by 0.5 mm, and will
-    move there at a maximum speed of 0.75 mm per second.
-
-- `<rotary-abs/{position}/{speed}>`
-  - rotate the rotary motor to the given `{position}` in milli-degrees.  This
-    value can be larger than 360,000 which will mean past one full rotation.
-    From the home position, you can command five full rotations clockwise by
-    passing the value 1,800,000 for the position.  The `{speed}` is given as
-    millidegrees per second.
-  - Example: `<rotary-abs/1800000/36000>` will rotate clockwise for five full
-    rotations from the home position at a speed of 0.1 revolutions per second
-    (or 36 degrees per second).
-
-- `<rotary-rel/{position}/{speed}>`
-  - Rotate the rotary motor `{position}` millidegrees clockwise from where it
-    currently is (give a negative number to go counter-clockwise) at the given
-    `{speed}` in millidegrees per second (so 360000 is 1 Hz, which at this
-    resolution with 32-bits, you can specify up to 5.9 kHz which is much faster
-    than this little motor can achieve).
+TODO: zero absolute rotary position
+TODO: zero absolute linear position
 
 
 ### Text messages from the arduino yet to be supported
@@ -291,31 +292,6 @@ documentation below, I specify just the command code followed by the arguments
 
 ### Supported binary commands
 
-None yet
-
-
-### Supported binary messages from the arduino
-
-- `s`: current state, equal to `current-state` text command
-  - payload of 20 bytes
-  - `linear-abs-position` (32-bit signed integer): absolute linear position
-    from home position in micrometers
-  - `rotary-abs-position` (32-bit signed integer): absolute clockwise rotation
-    from home position in milli-degrees
-  - `linear-velocity` (32-bit signed integer): velocity of linear actuator in
-    micrometers per second
-  - `rotary-velocity` (32-bit signed integer): clockwise angular velocity in
-    milli-degrees per second
-  - `force-sensor-reading` (32-bit signed integer): last force sensor reading
-    in micro-Newtons.
-
-- `f`: force sensor reading, equal to `force` text command
-  - payload of 4 bytes
-  - `force-sensor-reading`
-
-
-### Binary commands yet to be supported
-
 - `A`: equal to `linear-abs` text command
   - payload of 8 bytes
   - `position` (32-bit signed integer): absolute linear position in micrometers
@@ -343,6 +319,31 @@ None yet
 - `F`: equal to `rotary-velocity` text command
   - payload of 4 bytes
   - `velocity` (32-bit unsigned integer): clockwise velocity in milli-degrees per second
+
+
+### Supported binary messages from the arduino
+
+- `s`: current state, equal to `current-state` text command
+  - payload of 20 bytes
+  - `linear-abs-position` (32-bit signed integer): absolute linear position
+    from home position in micrometers
+  - `rotary-abs-position` (32-bit signed integer): absolute clockwise rotation
+    from home position in milli-degrees
+  - `linear-velocity` (32-bit signed integer): velocity of linear actuator in
+    micrometers per second
+  - `rotary-velocity` (32-bit signed integer): clockwise angular velocity in
+    milli-degrees per second
+  - `force-sensor-reading` (32-bit signed integer): last force sensor reading
+    in micro-Newtons.
+
+- `f`: force sensor reading, equal to `force` text command
+  - payload of 4 bytes
+  - `force-sensor-reading`
+
+
+### Binary commands yet to be supported
+
+None for now
 
 
 ### Binary messages from the arduino yet to be supported

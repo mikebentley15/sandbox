@@ -5,7 +5,6 @@
 #include <stdlib.h> // for strtoul()
 
 bool MessageParser::append(char input) {
-  (void)input; // unused
   bool finished_message = false;
 
   // state machine logic
@@ -101,9 +100,12 @@ bool MessageParser::append(char input) {
 }
 
 int MessageParser::payload_size(char message_type) const {
-  (void)message_type; // unused
   switch (message_type) {
+    case 'A': return  8;
+    case 'B': return  8;
     case 'C': return  4;
+    case 'D': return  8;
+    case 'E': return  8;
     case 'F': return  4;
     default:  return -1;  // signal that it's an unsupported message type
   }
@@ -156,11 +158,68 @@ void MessageParser::parse_text(const char *data) {
       this->_tare_callback();
     }
 
+  // TODO: refactor to reuse code
+  } else if (0 == strncmp(data, "linear-abs", 10)) {
+    serial_assert(data[10] == '/', "MessageParser: parse error");
+    const char *p = data + 11;
+    char *p_end;
+    int32_t pos = strtol(p, &p_end, 10);
+    p = p_end;
+    serial_assert(p[0] == '/', "MessageParser: parse error");
+    uint32_t vel = strtoul(p+1, &p_end, 10);
+    p = p_end;
+    serial_assert(p[0] == '\0', "MessageParser: parse error");
+    if (this->_linear_abs_callback != nullptr) {
+      this->_linear_abs_callback(pos, vel);
+    }
+
+  } else if (0 == strncmp(data, "linear-rel", 10)) {
+    serial_assert(data[10] == '/', "MessageParser: parse error");
+    const char *p = data + 11;
+    char *p_end;
+    int32_t pos = strtol(p, &p_end, 10);
+    p = p_end;
+    serial_assert(p[0] == '/', "MessageParser: parse error");
+    uint32_t vel = strtoul(p+1, &p_end, 10);
+    p = p_end;
+    serial_assert(p[0] == '\0', "MessageParser: parse error");
+    if (this->_linear_rel_callback != nullptr) {
+      this->_linear_rel_callback(pos, vel);
+    }
+
   } else if (0 == strncmp(data, "linear-velocity", 15)) {
     serial_assert(data[15] == '/', "MessageParser: parse error");
     int32_t velocity = strtol(data + 16, nullptr, 10);
     if (this->_linear_velocity_callback != nullptr) {
       this->_linear_velocity_callback(velocity);
+    }
+
+  } else if (0 == strncmp(data, "rotary-abs", 10)) {
+    serial_assert(data[10] == '/', "MessageParser: parse error");
+    const char *p = data + 11;
+    char *p_end;
+    int32_t pos = strtol(p, &p_end, 10);
+    p = p_end;
+    serial_assert(p[0] == '/', "MessageParser: parse error");
+    uint32_t vel = strtoul(p+1, &p_end, 10);
+    p = p_end;
+    serial_assert(p[0] == '\0', "MessageParser: parse error");
+    if (this->_rotary_abs_callback != nullptr) {
+      this->_rotary_abs_callback(pos, vel);
+    }
+
+  } else if (0 == strncmp(data, "rotary-rel", 10)) {
+    serial_assert(data[10] == '/', "MessageParser: parse error");
+    const char *p = data + 11;
+    char *p_end;
+    int32_t pos = strtol(p, &p_end, 10);
+    p = p_end;
+    serial_assert(p[0] == '/', "MessageParser: parse error");
+    uint32_t vel = strtoul(p+1, &p_end, 10);
+    p = p_end;
+    serial_assert(p[0] == '\0', "MessageParser: parse error");
+    if (this->_rotary_rel_callback != nullptr) {
+      this->_rotary_rel_callback(pos, vel);
     }
 
   } else if (0 == strncmp(data, "rotary-velocity", 15)) {
@@ -185,10 +244,46 @@ void MessageParser::parse_binary(const char *data) {
   // type
 
   switch (data[1]) {
+    case 'A': { // linear abs
+      if (this->_linear_abs_callback != nullptr) {
+        int32_t  pos = this->parse_binary_signed32(data + 2);
+        uint32_t vel = this->parse_binary_unsigned32(data + 6);
+        this->_linear_abs_callback(pos, vel);
+      }
+      break;
+    }
+
+    case 'B': { // linear rel
+      if (this->_linear_rel_callback != nullptr) {
+        int32_t  pos = this->parse_binary_signed32(data + 2);
+        uint32_t vel = this->parse_binary_unsigned32(data + 6);
+        this->_linear_rel_callback(pos, vel);
+      }
+      break;
+    }
+
     case 'C': { // linear velocity
       if (this->_linear_velocity_callback != nullptr) {
         int32_t velocity = this->parse_binary_signed32(data + 2);
         this->_linear_velocity_callback(velocity);
+      }
+      break;
+    }
+
+    case 'D': { // rotary abs
+      if (this->_rotary_abs_callback != nullptr) {
+        int32_t  pos = this->parse_binary_signed32(data + 2);
+        uint32_t vel = this->parse_binary_unsigned32(data + 6);
+        this->_rotary_abs_callback(pos, vel);
+      }
+      break;
+    }
+
+    case 'E': { // rotary rel
+      if (this->_rotary_rel_callback != nullptr) {
+        int32_t  pos = this->parse_binary_signed32(data + 2);
+        uint32_t vel = this->parse_binary_unsigned32(data + 6);
+        this->_rotary_rel_callback(pos, vel);
       }
       break;
     }
@@ -211,7 +306,6 @@ void MessageParser::parse_binary(const char *data) {
       break;
     }
   }
-  (void)data; // unused
 }
 
 bool MessageParser::parse_on_off(const char *data) const {

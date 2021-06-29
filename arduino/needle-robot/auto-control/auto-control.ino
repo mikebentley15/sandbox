@@ -126,10 +126,42 @@ bool stream_force = false;
 
 namespace {
 
+template <typename T>
+T sign(T val) {
+  if (val < 0) {
+    return T(-1);
+  } else {
+    return T(1);
+  }
+}
+
 void send_state() {
   sender.sendCurrentState(linear_abs, rotary_abs,
                           linear_vel, rotary_vel,
                           force);
+}
+
+void schedule_motor(Event *e, StepperMotor &motor, int32_t angular_velocity) {
+  auto &v = angular_velocity;
+  // if zero, then remove it
+  if (v == 0) {
+    if (eventloop.contains(e)) {
+      eventloop.remove_event(e);
+    }
+  } else {
+    // TODO: handle acceleration
+    // calculate necessary interval
+    e->period_micros = motor.micros_per_pulse(abs(v)) / 2;
+    // handle motor direction
+    if ((v > 0) != motor.forward) {
+      motor.toggle_direction();
+    }
+    // make sure it's in the event loop
+    if (!eventloop.contains(e)) {
+      e->last_trigger = micros(); // now
+      eventloop.add_event(e);
+    }
+  }
 }
 
 } // end of unnamed namespace
@@ -248,11 +280,33 @@ void setup() {
         " (including motors and force readings) for about 500 ms.  At the\r\n"
         " beginning of tare, a <tare-starting> will be sent.  At the end\r\n"
         " of tare, a <tare-finished> will be sent.");
+    sender.sendHelpCommand("linear-abs",
+        "Move linear actuator to a specified position relative to home\r\n"
+        " (which starts out as the position of the robot at bootup.)\r\n"
+        " @param position (signed 32-bit): linear position in microns\r\n"
+        " @param speed (unsigned 32-bit): speed to move to position");
+    sender.sendHelpCommand("linear-rel",
+        "Move linear actuator to a specified position relative to the\r\n"
+        " current position.\r\n"
+        " @param position (signed 32-bit): relative linear position in\r\n"
+        "     microns\r\n"
+        " @param speed (unsigned 32-bit): speed to move to position");
     sender.sendHelpCommand("linear-velocity",
         "Rotate the linear motor so that the linear lead screw actuates the\r\n"
         " platform by the given velocity in micrometers per second.\r\n"
         " @param velocity (32-bit signed): velocity of linear platform.\r\n"
         "     Give a negative value to go backwards.");
+    sender.sendHelpCommand("rotary-abs",
+        "Move rotary actuator to a specified position relative to home\r\n"
+        " (which starts out as the position of the robot at bootup.)\r\n"
+        " @param position (signed 32-bit): rotary position in microns\r\n"
+        " @param speed (unsigned 32-bit): speed to move to position");
+    sender.sendHelpCommand("rotary-rel",
+        "Move rotary actuator to a specified position relative to the\r\n"
+        " current position.\r\n"
+        " @param position (signed 32-bit): relative rotary position in\r\n"
+        "     microns\r\n"
+        " @param speed (unsigned 32-bit): speed to move to position");
     sender.sendHelpCommand("rotary-velocity",
         "Rotate the rotary motor by the given angular velocity in \r\n"
         " milli-degrees per second.\r\n"
@@ -322,65 +376,46 @@ void setup() {
     eventloop.reset();
   });
 
+  parser.setLinearAbsCallback([](int32_t pos, uint32_t speed) {
+    int32_t diff = pos - linear_abs;
+    linear_vel = int32_t(speed) * sign(diff);
+    int32_t angular_vel = linear_vel * int32_t(linear_to_angular);
+    linear_motor_event.repeats = 2 * abs(diff) / int32_t(microns_per_step);
+    schedule_motor(&linear_motor_event, linear_motor, angular_vel);
+  });
+
+  parser.setLinearRelCallback([](int32_t diff, uint32_t speed) {
+    linear_vel = int32_t(speed) * sign(diff);
+    int32_t angular_vel = linear_vel * int32_t(linear_to_angular);
+    linear_motor_event.repeats = 2 * abs(diff) / int32_t(microns_per_step);
+    schedule_motor(&linear_motor_event, linear_motor, angular_vel);
+  });
+
   parser.setLinearVelocityCallback([](int32_t v) {
     linear_vel = v;
-    if (v == 0) {
-      if (eventloop.contains(&linear_motor_event)) {
-        eventloop.remove_event(&linear_motor_event);
-      }
-    } else {
-      // TODO: handle acceleration
-      int32_t angular_vel = v * int32_t(linear_to_angular);
-      linear_motor_event.period_micros
-          = linear_motor.micros_per_pulse(abs(angular_vel)) / 2;
-      if ((v > 0) != linear_motor.forward) {
-        linear_motor.toggle_direction();
-      }
-      if (!eventloop.contains(&linear_motor_event)) {
-        linear_motor_event.last_trigger = micros(); // now
-        eventloop.add_event(&linear_motor_event);
-      }
-    }
+    int32_t angular_vel = linear_vel * int32_t(linear_to_angular);
+    linear_motor_event.repeats = -1;
+    schedule_motor(&linear_motor_event, linear_motor, angular_vel);
+  });
+
+  parser.setRotaryAbsCallback([](int32_t pos, uint32_t speed) {
+    int32_t diff = pos - rotary_abs;
+    rotary_vel = int32_t(speed) * sign(diff);
+    rotary_motor_event.repeats = 2 * abs(diff) / int32_t(angle_per_step);
+    schedule_motor(&rotary_motor_event, rotary_motor, rotary_vel);
+  });
+
+  parser.setRotaryRelCallback([](int32_t diff, uint32_t speed) {
+    rotary_vel = int32_t(speed) * sign(diff);
+    rotary_motor_event.repeats = 2 * abs(diff) / int32_t(angle_per_step);
+    schedule_motor(&rotary_motor_event, rotary_motor, rotary_vel);
   });
 
   parser.setRotaryVelocityCallback([](int32_t v) {
     rotary_vel = v;
-    if (v == 0) {
-      if (eventloop.contains(&rotary_motor_event)) {
-        eventloop.remove_event(&rotary_motor_event);
-      }
-    } else {
-      // TODO: handle acceleration
-      rotary_motor_event.period_micros
-          = rotary_motor.micros_per_pulse(abs(v)) / 2;
-      if ((v > 0) != rotary_motor.forward) {
-        rotary_motor.toggle_direction();
-      }
-      if (!eventloop.contains(&rotary_motor_event)) {
-        rotary_motor_event.last_trigger = micros(); // now
-        eventloop.add_event(&rotary_motor_event);
-      }
-    }
+    rotary_motor_event.repeats = -1;
+    schedule_motor(&rotary_motor_event, rotary_motor, v);
   });
-
-
-  //
-  // temporary debug values
-  //
-
-  //// temporary debug values for the five state variables
-  //auto set_byte_vals = [](int32_t &val, uint8_t a, uint8_t b, uint8_t c, uint8_t d) {
-  //  val = (int32_t(a) << 24)
-  //      + (int32_t(b) << 16)
-  //      + (int32_t(c) <<  8)
-  //      +  int32_t(d);
-  //};
-
-  //set_byte_vals(linear_abs, ' ', 'H', 'e', 'l');
-  //set_byte_vals(rotary_abs, 'l', 'o', ' ', 'W');
-  //set_byte_vals(linear_vel, 'o', 'r', 'l', 'd');
-  //set_byte_vals(rotary_vel, ',', ' ', 'f', 'r');
-  //set_byte_vals(force,      'i', 'e', 'n', 'd');
 
   Serial.println("setup() finished");
 }

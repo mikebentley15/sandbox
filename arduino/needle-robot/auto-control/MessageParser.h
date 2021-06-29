@@ -30,16 +30,20 @@ public:
   bool append(char input);
 
   // callbacks
-  void setHelpCallback(Callback_noargs *cb) { _help_callback = cb; }
-  void setSettingsCallback(Callback_noargs *cb) { _settings_callback = cb; }
-  void setStateCallback(Callback_noargs *cb) { _state_callback = cb; }
-  void setSendBinaryCallback(Callback_bool *cb) { _send_binary_callback = cb; }
-  void setStreamForceCallback(Callback_bool *cb) { _stream_force_callback = cb; }
-  void setStreamStateOnCallback(Callback_U *cb) { _stream_state_on_callback = cb; }
+  void setHelpCallback(Callback_noargs *cb)           { _help_callback             = cb; }
+  void setSettingsCallback(Callback_noargs *cb)       { _settings_callback         = cb; }
+  void setStateCallback(Callback_noargs *cb)          { _state_callback            = cb; }
+  void setSendBinaryCallback(Callback_bool *cb)       { _send_binary_callback      = cb; }
+  void setStreamForceCallback(Callback_bool *cb)      { _stream_force_callback     = cb; }
+  void setStreamStateOnCallback(Callback_U *cb)       { _stream_state_on_callback  = cb; }
   void setStreamStateOffCallback(Callback_noargs *cb) { _stream_state_off_callback = cb; }
-  void setTareCallback(Callback_noargs *cb) { _tare_callback = cb; }
-  void setLinearVelocityCallback(Callback_S *cb) { _linear_velocity_callback = cb; }
-  void setRotaryVelocityCallback(Callback_S *cb) { _rotary_velocity_callback = cb; }
+  void setTareCallback(Callback_noargs *cb)           { _tare_callback             = cb; }
+  void setLinearVelocityCallback(Callback_S *cb)      { _linear_velocity_callback  = cb; }
+  void setLinearAbsCallback(Callback_SU *cb)          { _linear_abs_callback       = cb; }
+  void setLinearRelCallback(Callback_SU *cb)          { _linear_rel_callback       = cb; }
+  void setRotaryVelocityCallback(Callback_S *cb)      { _rotary_velocity_callback  = cb; }
+  void setRotaryAbsCallback(Callback_SU *cb)          { _rotary_abs_callback       = cb; }
+  void setRotaryRelCallback(Callback_SU *cb)          { _rotary_rel_callback       = cb; }
 
 private:
   enum class ParseState {
@@ -81,7 +85,11 @@ private:
   Callback_noargs *_stream_state_off_callback = nullptr;
   Callback_noargs *_tare_callback             = nullptr;
   Callback_S      *_linear_velocity_callback  = nullptr;
+  Callback_SU     *_linear_abs_callback       = nullptr;
+  Callback_SU     *_linear_rel_callback       = nullptr;
   Callback_S      *_rotary_velocity_callback  = nullptr;
+  Callback_SU     *_rotary_abs_callback       = nullptr;
+  Callback_SU     *_rotary_rel_callback       = nullptr;
 };
 
 #endif // MessageParser_h
