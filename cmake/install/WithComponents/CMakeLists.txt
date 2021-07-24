@@ -43,6 +43,7 @@ add_library(Base STATIC
 add_library(WithComponents::Base ALIAS Base)
 target_link_libraries(Base PUBLIC Boost::filesystem)
 target_include_directories(Base INTERFACE $<BUILD_INTERFACE:${SRC_DIR}>)
+set_property(TARGET Base PROPERTY OUTPUT_NAME WithComponents_Base)
 set_version(Base)
 
 set(Email_HEADERS ${SRC_DIR}/Email/Email.h)
@@ -55,6 +56,7 @@ add_library(Email STATIC ${Email_HEADERS} ${SRC_DIR}/Email/Email.cpp)
 add_library(WithComponents::Email ALIAS Email)
 target_link_libraries(Email PUBLIC WithComponents::Base)
 target_include_directories(Email INTERFACE $<BUILD_INTERFACE:${SRC_DIR}>)
+set_property(TARGET Email PROPERTY OUTPUT_NAME WithComponents_Email)
 set_version(Email)
 
 set(Telephone_HEADERS ${SRC_DIR}/Telephone/Telephone.h)
@@ -70,6 +72,7 @@ add_library(Telephone STATIC
 add_library(WithComponents::Telephone ALIAS Telephone)
 target_link_libraries(Telephone PUBLIC WithComponents::Base)
 target_include_directories(Telephone INTERFACE $<BUILD_INTERFACE:${SRC_DIR}>)
+set_property(TARGET Telephone PROPERTY OUTPUT_NAME WithComponents_Telephone)
 set_version(Telephone)
 
 install(TARGETS Base Email Telephone EXPORT WithComponentsTargets
