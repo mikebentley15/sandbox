@@ -1,3 +1,6 @@
 [submodule "docker/arch-flit/flit_mfem"]
 	path = docker/arch-flit/flit_mfem
 	url = git@github.com:pruners/flit_mfem
+[submodule "cmake/tutorials/cmake-cookbook"]
+	path = cmake/tutorials/cmake-cookbook
+	url = https://github.com/dev-cafe/cmake-cookbook
