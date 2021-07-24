@@ -1,6 +1,6 @@
 LOG_FILE_BASE  := my-logfile
 LOGFILE        ?= $(LOG_FILE_BASE)-$$PPID.log
-LOG_EVENT       = echo '{"date": "$(shell date)", "time": "$(shell date +%s%N)", "type": "$1", "message": "$2"}'
+LOG_EVENT       = echo '{"date": "'$$(date)'", "time": "'$$(date +%s%N)'", "type": "$1", "message": "$2"}'
 
 TMPDIR         := tmpdir
 FILES          :=
@@ -53,6 +53,9 @@ FILES          += $(TMPDIR)/50.txt
 
 ifneq ($(LOGFILE),)
 
+.PHONY: default
+default: all
+
 .PHONY: %
 
 %:
@@ -73,16 +76,25 @@ $(TMPDIR):
 
 $(FILES): | $(TMPDIR)
 	@$(call LOG_EVENT,MyEvent,01: creating $@)
+	@sleep 0.02
 	@$(call LOG_EVENT,MyEvent,02: creating $@)
+	@sleep 0.02
 	@$(call LOG_EVENT,MyEvent,03: creating $@)
+	@sleep 0.02
 	@$(call LOG_EVENT,MyEvent,04: creating $@)
+	@sleep 0.02
 	@$(call LOG_EVENT,MyEvent,05: creating $@)
+	@sleep 0.02
 	@$(call LOG_EVENT,MyEvent,06: creating $@)
+	@sleep 0.02
 	@$(call LOG_EVENT,MyEvent,07: creating $@)
+	@sleep 0.02
 	@$(call LOG_EVENT,MyEvent,08: creating $@)
+	@sleep 0.02
 	@$(call LOG_EVENT,MyEvent,09: creating $@)
+	@sleep 0.02
 	@$(call LOG_EVENT,MyEvent,10: creating $@)
-	@sleep 0.01
+	@sleep 0.02
 	touch $@
 
 clean:
