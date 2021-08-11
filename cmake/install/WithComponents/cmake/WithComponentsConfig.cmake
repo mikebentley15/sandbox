@@ -12,7 +12,11 @@ if (NOT ${CMAKE_FIND_PACKAGE_NAME}_FIND_COMPONENTS)
   return()
 endif()
 
+
+# ======================================
 # Handle dependencies between components
+# ======================================
+
 set(_${CMAKE_FIND_PACKAGE_NAME}_COMPS
     ${${CMAKE_FIND_PACKAGE_NAME}_FIND_COMPONENTS})
 # All components depend on the Base component
@@ -20,6 +24,11 @@ if (NOT Base IN_LIST _${CMAKE_FIND_PACKAGE_NAME}_COMPS)
   list(INSERT _${CMAKE_FIND_PACKAGE_NAME}_COMPS 0 Base) # prepend
 endif()
 # If there were inter-component dependencies, they would be specified here.
+
+# ======================================
+# End of dependencies between components
+# ======================================
+
 
 # Report to the console the found framework version
 if (NOT ${CMAKE_FIND_PACKAGE_NAME}_FIND_QUIETLY)
