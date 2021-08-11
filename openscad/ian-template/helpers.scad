@@ -300,3 +300,33 @@ function mm(in) = (in*25.4);
 
 // Splits the time variable
 function split_time(low, high) = low + (high - low)*$t;
+
+// r: radius
+// N: number of points
+// th_i: initial theta (defaults to 0 degrees)
+function circle_pts(r, N, th_i=0) =
+  [for (i = [0:N-1]) let(th=th_i + i*360/N)
+    r * [cos(th), sin(th)]];
+
+// takes two arrays of equal size and returns a combined array by alternating
+// elements between a and b
+function interleave_arrays(a, b) =
+  [for (i = [0:len(a)-1]) each [a[i], b[i]]];
+
+// generates 2D points describing the polygon of a star
+// first point is [ro, 0] (i.e., aligned with the +x-axis)
+//
+// N: number of points on the star (number of points returned is 2*N)
+// ro: outer radius (default = 1)
+// ri: inner radius (default = 0.5)
+// inner_rot_offset: degrees of rotational offset of the inside points.
+//     By default, the inside points will be exactly in between the outside
+//     points, but you can relatively "rotate" those inside points by setting
+//     this value.
+function star_pts(N=5, ro=1, ri=0.5, inner_rot_offset=0) =
+  interleave_arrays(
+    circle_pts(ro, N),
+    circle_pts(ri, N, th_i = inner_rot_offset + 180/N));
+
+// creates a star polygon using star_pts()  (see star_pts() doc)
+module star(N=5, ro=1, ri=0.5) { polygon(star_pts(N=N, ro=ro, ri=ri)); }
