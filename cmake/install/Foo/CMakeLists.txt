@@ -11,9 +11,7 @@ set(FOO_SOURCES ${SRC_DIR}/A.cpp ${SRC_DIR}/B.cpp)
 add_library(Foo STATIC ${FOO_SOURCES})
 target_link_libraries(Foo PUBLIC Boost::filesystem)
 # I'm trying to find a way to include the correct things...
-target_include_directories(Foo INTERFACE
-  $<INSTALL_INTERFACE:include/Foo>
-)
+target_include_directories(Foo INTERFACE $<INSTALL_INTERFACE:include/Foo>)
 
 ## # This generates a header called foo_export.h
 ## # foo_export.h defines a few macros that can be used in the project

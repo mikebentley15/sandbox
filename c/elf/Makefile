@@ -14,19 +14,20 @@ OBJDUMP_TARG  := $(ELF_TARG:%-readelf.txt=%-objdump.txt)
 READELF       := readelf --all
 NM            := nm
 OBJDUMP       := objdump -D
+OBJ2YAML      := $(lastword $(sort $(wildcard /usr/bin/obj2yaml*)))
 
-.PHONY: all targets elfread nm objdump clean
-all: targets elfread nm objdump
+.PHONY: all targets elfread nm objdump yaml clean
+all: targets elfread nm objdump yaml
 targets: $(TARGETS)
 elfread: $(OBJ) $(ELF_TARG)
 nm: $(OBJ) $(NM_TARG)
 objdump: $(OBJ) $(OBJDUMP_TARG)
 clean:
-	rm -f $(TARGETS)
-	rm -f $(OBJ)
-	rm -f $(ELF_TARG)
-	rm -f $(NM_TARG)
-	rm -f $(OBJDUMP_TARG)
+	$(RM) $(TARGETS)
+	$(RM) $(OBJ)
+	$(RM) $(ELF_TARG)
+	$(RM) $(NM_TARG)
+	$(RM) $(OBJDUMP_TARG)
 
 demo: demo.o main.o
 	$(CC) $(CFLAGS) demo.o main.o -o demo
@@ -54,3 +55,31 @@ demo: demo.o main.o
 
 %.exe-objdump.txt: %
 	$(OBJDUMP) $< > $@
+
+ifneq ($(OBJ2YAML),)
+
+OBJ           := $(SOURCE:%.c=%.o)
+YAML_OUTPUT   := $(OBJ:%.o=%.o-to.yaml)
+YAML_BACK     := $(YAML_OUTPUT:%.yaml=%.yaml-to.o)
+YAML2OBJ      := $(subst obj2yaml,yaml2obj,$(OBJ2YAML))
+
+yaml: $(YAML_OUTPUT) $(YAML_BACK)
+
+.PHONY: yaml-clean
+clean: yaml-clean
+yaml-clean:
+	$(RM) $(YAML_OUTPUT)
+	$(RM) $(YAML_BACK)
+
+%.o-to.yaml: %.o
+	$(OBJ2YAML) $< > $@
+
+%.yaml-to.o: %.yaml
+	$(YAML2OBJ) $< > $@
+
+else
+
+yaml:
+	@echo "no obj2yaml executable found"
+
+endif
