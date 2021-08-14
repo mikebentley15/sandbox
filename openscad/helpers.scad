@@ -313,6 +313,45 @@ function circle_pts(r, N, th_i=0) =
 function interleave_arrays(a, b) =
   [for (i = [0:len(a)-1]) each [a[i], b[i]]];
 
+// element-wise operations
+function elementwise_add (a, b) = a + b;
+function elementwise_sub (a, b) = a - b;
+function elementwise_mult(a, b) =
+    len(a) == len(b) ? [for (i = [0:len(a)-1]) a[i] * b[i]] : undef;
+function elementwise_div (a, b) =
+    len(a) == len(b) ? [for (i = [0:len(a)-1]) a[i] / b[i]] : undef;
+function elementwise_pow (a, b) =
+    len(a) == len(b) ? [for (i = [0:len(a)-1]) pow(a[i], b[i])] : undef;
+// shorter aliases
+function ew_add (a, b) = elementwise_add (a, b);
+function ew_sub (a, b) = elementwise_sub (a, b);
+function ew_mult(a, b) = elementwise_mult(a, b);
+function ew_div (a, b) = elementwise_div (a, b);
+function ew_pow (a, b) = elementwise_pow (a, b);
+// TODO: implement the following operations as element-wise:
+// - abs
+// - sign
+// - sin
+// - cos
+// - tan
+// - acos
+// - asin
+// - atan
+// - atan2
+// - floor
+// - round
+// - ceil
+// - ln
+// - log
+// - sqrt
+// - exp
+// - min
+// - max
+// - norm
+// - cross
+
+
+
 // generates 2D points describing the polygon of a star
 // first point is [ro, 0] (i.e., aligned with the +x-axis)
 //
