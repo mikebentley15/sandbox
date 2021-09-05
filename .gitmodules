@@ -4,3 +4,6 @@
 [submodule "cmake/tutorials/cmake-cookbook"]
 	path = cmake/tutorials/cmake-cookbook
 	url = https://github.com/dev-cafe/cmake-cookbook
+[submodule "arduino/3rdparty/DIO2"]
+	path = arduino/3rdparty/DIO2
+	url = https://github.com/Locoduino/DIO2
