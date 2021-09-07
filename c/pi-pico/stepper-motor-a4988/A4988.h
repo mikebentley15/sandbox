@@ -81,8 +81,8 @@ protected:
   uint _dir_pin;
   uint _step_pin;
 
-  bool _is_forward;
   bool _is_high;
+  bool _is_forward;
 };
 
 struct A4988 : public A4988_simple {

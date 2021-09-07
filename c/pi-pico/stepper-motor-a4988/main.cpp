@@ -42,7 +42,7 @@ void spin_motor(A4988_simple &stepper,
                 const int steps_per_sec,
                 const int secs,
                 SpinCallback &after_step_callback) {
-  uint64_t us_per_step = uint64_t(1000000u / steps_per_sec);
+  uint64_t us_per_step = 1000000u / uint64_t(steps_per_sec);
   absolute_time_t next_step = get_absolute_time();
   for (int i = 0; i < steps_per_sec * secs; ++i) {
     stepper.full_step();
@@ -54,13 +54,25 @@ void spin_motor(A4988_simple &stepper,
   }
 }
 
-void blink(int interval_ms, int num = 1) {
+void blink(uint interval_ms, int num = 1) {
   for (int i = 0; i < num; ++i) {
     gpio_put(led_pin, true);
     sleep_ms(interval_ms / 2);
     gpio_put(led_pin, false);
     sleep_ms(interval_ms / 2);
   }
+}
+
+void print_state(absolute_time_t time, StepMode mode,
+                 int steps, int steps_per_sec) // negative if CCW
+{
+  float angle = float(steps) * degrees_per_full_step / float(mode);
+  float angular_velocity =
+      float(steps_per_sec) * degrees_per_full_step / float(mode);
+  std::cout << time << ','
+            << int(mode) << ','
+            << angle << ','
+            << angular_velocity << '\n';
 }
 
 } // end of unnamed namespace
@@ -85,37 +97,13 @@ int main() {
   A4988_simple stepper(dir_pin, step_pin);
 
   // blink LED for 10 seconds
-  blink(1000, 10);
+  blink(1000u, 10);
 
   std::cout << "Beginning of the Experiment\n";
 
   const int spin_seconds = 10;
-  const int max_iter = 8;
+  const int max_iter = 20;
   const int angular_speed_increment = 36;  // degrees per second
-  const int max_steps =
-      max_iter * angular_speed_increment * spin_seconds    // degrees traveled
-         * int(StepMode::SIXTEENTH_STEP) * full_steps_per_rotation / 360;
-
-  struct MyState {
-    absolute_time_t time;
-    StepMode mode;
-    int steps;         // total steps from the zero mark. negative if CCW
-    int steps_per_sec; // degrees/sec. negative if going to CCW
-
-    MyState(absolute_time_t t, StepMode m, int s, int spc)
-      : time(t), mode(m), steps(s), steps_per_sec(spc) {}
-
-    void print() const {
-      float angle = steps * degrees_per_full_step / float(mode);
-      float angular_velocity = steps_per_sec * degrees_per_full_step / float(mode);
-      std::cout << time << ','
-                << int(mode) << ','
-                << angle << ','
-                << angular_velocity << '\n';
-    }
-  };
-  std::vector<MyState> state_cache;
-  state_cache.reserve(2 * max_steps);
 
   std::cout << "time_ns,mode,angle,angular_velocity\n";
 
@@ -133,40 +121,29 @@ int main() {
     for (auto mode : modes) {
       mode_num++;
 
-      const int steps_per_sec = angular_speed * int(mode) / degrees_per_full_step;
+      const int steps_per_sec =
+          angular_speed * int(mode) * full_steps_per_rotation / 360;
       const int total_steps = steps_per_sec * spin_seconds;
 
-      SpinCallback capture_forward_state =
-        [&state_cache, steps_per_sec, mode](int idx) {
-          auto t = get_absolute_time();
-          state_cache.emplace_back(t, mode, idx, steps_per_sec);
+      SpinCallback print_forward = [mode, steps_per_sec](int idx) {
+          print_state(get_absolute_time(), mode, idx, steps_per_sec);
         };
-      SpinCallback capture_reverse_state =
-        [&state_cache, steps_per_sec, mode, total_steps](int idx) {
-          auto t = get_absolute_time();
-          state_cache.emplace_back(
-              t, mode, total_steps - idx, -steps_per_sec);
+      SpinCallback print_backward = [mode, steps_per_sec, total_steps](int idx) {
+          print_state(get_absolute_time(), mode, total_steps - idx, -steps_per_sec);
         };
 
       // blink for 2 seconds (duration adjusted by # blinks)
-      blink(2000 / mode_num, mode_num);
-      MyState{get_absolute_time(), mode, 0, steps_per_sec}.print();
+      blink(2000u / uint(mode_num), mode_num);
+      print_state(get_absolute_time(), mode, 0, steps_per_sec);
 
       stepper.set_step_mode(mode, ms1_pin, ms2_pin, ms3_pin);
-      spin_motor(stepper, steps_per_sec, spin_seconds, capture_forward_state);
+      spin_motor(stepper, steps_per_sec, spin_seconds, print_forward);
       stepper.change_direction();
-      spin_motor(stepper, steps_per_sec, spin_seconds, capture_reverse_state);
+      spin_motor(stepper, steps_per_sec, spin_seconds, print_backward);
       stepper.change_direction();
 
-      // flush all states to the console
-      for (auto &state : state_cache) {
-        state.print();
-      }
-      state_cache.clear();
-      MyState{get_absolute_time(), mode, 0, -steps_per_sec}.print();
+      print_state(get_absolute_time(), mode, 0, -steps_per_sec);
     }
-
-    sleep_ms(1000);
   }
 
   return 0;
