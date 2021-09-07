@@ -7,3 +7,9 @@
 [submodule "arduino/3rdparty/DIO2"]
 	path = arduino/3rdparty/DIO2
 	url = https://github.com/Locoduino/DIO2
+[submodule "c/pi-pico/pico-sdk"]
+	path = c/pi-pico/pico-sdk
+	url = https://github.com/raspberrypi/pico-sdk
+[submodule "c/pi-pico/pico-examples"]
+	path = c/pi-pico/pico-examples
+	url = https://github.com/raspberrypi/pico-examples
