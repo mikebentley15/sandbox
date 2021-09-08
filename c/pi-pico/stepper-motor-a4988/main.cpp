@@ -43,14 +43,16 @@ void spin_motor(A4988_simple &stepper,
                 const int secs,
                 SpinCallback &after_step_callback) {
   uint64_t us_per_step = 1000000u / uint64_t(steps_per_sec);
-  absolute_time_t next_step = get_absolute_time();
+  auto next_step = get_absolute_time();
   for (int i = 0; i < steps_per_sec * secs; ++i) {
     stepper.full_step();
 
     after_step_callback(i);
 
     next_step = delayed_by_us(next_step, us_per_step);
-    sleep_until(next_step);
+    if (time_us_64() + 100 <= to_us_since_boot(next_step)) {
+      sleep_until(next_step);
+    }
   }
 }
 
@@ -63,7 +65,7 @@ void blink(uint interval_ms, int num = 1) {
   }
 }
 
-void print_state(absolute_time_t time, StepMode mode,
+void print_state(uint64_t time, StepMode mode,
                  int steps, int steps_per_sec) // negative if CCW
 {
   float angle = float(steps) * degrees_per_full_step / float(mode);
@@ -96,16 +98,37 @@ int main() {
 
   A4988_simple stepper(dir_pin, step_pin);
 
-  // blink LED for 10 seconds
-  blink(1000u, 10);
-
-  std::cout << "Beginning of the Experiment\n";
-
+#ifdef ARMLAB_DEMO // faster demo version
+  const int initial_blink_countdown = 5;
+  const uint mode_blink_duration = 1; // secs - blinking when changing modes
+  const int spin_seconds = 3;
+  const int max_iter = 20;
+  const int angular_speed_increment = 36;  // degrees per second
+  const int print_frequency = 20; // Hz
+#else // runtime code
+  const int initial_blink_countdown = 20; // secs - blinking before beginning
+  const uint mode_blink_duration = 2; // secs - blinking when changing modes
   const int spin_seconds = 10;
   const int max_iter = 20;
   const int angular_speed_increment = 36;  // degrees per second
+  const int print_frequency = 20; // Hz
+#endif // ARMLAB_DEMO
+
+  // blink LED for a few seconds, doing a countdown.
+  for (int i = initial_blink_countdown; i > 0; --i) {
+    const uint initial_blink_duration =
+        1000u / uint(initial_blink_countdown + 1);
+    auto next_step = make_timeout_time_ms(1000u);
+    blink(initial_blink_duration, i);
+    sleep_until(next_step);
+  }
+
+  std::cout << "Beginning of the Experiment\n";
 
   std::cout << "time_ns,mode,angle,angular_velocity\n";
+
+  std::vector<uint64_t> times;
+  times.reserve(2 * print_frequency * spin_seconds);
 
   for (int iter = 1; iter <= max_iter; iter++) {
     int angular_speed = angular_speed_increment * iter;
@@ -124,25 +147,39 @@ int main() {
       const int steps_per_sec =
           angular_speed * int(mode) * full_steps_per_rotation / 360;
       const int total_steps = steps_per_sec * spin_seconds;
+      const int print_step_interval = steps_per_sec / print_frequency;
 
-      SpinCallback print_forward = [mode, steps_per_sec](int idx) {
-          print_state(get_absolute_time(), mode, idx, steps_per_sec);
-        };
-      SpinCallback print_backward = [mode, steps_per_sec, total_steps](int idx) {
-          print_state(get_absolute_time(), mode, total_steps - idx, -steps_per_sec);
+      SpinCallback capture_time = [&times, print_step_interval](int idx) {
+          if (idx % print_step_interval == 0) {
+            times.emplace_back(time_us_64());
+          }
         };
 
-      // blink for 2 seconds (duration adjusted by # blinks)
-      blink(2000u / uint(mode_num), mode_num);
-      print_state(get_absolute_time(), mode, 0, steps_per_sec);
+      // blink out the mode (duration adjusted by # blinks)
+      blink(mode_blink_duration / uint(mode_num), mode_num);
+      print_state(time_us_64(), mode, 0, steps_per_sec);
 
       stepper.set_step_mode(mode, ms1_pin, ms2_pin, ms3_pin);
-      spin_motor(stepper, steps_per_sec, spin_seconds, print_forward);
-      stepper.change_direction();
-      spin_motor(stepper, steps_per_sec, spin_seconds, print_backward);
+
+      gpio_put(led_pin, true);
+      spin_motor(stepper, steps_per_sec, spin_seconds, capture_time);
       stepper.change_direction();
 
-      print_state(get_absolute_time(), mode, 0, -steps_per_sec);
+      gpio_put(led_pin, false);
+      spin_motor(stepper, steps_per_sec, spin_seconds, capture_time);
+      stepper.change_direction();
+
+      auto end_time = time_us_64();
+
+      for (size_t i = 0; i < times.size() / 2; ++i) {
+        print_state(times[i], mode, i * print_step_interval, steps_per_sec);
+      }
+      for (size_t i = times.size() / 2; i < times.size(); ++i) {
+        print_state(times[i], mode, 2 * total_steps - i * print_step_interval,
+                    -steps_per_sec);
+      }
+      print_state(end_time, mode, 0, -steps_per_sec);
+      times.clear();
     }
   }
 
