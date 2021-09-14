@@ -13,3 +13,24 @@
 [submodule "c/pi-pico/pico-examples"]
 	path = c/pi-pico/pico-examples
 	url = https://github.com/raspberrypi/pico-examples
+[submodule "arduino/3rdparty/rpi"]
+	path = arduino/3rdparty/rpi
+	url = https://github.com/blippy/rpi
+[submodule "arduino/3rdparty/MsTimer2"]
+	path = arduino/3rdparty/MsTimer2
+	url = https://github.com/PaulStoffregen/MsTimer2
+[submodule "c/pi-pico/pico-micropython-examples"]
+	path = c/pi-pico/pico-micropython-examples
+	url = https://github.com/raspberrypi/pico-micropython-examples
+[submodule "arduino/3rdparty/pico-pi-playing"]
+	path = arduino/3rdparty/pico-pi-playing
+	url = https://github.com/tinkertechtrove/pico-pi-playing
+[submodule "arduino/3rdparty/n64arduinoAdapter"]
+	path = arduino/3rdparty/n64arduinoAdapter
+	url = https://github.com/telenaut/n64arduinoAdapter
+[submodule "c/pi-pico/pio-emulator"]
+	path = c/pi-pico/pio-emulator
+	url = https://github.com/soundpaint/rp2040pio
+[submodule "arduino/3rdparty/AccelStepper"]
+	path = arduino/3rdparty/AccelStepper
+	url = https://github.com/waspinator/AccelStepper
