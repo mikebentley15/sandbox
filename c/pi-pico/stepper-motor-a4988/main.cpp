@@ -38,7 +38,8 @@ void init_outpin(const uint pin) {
 }
 
 // spin the motor, sleeping in between.  But 
-void spin_motor(A4988_simple &stepper,
+template<typename StepperType>
+void spin_motor(StepperType &stepper,
                 const int steps_per_sec,
                 const int secs,
                 SpinCallback &after_step_callback) {
@@ -96,7 +97,7 @@ int main() {
   init_outpin(ms3_pin);
   init_outpin(led_pin);
 
-  A4988_simple stepper(dir_pin, step_pin);
+  A4988<dir_pin, step_pin> stepper;
 
 #ifdef ARMLAB_DEMO // faster demo version
   const int initial_blink_countdown = 5;
