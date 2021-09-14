@@ -1,0 +1,69 @@
+# Script: pulse_measure_3cycle
+# 
+# Monitor script for pulse_measure_3cycle (see pulse_measure_3cycle.pio)
+
+# reset the emulator
+reset
+
+# configure wrap TODO: is this right?
+wrap --pio=0 --sm=0 --wrap=15 --target=8
+
+# configure side set
+#side-set --pio=0 --sm=0 --count=0
+
+# load the hex code
+load --pio=0 --file=pulse_measure_3cycle.pio.hex --address=0
+
+# for convenience and verification, list the program that we just entered as
+# viewed by PIO 0, SM 0.
+unassemble --pio=0 --sm=0 --address=0 --count=16
+
+
+# ==================
+# initialize program
+# ==================
+
+# connect gpio 17 with pio 0
+gpio --pio=0 --gpio=17 --init
+
+# set consecutive pindirs, here just a single one
+gpio --pio=0 --gpio=17 --disable # set direction in
+
+# set the state machine to work starting with pin 17
+pinctrl --pio=0 --sm=0 --jmp-pin=17
+
+# enable the state machine
+sm --pio=0 --sm=0 --enable=true
+
+# step through the state machine for 50 steps.  It should block in RX queue
+#trace --cycles=50 --wait=100
+
+# add the wait time to the fifo (in 3's of cycles)
+fifo --pio=0 --sm=0 --tx --enqueue --value=10
+
+# trace to see it waiting for high
+#trace --cycles=50 --wait 1000
+
+# set it to low, then wait for it to notice
+gpio --gpio 17 --clear
+trace --cycles=15 --wait 1000
+registers
+
+# set it to high, then wait for it to notice
+gpio --gpio 17 --set
+trace --cycles=8 --wait 1000
+registers
+
+# set it to low, then wait for it to notice
+gpio --gpio 17 --clear
+trace --cycles=4 --wait 1000
+registers
+
+# set it to high, then wait for it to notice
+gpio --gpio 17 --set
+trace --cycles=5 --wait 1000
+registers
+
+gpio --gpio=17 --clear
+trace --cycles=10 --wait 1000
+registers

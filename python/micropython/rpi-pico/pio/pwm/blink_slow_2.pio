@@ -1,0 +1,8 @@
+.program blink_slow_2
+
+.wrap_target          ; 0 cycles: loop forever
+    set pins, 1  [31] ; 32 cycles: set pin high
+    nop          [31] ; 32 cycles: sleep
+    set pins, 0  [31] ; 32 cycles: set pin low
+    nop          [31] ; 32 cycles: sleep
+.wrap                 ; 0 cycles: loop forever

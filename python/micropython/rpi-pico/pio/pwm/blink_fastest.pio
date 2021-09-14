@@ -1,0 +1,6 @@
+.program blink_fastest
+
+.wrap_target    ; 0 cycles: loop forever
+    set pins, 1 ; 1 cycle: set pin high
+    set pins, 0 ; 1 cycle: set pin low
+.wrap           ; 0 cycles: loop forever

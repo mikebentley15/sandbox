@@ -1,0 +1,39 @@
+# Script: blink_fastest
+# 
+# Monitor script for blink_fastest (see blink_fastest.pio)
+
+# reset the emulator
+reset
+
+# configure wrap
+wrap --pio=0 --sm=0 --wrap=1 --target=0
+
+# configure side set
+#side-set --pio=0 --sm=0 --count=0
+
+# load the hex code
+load --pio=0 --file=blink_fastest.pio.hex --address=0
+
+# for convenience and verification, list the program that we just entered as
+# viewed by PIO 0, SM 0.
+unassemble --pio=0 --sm=0 --address=0 --count=8
+
+
+# ==================
+# initialize program
+# ==================
+
+# connect gpio 17 with pio 0
+gpio --pio=0 --gpio=17 --init
+
+# set consecutive pindirs, here just a single one
+gpio --pio=0 --gpio=17 --enable # set direction out
+
+# set the state machine to work starting with pin 17
+pinctrl --pio=0 --sm=0 --set-base=17 --set-count=1
+
+# enable the state machine
+sm --pio=0 --sm=0 --enable=true
+
+# step through the state machine at 1 Hz for 20 steps
+trace --cycles=20 --wait=1000 --show-gpio

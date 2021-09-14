@@ -1,0 +1,27 @@
+.program pulse_period
+
+    ; x represents the amount of 10's of cycles to sleep
+    ; beyond the 10 cycles of sending the pulse
+    set x, 0            ; 1 cycle: zero-initialize x
+
+.wrap_target            ; 0 cycles: loop forever
+
+nosleep:
+
+    ; pulse with width = 8 cycles (low is at 2 + 10*x)
+    set pins, 1         ; 1 cycle: set pin high
+
+    ; pull from TX queue.  If empty, pulls from x value by default
+    ; (because of the noblock), which is perfect since that's our
+    ; storage of the value in question.
+    pull noblock        ; 1 cycle: pull from queue (or x) into osr
+    mov x, osr    [4]   ; 5 cycles: update x value
+    mov y, x            ; 1 cycle: copy x into y for use
+
+    set pins, 0         ; 1 cycle: set pin low, was on for 8 cycles
+
+sleep:
+    jmp !y, nosleep     ; 1 cycle: skip if we're done sleeping
+    jmp y--, sleep  [8] ; 9 cycles: sleep 10 cycles at a time until y == 0
+
+.wrap

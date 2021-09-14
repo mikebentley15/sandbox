@@ -1,0 +1,28 @@
+.program blink_slow_3
+
+    ; goal: to set pins to on for 5,000 cycles, then off for 5,000 cycles
+
+.wrap_target              ; 0 cycles: loop forever
+    set y, 1              ; 1 cycle: y contains next pin value (high)
+
+toggle_and_sleep:
+    mov pins, y   [31]    ; 32 cycles: set pin to y value (then sleep)
+
+    ; sleep for 4997 - (# cycles above) = 4964
+    set x, 30      [3]    ; 4 cycles: set x to 30 for sleeping 31 times
+sleep_inner:              ; sleep loop is 5*32*(x+1) = 4,960
+    nop           [31]    ; 32 cycles: sleep
+    nop           [31]    ; 32 cycles: sleep
+    nop           [31]    ; 32 cycles: sleep
+    nop           [31]    ; 32 cycles: sleep
+    jmp x--, sleep_inner [31]  ; 32 cycles: until x is zero, sleep
+
+    jmp !y, end           ; 1 cycle: if y is 0 (off), then we're done with this wrapping
+
+    set y, 0              ; 1 cycle: set y to next pin value (low)
+    jmp toggle_and_sleep  ; 1 cycle: toggle pin and sleep
+
+end:
+    nop           [2]     ; 3 cycles: sleep enough to make #high == #low
+
+.wrap

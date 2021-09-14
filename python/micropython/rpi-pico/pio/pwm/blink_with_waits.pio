@@ -1,0 +1,10 @@
+.program blink_with_waits
+
+.wrap_target         ; 0 cycles: loop forever
+
+    set pins, 1 [1]  ; 2 cycles: set pin high
+    nop              ; 1 cycle: sleep
+    set pins, 0 [1]  ; 2 cycles: set pin low
+    nop              ; 1 cycle: sleep
+
+.wrap

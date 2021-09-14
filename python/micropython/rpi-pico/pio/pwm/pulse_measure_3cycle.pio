@@ -1,0 +1,47 @@
+.program pulse_measure_3cycle
+
+    pull block
+    mov y, ~NULL   ; set y to maximum of 0xffffffff (count is done by decrement)
+
+    ; x is the timeout in 3x cycles
+    ; - this means that "jmp x--", skip with a "jmp restart" is needed every
+    ;   third cycle
+
+    ; y is the negation of the count of identified pulses
+    ; isr is used to send those to the host
+
+    ; when restarting, it takes 6 cycles before checking for high
+    ; other than that, checks for high, then low, every 3 cycles :)
+    ; every instruction is 1 cycle except where noted
+
+restart:
+    mov x, osr        ; initialize x to the timeout
+    mov isr, ~y       ; copy opposite of y into isr
+    jmp x--, skip_1
+    jmp restart
+skip_1:
+    push noblock      ; push and zero isr
+    mov y, ~NULL      ; reset y to maximum of 0xffffffff
+
+.wrap_target
+
+    ; wait for low (checks every 3 cycles)
+wait_for_low:
+    jmp x--, skip_2
+    jmp restart
+skip_2:
+    jmp pin, wait_for_low  [1]  ; 2 cycles: while high, keep waiting
+
+    ; wait for high (checks every 3 cycles)
+wait_for_high:
+    jmp x--, skip_3
+    jmp restart
+skip_3:
+    jmp pin, exit_wait_for_high   ; once high, goto the exit
+    jmp wait_for_high             ; else, wait
+exit_wait_for_high:
+
+    ; record the pulse
+    jmp y--, wait_for_low         ; decrement y and wrap around regardless
+
+.wrap

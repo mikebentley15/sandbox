@@ -1,0 +1,25 @@
+.program blink_slow_5
+
+.wrap_target
+
+    set pins, 1            ; 1 cycle: set pin high
+
+    set x, 31    [6]       ; 7 cycles: set x to 31
+sleep_1:
+    nop          [31]      ; 32 cycles: sleep
+    nop          [31]      ; 32 cycles: sleep
+    nop          [31]      ; 32 cycles: sleep
+    nop          [31]      ; 32 cycles: sleep
+    jmp x--, sleep_1  [27] ; 28 cycles: sleep until x == 0
+
+    set pins, 0            ; 1 cycle: set pin low
+
+    set x, 31    [6]       ; 7 cycles: set x to 31
+sleep_2:
+    nop          [31]      ; 32 cycles: sleep
+    nop          [31]      ; 32 cycles: sleep
+    nop          [31]      ; 32 cycles: sleep
+    nop          [31]      ; 32 cycles: sleep
+    jmp x--, sleep_2  [27] ; 28 cycles: sleep until x == 0
+
+.wrap                      ; 0 cycles: loop forever

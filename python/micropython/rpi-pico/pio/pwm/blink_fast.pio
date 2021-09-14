@@ -1,0 +1,6 @@
+.program blink_fast
+
+again:
+    set pins, 1  ; 1 cycle: set pin high
+    set pins, 0  ; 1 cicle: set pin low
+    jmp again    ; 1 cycle: start over

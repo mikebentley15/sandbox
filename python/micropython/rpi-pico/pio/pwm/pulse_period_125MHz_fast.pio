@@ -1,0 +1,32 @@
+.program pulse_period_125MHz_fast
+
+    ; x represents the amount of cycles to sleep
+    ; beyond the 250 cycles of sending the pulse
+
+    ; 2 cycles of setup
+    set x, 0          ; 1 cycle: zero-initialize osr to be copied into x
+    mov osr, x        ; 1 cycle
+
+.wrap_target            ; 0 cycles: loop forever
+
+    ; pulse with width = 125 cycles = 3*32 + 29
+    set pins, 1   [31]  ; 32 cycles: set pin high
+
+    ; pull from TX queue.  If empty, pulls from x value by default
+    ; (because of the noblock), which is perfect since that's our
+    ; storage of the value in question.
+    mov x, osr    [31]  ; 32 cycles: restore x value
+    pull noblock  [31]  ; 32 cycles: pull from queue (or x) into osr
+    mov x, osr    [28]  ; 29 cycles: update x value
+
+    ; have low for 125 + x cycles = 3*32 + 28 + (x + 1)
+    set pins, 0   [31]  ; 32 cycles: off
+    nop           [31]  ; 32 cycles: sleep
+    nop           [31]  ; 32 cycles: sleep
+    nop           [28]  ; 28 cycles: sleep
+
+    ; sleep in a loop for x + 1 cycles
+sleep:
+    jmp x--, sleep      ; 1 cycle: loop
+
+.wrap
