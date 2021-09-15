@@ -20,7 +20,7 @@
 	path = arduino/3rdparty/MsTimer2
 	url = https://github.com/PaulStoffregen/MsTimer2
 [submodule "c/pi-pico/pico-micropython-examples"]
-	path = python/micropython/rpi-pico/pico-micropython-examples
+	path = python/micropython/pi-pico/pico-micropython-examples
 	url = https://github.com/raspberrypi/pico-micropython-examples
 [submodule "arduino/3rdparty/pico-pi-playing"]
 	path = arduino/3rdparty/pico-pi-playing
