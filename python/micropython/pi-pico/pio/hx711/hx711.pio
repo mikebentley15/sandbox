@@ -1,0 +1,40 @@
+.program hx711
+
+.define PUBLIC hello 3
+.lang_opt python sideset_init = rp2.PIO.OUT_LOW
+
+.side_set 1
+
+    pull block         side 0   ; get number of bits to retrieve
+    mov x, osr         side 0   ; store it in x
+
+    ; generate x+1 pulses once to initialize the gain and channel of HX711
+    wait 0 pin 0       side 0   ; wait for data line to go low
+
+initloop:
+    nop                side 1 [1] ; 2 cycles high
+    jmp x--, initloop  side 0 [1] ; 2 cycles low
+
+    ; main loop
+.wrap_target
+
+    mov x, osr         side 0   ; reset x back to # clock cycles
+
+    ; Wait for data to go high, then low again, indicating new data
+    ; Note: instead of waiting for the pin to go high, we could sleep a set
+    ;     amount.  However, the datasheet does not specify how long that is.
+    wait 0 pin 0       side 0   ; wait for data line to go low
+
+bitloop:
+    nop                side 1     ; activate edge
+    in pins, 1         side 1     ; get the pin and shift it in
+    jmp x--, bitloop   side 0 [1] ; test for more bits
+
+    push noblock       side 0     ; deliver data and start over
+    irq nowait  0 rel  side 0     ; digital host new data is ready
+
+.wrap
+
+%c-sdk{
+
+%}
