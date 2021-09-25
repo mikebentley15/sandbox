@@ -102,7 +102,6 @@ int main() {
   
   GEN_PROFILER(r0,    p_r0,    std::minstd_rand0         );
   GEN_PROFILER(r,     p_r,     std::minstd_rand          );
-  GEN_PROFILER(rc,    p_rc,    std::linear_congruential_engine<std::uint_fast32_t, 1664525, 1013904223, std::numeric_limits<std::unit_fast32_t>::max()>
   GEN_PROFILER(mt,    p_mt,    std::mt19937              );
   GEN_PROFILER(mt64,  p_mt64,  std::mt19937_64           );
   GEN_PROFILER(rl24,  p_rl24,  std::ranlux24_base        );
@@ -118,7 +117,6 @@ int main() {
     std::cout << "\n  rep " << i+1 << "\n" << std::endl;
     p_r0  .profile();
     p_r   .profile();
-    p_rc  .profile();
     p_mt  .profile();
     p_mt64.profile();
     p_rl24.profile();
@@ -130,7 +128,6 @@ int main() {
   std::cout << std::endl;
   p_r0  .print_report(std::cout);
   p_r   .print_report(std::cout);
-  p_rc  .print_report(std::cout);
   p_mt  .print_report(std::cout);
   p_mt64.print_report(std::cout);
   p_rl24.print_report(std::cout);
