@@ -1,3 +1,6 @@
+#ifndef SCOPED_TIMING_H
+#define SCOPED_TIMING_H
+
 /** Automatically starts and stops timer based on scope
  *
  * TimerClass expected to have the following interface:
@@ -27,3 +30,5 @@ public:
 private:
   Timer &timer;
 }; // end of class ScopedTiming
+
+#endif // SCOPED_TIMING_H

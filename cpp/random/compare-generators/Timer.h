@@ -1,3 +1,6 @@
+#ifndef TIMER_H
+#define TIMER_H
+
 #include <chrono>
 #include <ostream>
 #include <vector>
@@ -33,3 +36,5 @@ std::ostream& operator<<(std::ostream &out, const Timer<Clock> &t) {
   out << ']';
   return out;
 }
+
+#endif // TIMER_H
