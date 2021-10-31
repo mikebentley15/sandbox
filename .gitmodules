@@ -37,3 +37,6 @@
 [submodule "cmake/tutorials/cmake-template-example"]
 	path = cmake/tutorials/cmake-template-example
 	url = https://github.com/sunsided/cmake
+[submodule "python/blender/blender-cli-rendering"]
+	path = python/blender/blender-cli-rendering
+	url = https://github.com/yuki-koyama/blender-cli-rendering
