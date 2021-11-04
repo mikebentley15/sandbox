@@ -40,3 +40,9 @@
 [submodule "python/blender/blender-cli-rendering"]
 	path = python/blender/blender-cli-rendering
 	url = https://github.com/yuki-koyama/blender-cli-rendering
+[submodule "c/udev/interception/interception-k2k"]
+	path = c/udev/interception/plugins/k2k
+	url = https://github.com/zsugabubus/interception-k2k
+[submodule "c/udev/interception/tools"]
+	path = c/udev/interception/tools
+	url = https://gitlab.com/interception/linux/tools.git
