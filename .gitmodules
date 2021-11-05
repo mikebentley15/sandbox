@@ -46,3 +46,6 @@
 [submodule "c/udev/interception/tools"]
 	path = c/udev/interception/tools
 	url = https://gitlab.com/interception/linux/tools.git
+[submodule "python/pandas/best-practices/pycon-2019-tutorial"]
+	path = python/pandas/best-practices/pycon-2019-tutorial
+	url = https://github.com/justmarkham/pycon-2019-tutorial
