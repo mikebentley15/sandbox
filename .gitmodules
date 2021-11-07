@@ -49,3 +49,6 @@
 [submodule "python/pandas/best-practices/pycon-2019-tutorial"]
 	path = python/pandas/best-practices/pycon-2019-tutorial
 	url = https://github.com/justmarkham/pycon-2019-tutorial
+[submodule "c/raylib/raylib"]
+	path = c/raylib/raylib
+	url = https://github.com/raysan5/raylib
