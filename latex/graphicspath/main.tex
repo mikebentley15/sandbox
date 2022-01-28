@@ -1,0 +1,37 @@
+\documentclass{article}
+\usepackage{graphicx}
+
+\begin{document}
+
+We test the use of \verb|\graphicspath| for \verb|\includegraphics| from the \verb|graphicx| package.
+
+\includegraphics[width=5in]{images/pdf/missingfig.pdf}
+
+% curly-brace-separated list of paths
+% needs the trailing slash
+\graphicspath{
+  {images/}
+}
+
+\includegraphics[width=5in]{images/pdf/missingfig.pdf}
+\includegraphics[width=5in]{pdf/missingfig.pdf}
+
+% replaces the entire graphics path
+\graphicspath{
+  {images/pdf/}
+}
+
+\includegraphics[width=5in]{images/pdf/missingfig.pdf}
+%\includegraphics[width=5in]{pdf/missingfig.pdf}
+\includegraphics[width=5in]{missingfig.pdf}
+
+\graphicspath{
+  {images/}
+  {images/pdf/}
+}
+
+\includegraphics[width=5in]{images/pdf/missingfig.pdf}
+\includegraphics[width=5in]{pdf/missingfig.pdf}
+\includegraphics[width=5in]{missingfig.pdf}
+
+\end{document}
