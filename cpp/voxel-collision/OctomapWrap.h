@@ -47,8 +47,12 @@ public:
   size_t memoryUsage() const { return _data->memoryUsage(); }
   size_t nblocks() const { return _data->size(); }
 
-  void add_point(float x, float y, float z) {
-    _data->updateNode(octomap::point3d{x, y, z}, true);
+  void add_point(float x, float y, float z, bool occupied = true, bool lazy = false) {
+    _data->updateNode(octomap::point3d{x, y, z}, occupied, lazy);
+  }
+
+  void update() {
+    _data->updateInnerOccupancy();
   }
 
   void add_sphere(double x, double y, double z, double r) {
@@ -67,9 +71,6 @@ public:
       double dy = y - _y;
       double dz = z - _z;
       bool is_in = dx*dx + dy*dy + dz*dz <= r*r;
-      //std::cout << "  add_sphere(): checking is in sphere "
-      //             "(" << _x << ", " << _y << ", " << _z << "): "
-      //          << is_in << std::endl;
       return is_in;
     };
 
@@ -88,15 +89,6 @@ public:
       };
 
     // just check all of them
-    //for (size_t ix = 0; ix < _Nx; ix++) {
-    //  for (size_t iy = 0; iy < _Ny; iy++) {
-    //    for (size_t iz = 0; iz < _Nz; iz++) {
-    //      if (voxel_ctr_is_in_sphere(ix, iy, iz)) {
-    //        this->set_cell(ix, iy, iz);
-    //      }
-    //    }
-    //  }
-    //}
     for (size_t ix = 0; ix < _Nx; ix++) {
       for (size_t iy = 0; iy < _Ny; iy++) {
         for (size_t iz = 0; iz < _Nz; iz++) {
@@ -105,39 +97,6 @@ public:
         }
       }
     }
-
-    //// do a growing algorithm with a frontier and a visited
-    //using IdxType = std::tuple<size_t, size_t, size_t>;
-    //std::stack<IdxType> frontier;
-    //auto visited = std::make_unique<VoxelObject<_Nx, _Ny, _Nz>>();
-
-    //auto check_push = [&frontier, &visited](size_t _ix, size_t _iy, size_t _iz) {
-    //  if (!visited->cell(_ix, _iy, _iz) && _ix < _Nx && _iy < _Ny && _iz < _Nz) {
-    //    //std::cout << "  add_sphere(): pushing: "
-    //    //          << _ix << ", " << _iy << ", " << _iz << std::endl;
-    //    frontier.push(IdxType{_ix, _iy, _iz});
-    //    visited->set_cell(_ix, _iy, _iz);
-    //  }
-    //};
-
-    //check_push(ix, iy, iz);
-    //while(!frontier.empty()) {
-    //  auto [ix, iy, iz] = frontier.top();
-    //  frontier.pop();
-    //  if (voxel_ctr_is_in_sphere(ix, iy, iz)) {
-    //    this->set_cell(ix, iy, iz);
-    //    check_push(ix-1, iy, iz);
-    //    check_push(ix+1, iy, iz);
-    //    check_push(ix, iy-1, iz);
-    //    check_push(ix, iy+1, iz);
-    //    check_push(ix, iy, iz-1);
-    //    check_push(ix, iy, iz+1);
-    //  }
-    //}
-
-    // 3. for each voxel adjacent to the end of the growing, check if that voxel
-    //    box collides with the sphere at all.  If so, add it to the voxelization
-    // TODO: implement
   }
 
   bool collides(const OctomapWrap &other) const {
