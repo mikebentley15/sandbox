@@ -79,6 +79,8 @@ def main(arguments):
 
     root = tree.getroot()
 
+    namespaces['svg'] = 'http://www.w3.org/2000/svg'
+
     # remove clippath elements
     for parent in tree.findall('.//svg:clipPath/..', namespaces):
         for child in parent.findall('./svg:clipPath', namespaces):
@@ -88,16 +90,6 @@ def main(arguments):
     for element in root.findall('.//*[@clip-path]'):
         del(element.attrib['clip-path'])
 
-    #for element in tree.iter():
-    #    if 'clip-path' in element.attrib:
-    #        print(f'deleting clip-path from {element.tag}')
-    #        del(element.attrib['clip-path'])
-    #    for subelement in element[:]:
-    #        if subelement.tag.lower() == 'clippath':
-    #            print(f'removing element {subelement.tag} from {element.tag}')
-    #            element.remove(subelement)
-    #        else:
-    #            print(f'keeping {subelement.tag} from {element.tag}')
     tree.write(fout, encoding='unicode')
 
 if __name__ == '__main__':
