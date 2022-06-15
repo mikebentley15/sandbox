@@ -1,0 +1,6 @@
+venv/
+activate
+.doit.sqlite
+.doit.bash_completion
+doit.dot
+doit.png
