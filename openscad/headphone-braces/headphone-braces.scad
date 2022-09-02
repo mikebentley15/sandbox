@@ -6,13 +6,13 @@ svg_width   = 29.6;
 
 // [General Parameters]
 
-thickness   =  3.5;
-clearance   =  0.3;
+thickness   =  5.0;
+clearance   =  0.1;
 
-height      =  8.0;
+height      =  30.0;
 vertical_curve_radius = 88.5;
 
-$fn         = 100;
+$fn         = 500;
 
 use <helpers.scad>
 
@@ -29,15 +29,16 @@ module make_clip() {
   difference() {
     shell2d(svg_width, svg_height, thickness, clearance)
       import(svg, center = true);
-    difference() {
-      polygon(points = [
-        [0, 50.9],
-        [-16, -20],
-        [16, -20]
-      ]);
-      translate([-50, 0])
-        square(100);
-    }
+      polygon([[0, -4.5], [-16, -8], [16, -8]]);
+//    difference() {
+//      #polygon(points = [
+//        [0, 50.9],
+//        [-16, -20],
+//        [16, -20]
+//      ]);
+//      translate([-50, 0])
+//        square(100);
+//    }
   }
 }
 
