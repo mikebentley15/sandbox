@@ -1,4 +1,5 @@
 from collections import namedtuple
+import itertools as it
 
 import numpy as np
 import scipy
@@ -27,15 +28,38 @@ def kendalltau(x, y=None, dist=None, D=None):
         (a, b) from x where b > a (according to the orderings of x).
     @param D: matrix
         Distance metric matrix (only upper triangle is used).  This is in replacement of the dist function (i.e., use entries from this matrix instead of the dist function).  The i,j entry means dist(x[j] - x[i]).
-    '''
-    N = len(x)
 
+    @return KendallTau object fully filled out
+    '''
+    S, D = _kendallprep(x, y, dist, D)
+    if D is None:
+        distance, normed_dist, cor_var = _normal_kendall_tau(S)
+    else:
+        distance, normed_dist, cor_var = _general_kendall_tau(S, D)
+    cor = 1 - 2 * normed_dist
+    zscore = cor / np.sqrt(cor_var)
+    pvalue = _zscore_to_pvalue(zscore, tail='right')
+    return KendallTau(distance, normed_dist, cor, zscore, pvalue)
+
+def kendalldist(x, y=None, dist=None, D=None):
+    '''Calculate just the Kendall distance (unnormalized).  Similar to kendalltau()
+    Returns just the distance.
+    '''
+    S, D = _kendallprep(x, y, dist, D)
+    if D is None:
+        return np.sum(S)
+    else:
+        return np.sum(S * D)
+
+def _kendallprep(x, y, dist, D):
+    'Calc and return (S, D) from kendalldist() or kendalltau() args'
     # populate srt and usrt for sorted and unsorted arrays, respectively
+    x = np.asarray(x)
     if y is None:
         srt, usrt = x.copy(), x
         srt.sort()
     else:
-        srt, usrt = x, y
+        srt, usrt = x, np.asarray(y)
 
     # for dist == 'default', generate the default distance function
     if dist == 'default':
@@ -50,54 +74,64 @@ def kendalltau(x, y=None, dist=None, D=None):
         D = _distmat(srt, assume_sorted=True, dist=dist)
 
     S = _swapmat(srt, usrt)
-    #print(f'srt:  {srt}')
-    #print(f'usrt: {usrt}')
-    #print(f'S:\n{S}')
-    #print(f'D:\n{D}')
-    if D is None:
-        return _normal_kendall_tau(S)
-    else:
-        return _general_kendall_tau(S, D)
+    return S, D
 
 def _normal_kendall_tau(S):
+    'Calculate the regular Kendall Tau'
     N = len(S)
     distance = np.sum(S)
     normalized_distance = distance * 2 / (N * (N-1))
-    correlation = 1 - 2 * normalized_distance
     correlation_var = 2 * (2*N + 5) / (9*N * (N - 1))
-    zscore = correlation / np.sqrt(correlation_var)
-    pvalue = _zscore_to_pvalue(zscore)
-    return KendallTau(distance, normalized_distance, correlation, zscore, pvalue)
+    return distance, normalized_distance, correlation_var
 
 def _general_kendall_tau(S, D):
+    'Calculate the generalized Kendall Tau with pairwise weights D'
     N = len(S)
     distance = np.sum(S*D)
     Dsum = np.sum(D)
     normalized_distance = distance / Dsum
-    correlation = 1 - 2 * normalized_distance
     correlation_var = -1 + 4 * _expected_QD2(D) / (Dsum**2)
-    zscore = correlation / np.sqrt(correlation_var)
-    pvalue = _zscore_to_pvalue(zscore)
-    return KendallTau(distance, normalized_distance, correlation, zscore, pvalue)
+    return distance, normalized_distance, correlation_var
 
 def _expected_QD2(D):
+    'Calculate E[Q_D**2] with Q_D the generalized Kendall distance'
     N = len(D)
     QD2 = 0
-    for j in range(N):
-        for i in range(j):
-            for k in range(N):
-                for L in range(k):
-                    if i == k and j == L:
-                        p = 0.5
-                    elif i != k and i != L and j != k and j != L:
-                        p = 0.25
-                    else:
-                        p = 1./3.
-                    QD2 += D[i,j] * D[k,L] * p
+    for j, L in it.product(range(1, N), range(1, N)):
+        for i, k in it.product(range(j), range(L)):
+            if i == k and j == L:
+                p = 0.5
+            elif i == k or j == L:
+                p = 1./3.
+            elif i == L or j == k:
+                p = 1./6.
+            else:
+                p = 0.25
+            QD2 += D[i,j] * D[k,L] * p
     return QD2
 
-def _zscore_to_pvalue(zscore):
-    return scipy.stats.norm.sf(zscore)
+def _estimated_expected_QD2(D, nsamples=1000):
+    N = len(D)
+    ordered = np.arange(N)
+    # chain of generators
+    samples = (np.random.permutation(N) for _ in range(nsamples))
+    Ss = (_swapmat(ordered, sample) for sample in samples)
+    QDs = (np.sum(S*D) for S in Ss)
+    QD2s = (QD**2 for QD in QDs)
+    return sum(QD2s) / nsamples
+
+def _zscore_to_pvalue(zscore, tail='two-sided'):
+    '''Return the associated p-value from a given Z-score.
+    @param tail from ('two', 'left', 'right')
+    '''
+    if tail == 'two':
+        return 2 * scipy.stats.norm.sf(abs(zscore))
+    elif tail == 'left':
+        return 1 - scipy.stats.norm.sf(zscore)
+    elif tail == 'right':
+        return scipy.stats.norm.sf(zscore)
+    else:
+        raise ValueError(f'Unsupported tail {repr(tail)}')
 
 def _swapmat(x, y=None):
     '''Return integer matrix of elements out of order (upper-triangular)
@@ -112,12 +146,21 @@ def _swapmat(x, y=None):
     array([[0, 1, 1],
            [0, 0, 0],
            [0, 0, 0]])
+
+    >>> _swapmat([5, 1, 2, 4, 3])
+    array([[0, 0, 0, 0, 1],
+           [0, 0, 0, 0, 1],
+           [0, 0, 0, 1, 1],
+           [0, 0, 0, 0, 1],
+           [0, 0, 0, 0, 0]])
+           
     '''
+    x = np.asarray(x)
     if y is None:
         srt, usrt = x.copy(), x
         srt.sort()
     else:
-        srt, usrt = x, y
+        srt, usrt = x, np.asarray(y)
     N = len(x)
     v = np.zeros((N, N), dtype=int)
     idx = np.argsort(usrt) #[usrt.index(val) for val in srt]
@@ -151,24 +194,3 @@ def _distmat(x, assume_sorted=False, dist=None):
         for i in range(j):
             v[i, j] = dist(x[i], x[j])
     return v
-
-def _inversion_vector(x, S=None):
-    if S is None:
-        S = swapmat(x)
-    return S.sum(axis=0)
-
-def _inversion_vector_dist(x, S=None, D=None):
-    return (S*D).sum(axis=0)
-
-def _tau_dist(vec, S=None, D=None):
-    if S is None:
-        S = swapmat(x)
-    if D is None:
-        D = distmat(x)
-    return np.sum(S*D)
-
-def _tau_dist_normalized(vec, S=None, D=None):
-    if D is None:
-        D = distmat(vec)
-    return tau_dist(vec, S=S, D=D) / D.sum()
-
