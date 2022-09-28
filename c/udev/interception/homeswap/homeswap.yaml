@@ -1,0 +1,3 @@
+- JOB: intercept -g $DEVNODE | /home/bentley/git/sandbox/c/udev/interception/homeswap/build/homeswap | uinput -d $DEVNODE
+  DEVICE:
+    LINK: /dev/input/by-path/platform-i8042-serio-0-event-kbd
