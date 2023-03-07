@@ -52,3 +52,6 @@
 [submodule "c/raylib/raylib"]
 	path = c/raylib/raylib
 	url = https://github.com/raysan5/raylib
+[submodule "cpp/package-managers/vcpkg/lefticus-example/vcpkg"]
+	path = cpp/package-managers/vcpkg/lefticus-example/vcpkg
+	url = https://github.com/microsoft/vcpkg
