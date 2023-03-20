@@ -23,7 +23,7 @@ std::ostream& operator<<(std::ostream& out, const std::vector<T> &vec) {
 }
 
 std::ostream& operator<<(std::ostream& out, const CircularBuffer &buf) {
-  out << "Container("
+  out << "CircularBuffer("
          "capacity: " << buf.capacity() << ", "
          "size: " << buf.size() << ") ";
   print_container(out, buf);
@@ -35,7 +35,7 @@ std::ostream& operator<<(std::ostream& out, const CircularBuffer &buf) {
 int main(void) {
   CircularBuffer buf(10);
   std::cout << "empty:  " << buf << "\n";
-  for (int i = 10; i < 50; ++i) {
+  for (int i = 10; i <= 50; ++i) {
     buf.write(i);
     std::cout << "after writing " << i << ": " << buf.allVals() << "\n";
   }

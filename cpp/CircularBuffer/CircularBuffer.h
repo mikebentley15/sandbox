@@ -1,11 +1,11 @@
 #ifndef CIRCULAR_BUFFER_H
 #define CIRCULAR_BUFFER_H
 
-#include <vector>   // for std::vector<>
+#include <vector>    // for std::vector<>
 #include <stdexcept> // for std::out_of_range
 #include <iterator>  // for std::foward_iterator_tag
 
-#include <cstdlib>  // for std::size_t
+#include <cstdlib>   // for std::size_t
 
 /// A circular buffer that reuses memory by circling around the end.
 class CircularBuffer {
@@ -120,12 +120,12 @@ public:
   const int& at(size_t i) const { bounds_check(i); return (*this)[i]; }
 
   // iterator support
-  auto begin()        { return Iterator(this, 0); }
-  auto end()          { return Iterator(this, size()); }
-  auto cbegin() const { return ConstIterator(this, 0); }
+  auto begin()        { return Iterator(this, 0);           }
+  auto end()          { return Iterator(this, size());      }
+  auto cbegin() const { return ConstIterator(this, 0);      }
   auto cend()   const { return ConstIterator(this, size()); }
-  auto begin()  const { return cbegin(); }
-  auto end()    const { return cend(); }
+  auto begin()  const { return cbegin();                    }
+  auto end()    const { return cend();                      }
 
   /// Return the capacity of the buffer
   size_t capacity() const { return m_capacity; }
@@ -146,6 +146,7 @@ public:
   }
 
 private:
+
   /// Compute the index with wrapping around the capacity
   size_t index(size_t i) const { return i % capacity(); }
 
