@@ -10,6 +10,8 @@
 /// A circular buffer that reuses memory by circling around the end.
 class CircularBuffer {
 public:
+  // TODO: make a templated Iterator class that can use at() and size()
+  // TODO: upgrade this to a LegacyRandomAccessIterator
   /// Implements LegacyForwardIterator
   class Iterator {
   public:
