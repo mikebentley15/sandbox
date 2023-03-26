@@ -1,6 +1,8 @@
 #ifndef CIRCULAR_BUFFER_H
 #define CIRCULAR_BUFFER_H
 
+#include "AtIterator.h"
+
 #include <vector>    // for std::vector<>
 #include <stdexcept> // for std::out_of_range
 #include <iterator>  // for std::foward_iterator_tag
@@ -10,84 +12,8 @@
 /// A circular buffer that reuses memory by circling around the end.
 class CircularBuffer {
 public:
-  // TODO: make a templated Iterator class that can use at() and size()
-  // TODO: upgrade this to a LegacyRandomAccessIterator
-  /// Implements LegacyForwardIterator
-  class Iterator {
-  public:
-    using value_type        = int;
-    using reference         = value_type&;
-    using pointer           = value_type*;
-    using iterator_category = std::forward_iterator_tag;
-    using difference_type   = ssize_t;
-
-    Iterator() = default;
-
-    Iterator(CircularBuffer *parent, size_t i)
-      : m_parent(parent), m_idx(i)
-    { }
-
-    // prefix ++ operator
-    auto& operator++() {
-      ++m_idx;
-      return *this;
-    }
-
-    // postfix ++ operator
-    auto operator++(int) {
-      auto before = *this;
-      ++m_idx;
-      return before;
-    }
-
-    auto& operator*() const { return m_parent->at(m_idx); }
-    auto& operator->() { return this->operator*(); }
-    bool operator==(const Iterator &other) const = default;
-    bool operator!=(const Iterator &other) const = default;
-
-  private:
-    CircularBuffer *m_parent;
-    size_t m_idx;
-  };
-
-  /// Implements Constant LegacyForwardIterator
-  class ConstIterator {
-  public:
-    using value_type        = int;
-    using reference         = const value_type&;
-    using pointer           = const value_type*;
-    using iterator_category = std::forward_iterator_tag;
-    using difference_type   = ssize_t;
-
-    ConstIterator() = default;
-
-    ConstIterator(const CircularBuffer *parent, size_t i)
-      : m_parent(parent), m_idx(i)
-    { }
-
-    // prefix ++ operator
-    auto& operator++() {
-      ++m_idx;
-      return *this;
-    }
-
-    // postfix ++ operator
-    auto operator++(int) {
-      auto before = *this;
-      ++m_idx;
-      return before;
-    }
-
-    reference operator*() const { return m_parent->at(m_idx); }
-    pointer operator->() const { return &this->operator*(); }
-
-    bool operator==(const ConstIterator &other) const = default;
-    bool operator!=(const ConstIterator &other) const = default;
-
-  private:
-    const CircularBuffer *m_parent;
-    size_t m_idx;
-  };
+  using Iterator = AtIterator<CircularBuffer, int>;
+  using ConstIterator = AtIterator<const CircularBuffer, const int>;
 
 public:
   /// Create a circular buffer with a preallocated capacity of size

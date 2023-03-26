@@ -64,7 +64,7 @@ using Counter = BaseCounter<A, std::map<A,int>>;
 //
 // The simpler way for this template also works having a single template called
 // Cont instead of all that are seen here.  However, that also overrides simple
-// calles to the operator<<() function such as
+// calls to the operator<<() function such as
 //   std::cout << "hello\n";
 // that would all of a sudden become ambiguous since range-based for loops work
 // with static arrays.
@@ -79,7 +79,7 @@ std::ostream& myoutput(std::ostream& out, const Cont<T, Args...> &c) {
   bool first = true;
   out << "[";
   for (const auto &x : c) {
-    if (!first) out << ",";
+    if (!first) out << ", ";
     first = false;
     out << x;
   }
@@ -94,7 +94,7 @@ std::ostream& operator<<(std::ostream& out, const BaseCounter<A,B> &c) {
 
 template <typename A, typename B>
 std::ostream& operator<<(std::ostream& out, const std::pair<A,B> &p) {
-  return out << "(" << p.first << "," << p.second << ")";
+  return out << "(" << p.first << ", " << p.second << ")";
 }
 
 #endif // COUNTER_H
