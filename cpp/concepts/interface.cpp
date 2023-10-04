@@ -17,10 +17,24 @@ concept CanProcessNodeB = requires(T &&processor, typename T::Node &&node) {
 };
 
 template <typename T>
+concept CanPostProcessNode = requires(T &&processor, typename T::Node &&node) {
+    { processor.postProcess(node) };
+};
+
+template <typename T>
 concept NodeProcessorA = CanProcessNodeA<T, typename T::Node>;
 
 template <typename T>
 concept NodeProcessorB = HasNodeType<T> && CanProcessNodeA<T, typename T::Node>;
+
+template <typename T>
+concept FullNodeProcessorA = requires(T &&processor, typename T::Node &&node) {
+    { processor.process(node) } -> std::same_as<std::tuple<bool, typename T::Node, std::vector<typename T::Node>>>;
+    { processor.postProcess(node) };
+};
+
+template <typename T>
+concept FullNodeProcessorB = CanProcessNodeB<T> && CanPostProcessNode<T>;
 
 struct A {
     struct Node { int a; };
@@ -33,6 +47,7 @@ struct B {
 struct C {
     struct Node {};
     void process(Node&);
+    void postProcess(Node&);
 };
 
 struct D {
@@ -49,14 +64,23 @@ struct F {
     std::tuple<bool, Node, std::vector<Node>> process(Node&);
 };
 
+struct G {
+    struct Node {};
+    std::tuple<bool, Node, std::vector<Node>> process(Node&);
+    bool postProcess(Node);
+};
+
 template <typename T>
 void testType(const char* name) {
     std::cout << std::boolalpha
         << name << ":\n"
-        << "  HasNodeType:      " << HasNodeType<T> << "\n"
-        << "  CanProcessNodeB:  " << CanProcessNodeB<T> << "\n"
-        << "  NodeProcessorA:   " << NodeProcessorA<T> << "\n"
-        << "  NodeProcessorB:   " << NodeProcessorB<T> << "\n"
+        << "  HasNodeType:         " << HasNodeType<T> << "\n"
+        << "  CanProcessNodeB:     " << CanProcessNodeB<T> << "\n"
+        << "  CanPostProcessNode:  " << CanPostProcessNode<T> << "\n"
+        << "  NodeProcessorA:      " << NodeProcessorA<T> << "\n"
+        << "  NodeProcessorB:      " << NodeProcessorB<T> << "\n"
+        << "  FullNodeProcessorA:  " << FullNodeProcessorA<T> << "\n"
+        << "  FullNodeProcessorB:  " << FullNodeProcessorB<T> << "\n"
         << std::endl;
 }
 
@@ -68,5 +92,6 @@ int main(void) {
     TEST_TYPE(D);
     TEST_TYPE(E);
     TEST_TYPE(F);
+    TEST_TYPE(G);
 #undef TEST_TYPE
 }
