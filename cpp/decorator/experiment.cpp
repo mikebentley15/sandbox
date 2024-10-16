@@ -263,15 +263,14 @@ auto callWithTemplateArgs(auto callable, TargetArgs &&...targetArgs)
 /// callWithTemplateArgs()
 template <class Callable>
 auto makeCounterPrintDecorator_v5(Callable callable) -> decltype(auto) {
-  const auto makeDecorator = [&callable]<typename... Args>() {
+  const auto decorator = [&callable]<typename... Args>() {
     return [capturedCallable = std::move(callable),
             counter = std::size_t{0}](Args... args) mutable -> decltype(auto) {
       std::cout << "V5 Counter: " << ++counter << ": ";
       return std::invoke(capturedCallable, std::forward<Args>(args)...);
     };
   };
-  auto decorated =
-      callWithTemplateArgs<tt::ArgumentPackT<Callable>>(makeDecorator);
+  auto decorated = callWithTemplateArgs<tt::ArgumentPackT<Callable>>(decorator);
 
   using DecoratedType = decltype(decorated);
   static_assert(
