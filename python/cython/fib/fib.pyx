@@ -1,3 +1,5 @@
+import cython
+
 def python_fib(n):
     a, b = 0.0, 1.0
     for i in range(n):
@@ -15,5 +17,11 @@ def cpython_fib(int n):
 cdef extern from "cfib.h":
     double cfib(int n)
 
-def c_fib(int n):
+cdef c_fib(int n):
     return cfib(n)
+
+cdef extern from "cppfib.hpp":
+    double cppfib(int n)
+
+cdef cpp_fib(int n):
+    return cppfib(n)

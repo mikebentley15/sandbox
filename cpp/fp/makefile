@@ -1,5 +1,5 @@
 CC         = gcc
-CFLAGS    += --std=c++11
+CFLAGS    += --std=c++11 -g
 
 SOURCES   += mantissa-test.cpp
 TARGETS    = $(SOURCES:%.cpp=%)

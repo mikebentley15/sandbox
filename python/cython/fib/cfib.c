@@ -1,6 +1,6 @@
 #include "cfib.h"
 
-double inline cfib(int n) {
+double cfib(int n) {
   int i;
   double a = 0.0;
   double b = 1.0;
