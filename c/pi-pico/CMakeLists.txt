@@ -11,3 +11,4 @@ pico_sdk_init()
 
 add_subdirectory(gpio_timing)
 add_subdirectory(stepper-motor-a4988)
+add_subdirectory(heartlight)

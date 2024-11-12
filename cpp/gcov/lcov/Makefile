@@ -5,6 +5,7 @@ GCDA      := $(TARGETS:%=%.gcda)
 GCNO      := $(TARGETS:%=%.gcno)
 GCOV      := $(SOURCES:%=%.gcov)
 GCOV_JSON := $(TARGETS:%=%.gcda.gcov.json.gz)
+GCOV_JSON += $(TARGETS:%=%.gcov.json.gz)
 LCOV      := $(TARGETS:%=%.info)
 
 .PHONY: default all clean gcov gcov_json lcov html

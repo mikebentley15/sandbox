@@ -23,7 +23,7 @@ WARNFLAGS      := -Wall -Wextra -Wpedantic -Werror -Wconversion
 APP_INCLUDES   := # -isystem /usr/include
 APP_LINKS      := -lreadline -lfmt -lboost_filesystem
 PLUG_INCLUDES  := -Iapp
-PLUG_LINKS     := -fno-gnu-unique -lfmt
+PLUG_LINKS     := -lfmt -fno-gnu-unique
 CXXFLAGS        = -std=c++20 -O3 -g $(WARNFLAGS)
 APP_CXXFLAGS    = $(APP_INCLUDES) $(APP_LINKS) $(CXXFLAGS)
 PLUG_CXXFLAGS   = $(PLUG_INCLUDES) $(PLUG_LINKS) $(CXXFLAGS)
