@@ -17,6 +17,14 @@ public:
   /// Unloads and uninitializes the plugin shared library.
   ~PluginWrapper();
 
+  /// Disable copy
+  PluginWrapper(const PluginWrapper&) = delete;
+  auto operator=(const PluginWrapper&) noexcept -> PluginWrapper& = delete;
+
+  /// Enable move
+  PluginWrapper(PluginWrapper&& other) noexcept;
+  auto operator=(PluginWrapper&& other) noexcept -> PluginWrapper&;
+
   /// Unload and reload the plugin.
   void reload();
 

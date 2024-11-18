@@ -8,10 +8,11 @@
 #include <boost/filesystem.hpp>
 
 #include <algorithm>
+#include <exception>
+#include <iostream>
+#include <memory>
 #include <ranges>
 #include <string_view>
-#include <memory>
-#include <iostream>
 
 #include <cstdlib>
 
@@ -33,6 +34,37 @@ auto loadPlugins(const bfs::path& dir) -> std::vector<PluginWrapper>{
   std::ranges::transform(sharedLibs, std::back_inserter(plugins),
       [](const bfs::path& libpath) { return PluginWrapper{libpath.string()}; });
   return plugins;
+}
+
+auto reloadPlugins(std::vector<PluginWrapper>& plugins) -> void {
+  std::ranges::for_each(plugins, &PluginWrapper::reload);
+}
+
+auto printHelp(std::vector<PluginWrapper>& plugins) -> void {
+  std::puts("\n"
+            "Built-in commands:\n"
+            "  help       Print this help message.\n"
+            "  reload     Reload all plugins.\n"
+            "  quit       Quit the program.\n");
+  for (const auto& plugin : plugins) {
+    try {
+      plugin.printHelp();
+    } catch(const std::exception &ex) {
+      std::cerr << "Error: " << ex.what() << '\n';
+    }
+  }
+}
+
+auto tryHandleInputFromPlugins(std::vector<PluginWrapper>& plugins, const std::string_view input) -> bool {
+  const auto found = std::ranges::find_if(plugins, [&input](const auto& plugin) {
+    try {
+      return plugin.tryHandleInput(input);
+    } catch(const std::exception& ex) {
+      std::cerr << "Error: " << ex.what() << '\n';
+      return false;
+    }
+  });
+  return found != plugins.end();
 }
 
 } // namespace
@@ -61,19 +93,10 @@ int main(int argCount, char* argList[]) {
     if (input == "quit") {
       break;
     } else if (input == "help") {
-      std::puts("\n"
-                "Built-in commands:\n"
-                "  help       Print this help message.\n"
-                "  reload     Reload all plugins.\n"
-                "  quit       Quit the program.\n");
-      for (const auto& plugin : plugins) { plugin.printHelp(); }
+      printHelp(plugins);
     } else if (input == "reload") {
-      for (auto& plugin : plugins) { plugin.reload(); }
-    } else if (auto found = std::ranges::find_if(
-                   plugins, [&input](const auto& plugin) {
-                       return plugin.tryHandleInput(input); });
-               found != plugins.end())
-    {
+      reloadPlugins(plugins);
+    } else if (tryHandleInputFromPlugins(plugins, input)) {
       // nothing to do, already handled.
 
       // TODO: get commands and descriptions from plugin, or have plugin print its help.
