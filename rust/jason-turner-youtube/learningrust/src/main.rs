@@ -15,7 +15,7 @@ impl Position {
     }
 }
 
-fn main1() {
+fn main() {
     // const is by default
     let mut pos = Position { x: 42, y: 32 };
     // pos.x = 12; // would fail if pos is created w/o mut keyword
@@ -28,10 +28,6 @@ fn main1() {
     //pos3.x = 16;
     pos2.update_x();
     Position::update_x(pos2); // alternative way to call
-    //println!("pos : {:#?}", pos); // not allowed to use since it's been borrowed
+                              //println!("pos : {:#?}", pos); // not allowed to use since it's been borrowed
     println!("pos2: {:#?}", pos2);
-}
-
-fn main() {
-    
 }
