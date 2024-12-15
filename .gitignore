@@ -1,5 +1,6 @@
 # Folders
 /blender/
+target/
 
 # Prerequisites
 *.d
@@ -49,3 +50,6 @@ __pycache__/
 
 # LaTeX
 *.aux
+
+# Rust
+Cargo.lock
