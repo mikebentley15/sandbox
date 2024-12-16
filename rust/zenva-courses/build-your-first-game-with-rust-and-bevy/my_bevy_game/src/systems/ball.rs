@@ -3,6 +3,7 @@ use crate::constants::*;
 use crate::BallBundle;
 use bevy::prelude::*;
 use bevy::sprite::MaterialMesh2dBundle;
+use rand::Rng;
 
 pub fn spawn_ball(
     mut commands: Commands,
@@ -23,6 +24,28 @@ pub fn spawn_ball(
             ..default()
         },
     ));
+}
+
+pub fn respawn_ball(
+    mut ball_query: Query<(&mut Position, &mut Velocity), With<Ball>>,
+    mut events: EventReader<Scored>,
+) {
+    if let Ok((mut position, mut velocity)) = ball_query.get_single_mut() {
+        for event in events.read() {
+            position.0 = Vec2::new(0.0, 0.0);
+            let mut rng = rand::thread_rng();
+            let pi = std::f32::consts::PI;
+            let max_angle = pi / 4.0;
+            let min_angle = -max_angle;
+            let angle_right = rng.gen_range(min_angle..max_angle);
+            let angle: f32 = match event.0 {
+                Scorer::Player1 => angle_right + pi,
+                Scorer::Player2 => angle_right,
+            };
+            let speed: f32 = 1.0;
+            velocity.0 = Vec2::new(angle.cos() * speed, angle.sin() * speed);
+        }
+    }
 }
 
 pub fn move_ball(mut ball: Query<(&mut Position, &Velocity), With<Ball>>) {

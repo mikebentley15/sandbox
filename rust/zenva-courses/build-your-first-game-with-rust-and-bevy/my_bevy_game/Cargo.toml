@@ -18,3 +18,4 @@ rustflags = ["-C", "link-arg=-fuse-ld=lld"]
 
 [dependencies]
 bevy = { version = "0.15.0", features = ["dynamic_linking"] }
+rand = "0.8.5"
