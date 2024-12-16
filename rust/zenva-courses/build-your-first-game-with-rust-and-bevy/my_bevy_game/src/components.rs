@@ -38,7 +38,7 @@ pub struct Velocity(pub Vec2);
 #[derive(Component)]
 pub struct Shape(pub Vec2);
 
-#[derive(Component)]
+#[derive(Event)]
 pub struct Scored(pub Scorer);
 
 #[derive(Resource, Default)]

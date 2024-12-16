@@ -6,3 +6,5 @@ pub const BALL_SPEED: f32 = 5.0;
 pub const PADDLE_SPEED: f32 = 5.0;
 
 pub const BOUNDARY_HEIGHT: f32 = 20.0;
+
+pub const WINDOW_HEIGHT: f32 = 600.0;
