@@ -17,7 +17,7 @@ pub fn spawn_ball(
     let material_handle = materials.add(color);
 
     commands.spawn((
-        BallBundle::new(1.0, 0.0),
+        BallBundle::new(-1.0, 0.0),
         MaterialMesh2dBundle {
             mesh: mesh_handle.into(),
             material: material_handle.into(),
@@ -35,7 +35,7 @@ pub fn respawn_ball(
             position.0 = Vec2::new(0.0, 0.0);
             let mut rng = rand::thread_rng();
             let pi = std::f32::consts::PI;
-            let max_angle = pi / 4.0;
+            let max_angle = pi / 8.0;
             let min_angle = -max_angle;
             let angle_right = rng.gen_range(min_angle..max_angle);
             let angle: f32 = match event.0 {

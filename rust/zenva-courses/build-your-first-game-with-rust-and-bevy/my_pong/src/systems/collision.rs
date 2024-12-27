@@ -58,7 +58,10 @@ fn detect_collision(
 
 fn respond_to_collision(velocity: &mut Velocity, collision: Collision) {
     match collision {
-        Collision::Left | Collision::Right => velocity.0.x *= -1.0,
+        Collision::Left | Collision::Right => {
+            velocity.0.x *= -1.0;
+            velocity.0 = velocity.0.normalize() * (velocity.0.length() + BALL_SPEED * 0.2);
+        }
         Collision::Top | Collision::Bottom => velocity.0.y *= -1.0,
     }
 }
