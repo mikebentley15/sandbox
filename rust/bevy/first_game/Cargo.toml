@@ -1,0 +1,22 @@
+[package]
+name = "first_game"
+version = "0.1.0"
+edition = "2021"
+
+# Note: bevy with dynamic_linking is not good for release, but great for fast compile-times in development
+[dependencies]
+bevy = { version = "0.15.1", features = ["dynamic_linking"] }
+bevy_dylib = "0.15.1"
+
+# Enable a small amount of optimizations in dev mode
+[profile.dev]
+opt-level = 1
+
+# Enable a large amount of optimizations in dev mode for dependencies
+[profile.dev.package."*"]
+opt-level = 3
+
+# Use clang linker because it's faster (linux)
+[target.x86_64-unknown-linux-gnu]
+linker = "clang"
+rustflags = ["-C", "link-arg=-fuse-ld=lld"]
