@@ -1,6 +1,7 @@
 SOURCES   := example.cpp
+SOURCES   += constexpr.cpp
 TARGETS   := $(SOURCES:%.cpp=%)
-CXXFLAGS  := -O0 --coverage -g
+CXXFLAGS  := -O3 --coverage -g
 GCDA      := $(TARGETS:%=%.gcda)
 GCNO      := $(TARGETS:%=%.gcno)
 GCOV      := $(SOURCES:%=%.gcov)

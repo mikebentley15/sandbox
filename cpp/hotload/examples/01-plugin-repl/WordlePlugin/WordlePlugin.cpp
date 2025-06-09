@@ -1,18 +1,15 @@
 #include "app/PluginFunctions.hpp"
 
-#include <fmt/format.h>
-
 #include <algorithm>
 #include <array>
+#include <bitset>
 #include <cstdio>
+#include <cstring>
 #include <iostream>
 #include <random>
 #include <ranges>
 #include <stdexcept>
 #include <string_view>
-#include <bitset>
-
-using State = PluginFunctions::State;
 
 constexpr std::size_t wordLength{5};
 constexpr std::size_t guessLimit{6};
@@ -30,20 +27,25 @@ namespace colorcode {
 constexpr auto boldGreen = "\033[1;32m";
 constexpr auto boldYellow = "\033[1;33m";
 // constexpr auto gray = "\033[2m";
-constexpr auto gray = "\033[30m";
+constexpr auto gray = "\033[2;90m";
 constexpr auto reset = "\033[0m";
 constexpr auto normal = reset;
 } // namespace colorcode
 
 namespace {
 
-auto isWordIn(const std::string_view word, const std::ranges::input_range auto& words) {
+auto isWordIn(const std::string_view word,
+              const std::ranges::input_range auto &words) {
   return std::ranges::binary_search(words, word);
 }
 
+auto isWordIn(const std::string_view word, auto startIter, const auto endIter) {
+  return std::binary_search(startIter, endIter, word);
+}
+
 auto isWord(const std::string_view word) -> bool {
-  return word.size() == wordLength
-         && (isWordIn(word, allowedWords) || isWordIn(word, answerWords));
+  return word.size() == wordLength &&
+         (isWordIn(word, allowedWords) || isWordIn(word, answerWords));
 }
 
 enum class LetterStatus : uint8_t {
@@ -54,16 +56,20 @@ enum class LetterStatus : uint8_t {
 };
 
 auto getColorCode(const LetterStatus status) -> std::string_view {
-  switch(status) {
-    case LetterStatus::unknown:     return colorcode::normal;
-    case LetterStatus::missing:     return colorcode::gray;
-    case LetterStatus::wrongSpot:   return colorcode::boldYellow;
-    case LetterStatus::correctSpot: return colorcode::boldGreen;
+  switch (status) {
+  case LetterStatus::unknown:
+    return colorcode::normal;
+  case LetterStatus::missing:
+    return colorcode::gray;
+  case LetterStatus::wrongSpot:
+    return colorcode::boldYellow;
+  case LetterStatus::correctSpot:
+    return colorcode::boldGreen;
   }
   return colorcode::normal;
 }
 
-auto chooseRandomWord() -> const Word& {
+auto chooseRandomWord() -> const Word & {
   static std::mt19937 gen{std::random_device{}()};
   std::uniform_int_distribution<std::size_t> dist{0, answerWordCount - 1};
   return answerWords[dist(gen)];
@@ -94,7 +100,9 @@ struct WordleState {
 
     // For remaining letters, see if there are matching letters in other spots
     for (std::size_t i = 0; i < wordLength; ++i) {
-      if (letterStatus[i] == LetterStatus::correctSpot) { continue; }
+      if (letterStatus[i] == LetterStatus::correctSpot) {
+        continue;
+      }
       for (std::size_t j = 0; j < wordLength; ++j) {
         if (!usedLetters.test(j) && guess[i] == correctWord[j]) {
           usedLetters.set(j);
@@ -110,67 +118,76 @@ struct WordleState {
   auto accumulateLetterStatus() const -> std::array<LetterStatus, 26> {
     std::array<LetterStatus, 26> statusForEachLetter;
     statusForEachLetter.fill(LetterStatus::unknown);
-    std::for_each(guesses, guesses + guessCount, [this, &statusForEachLetter](const std::string_view word) {
-      for (std::size_t i = 0; i < wordLength; ++i) {
-        const auto ch = word[i];
-        const auto idx = ch - 'a';
-        auto& status = statusForEachLetter[idx];
-        if (LetterStatus::correctSpot == status || LetterStatus::missing == status) {
-          // do nothing
-        } else if (ch == correctWord[i]) {
-          status = LetterStatus::correctSpot;
-        } else if (std::string_view::npos != correctWord.find(ch)) {
-          status = LetterStatus::wrongSpot;
-        } else {
-          status = LetterStatus::missing;
-        }
-      }
-    });
+    std::for_each(
+        guesses, guesses + guessCount,
+        [this, &statusForEachLetter](const std::string_view word) {
+          for (std::size_t i = 0; i < wordLength; ++i) {
+            const auto ch = word[i];
+            const char idx = ch - 'a';
+            auto &status = statusForEachLetter[static_cast<std::size_t>(idx)];
+            if (LetterStatus::correctSpot == status ||
+                LetterStatus::missing == status) {
+              // do nothing
+            } else if (ch == correctWord[i]) {
+              status = LetterStatus::correctSpot;
+            } else if (std::string_view::npos != correctWord.find(ch)) {
+              status = LetterStatus::wrongSpot;
+            } else {
+              status = LetterStatus::missing;
+            }
+          }
+        });
     return statusForEachLetter;
   }
 
   void printStatus() const {
     // Print each word with colors
-    std::for_each(guesses, guesses + guessCount, [this](const std::string_view word) {
-      const auto letterStatus = getLetterStatus(word);
-      fmt::print("\n  ");
-      for (std::size_t i = 0; i < wordLength; ++i) {
-        fmt::print("{}{}{} ", getColorCode(letterStatus[i]), word[i], colorcode::reset);
-      }
-    });
+    std::for_each(guesses, guesses + guessCount,
+                  [this](const std::string_view word) {
+                    const auto letterStatus = getLetterStatus(word);
+                    std::cout << "\n  ";
+                    for (std::size_t i = 0; i < wordLength; ++i) {
+                      std::cout << getColorCode(letterStatus[i]) << word[i]
+                                << colorcode::reset << ' ';
+                    }
+                  });
 
     // Print the alphabet with colors
     const auto statusForEachLetter = accumulateLetterStatus();
-    fmt::print("\n\n  -----------------------");
-    for (char i = 0; static_cast<std::size_t>(i) < statusForEachLetter.size(); ++i) {
+    std::cout << "\n\n  -----------------------";
+    for (char i = 0; static_cast<std::size_t>(i) < statusForEachLetter.size();
+         ++i) {
       const char ch = 'a' + i;
-      const auto letterStatus = statusForEachLetter[i];
+      const auto letterStatus =
+          statusForEachLetter[static_cast<std::size_t>(i)];
       if (i % 10 == 0) {
-        fmt::print("\n"
-                   "    ");
+        std::cout << "\n"
+                     "    ";
       }
-      fmt::print("{}{}{} ", getColorCode(letterStatus), ch, colorcode::reset);
+      std::cout << getColorCode(letterStatus) << ch << colorcode::reset << ' ';
     }
-    fmt::print("        \n"
-               "  -----------------------\n\n");
+    std::puts("        \n"
+              "  -----------------------\n");
 
-    // TODO: print keyboard with status of each letter
     if (victory) {
-      fmt::print("{}You won in {} guesses!{}\n\n", colorcode::boldGreen, guessCount, colorcode::reset);
+      std::cout << colorcode::boldGreen << "You won in " << guessCount
+                << " guesses!" << colorcode::reset << "\n\n";
     } else {
-      fmt::print("You have {} guesses left\n\n", guessLimit - guessCount);
+      std::cout << "You have " << guessLimit - guessCount
+                << " guesses left\n\n";
     }
   }
 
   void makeGuess(const std::string_view guess) {
-    constexpr auto restartMsg = "Restart (with 'wordle') if you want to play again.\n";
+    constexpr auto restartMsg =
+        "Restart (with 'wordle') if you want to play again.\n";
     if (victory) {
       std::puts("You already guessed the correct word.");
       std::puts(restartMsg);
       return;
     }
 
-    if (isWordIn(guess, std::ranges::subrange(guesses, guesses + guessCount))) {
+    if (isWordIn(guess, guesses, guesses + guessCount)) {
       std::puts("You already guessed that word.");
       return;
     }
@@ -183,8 +200,8 @@ struct WordleState {
     }
 
     // store guess
-    std::memcpy(guesses[guessCount-1], guess.data(), wordLength);
-    guesses[guessCount-1][wordLength] = '\0';
+    std::memcpy(guesses[guessCount - 1], guess.data(), wordLength);
+    guesses[guessCount - 1][wordLength] = '\0';
     victory = (guess == correctWord);
 
     printStatus();
@@ -194,58 +211,59 @@ struct WordleState {
     }
 
     if (guessCount == guessLimit) {
-      fmt::print("Sorry, the correct word was '{}'.\n", correctWord);
+      std::cout << "Sorry, the correct word was '" << correctWord << "'.\n";
       std::puts(restartMsg);
       return;
     }
   }
 };
 
-auto toWordleState(State raw) -> WordleState* {
-  return reinterpret_cast<WordleState*>(raw);
+auto toWordleState(PluginState raw) -> WordleState * {
+  return reinterpret_cast<WordleState *>(raw);
 }
 
-State pluginInit() {
-  auto* const state = new WordleState{};
+PluginState pluginInit() {
+  auto *const state = new WordleState{};
   *state = WordleState::newGame();
   return state;
 }
 
-void pluginPreReload(State) {
+void pluginPreReload(PluginState) {
   // do nothing
 }
 
-void pluginPostReload(State) {
+void pluginPostReload(PluginState) {
   // do nothing
 }
 
-void pluginDestroy(State rawState) {
-  auto* const state = toWordleState(rawState);
+void pluginDestroy(PluginState rawState) {
+  auto *const state = toWordleState(rawState);
   delete state;
 }
 
-void printHelp(State) {
+void printHelp(PluginState) {
   std::puts(
       "WordlePlugin:\n"
       "  Commands:\n"
       "    wordle          restart the wordle.\n"
-      "    wordle-status   print out a status report with the current guesses.\n"
+      "    wordle-status   print out a status report with the current "
+      "guesses.\n"
       "    wordle-cheat    print out the correct word.\n"
       "\n"
       "  Just type in a five letter word to get started until you're out of\n"
-      "  guesses.\n"
-  );
+      "  guesses.\n");
 }
 
-bool tryHandleInput(State rawState, const std::string_view input) {
+bool tryHandleInput(PluginState rawState, const std::string_view input) {
   try {
-    auto* const state = toWordleState(rawState);
+    auto *const state = toWordleState(rawState);
     if (state == nullptr) {
       std::fputs("Error: Wordle state has not been initialized\n", stderr);
       return false;
     }
     if (input == "wordle") {
-      fmt::print("Restarting wordle game.  {} guesses remaining.\n", guessLimit);
+      std::cout << "Restarting wordle game.  " << guessLimit
+                << " guesses remaining.\n";
       *state = WordleState::newGame();
       return true;
     }
@@ -254,14 +272,14 @@ bool tryHandleInput(State rawState, const std::string_view input) {
       return true;
     }
     if (input == "wordle-cheat") {
-      fmt::print("The word is '{}'\n", state->correctWord);
+      std::cout << "The word is '" << state->correctWord << "'\n";
       return true;
     }
     if (isWord(input)) {
       state->makeGuess(input);
       return true;
     }
-  } catch(const std::exception &ex) {
+  } catch (const std::exception &ex) {
     std::cerr << "Error: " << ex.what() << '\n';
   }
   return false;
@@ -271,8 +289,8 @@ bool tryHandleInput(State rawState, const std::string_view input) {
 
 __attribute__((constructor)) void handleDlOpen() {
   std::puts("WordlePlugin (constructed)");
-  fmt::print("- answer  list length: {}\n", answerWordCount);
-  fmt::print("- allowed list length: {}\n", allowedWordCount);
+  std::cout << "- answer  list length: " << answerWordCount << '\n';
+  std::cout << "- allowed list length: " << allowedWordCount << '\n';
 }
 
 __attribute__((destructor)) void handleDlClose() {
@@ -281,15 +299,21 @@ __attribute__((destructor)) void handleDlClose() {
 
 extern "C" {
 
-auto getPluginFunctions() -> PluginFunctions {
-  return PluginFunctions{
-    .pluginInit = &pluginInit,
-    .pluginPreReload = &pluginPreReload,
-    .pluginPostReload = &pluginPostReload,
-    .pluginDestroy = &pluginDestroy,
-    .printHelp = &printHelp,
-    .getCommands = nullptr,
-    .tryHandleInput = &tryHandleInput,
+auto getPluginFunctions(PluginFunctions *outFunctions) -> void {
+  if (nullptr == outFunctions) {
+    std::fputs("Error: cannot populate plugin functions to a null pointer",
+               stderr);
+    return;
+  }
+
+  *outFunctions = PluginFunctions{
+      .pluginInit = &pluginInit,
+      .pluginPreReload = &pluginPreReload,
+      .pluginPostReload = &pluginPostReload,
+      .pluginDestroy = &pluginDestroy,
+      .printHelp = &printHelp,
+      .getCommands = nullptr,
+      .tryHandleInput = &tryHandleInput,
   };
 }
 

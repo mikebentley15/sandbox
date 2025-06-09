@@ -1,4 +1,6 @@
 SOURCE  := linspace.cpp
+HEADERS := PairWise.hpp
+HEADERS += Chunk.hpp
 TARGET  := $(SOURCE:%.cpp=%)
 CXXFLAGS += -std=c++20 -O3
 
@@ -8,5 +10,5 @@ all: $(TARGET)
 clean:
 	$(RM) $(TARGET)
 
-%: %.cpp
+%: %.cpp PairWise.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@

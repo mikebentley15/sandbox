@@ -20,71 +20,80 @@ namespace bfs = boost::filesystem;
 
 namespace {
 
-auto isPlugin(const bfs::path& file) -> bool {
-  return file.extension() == ".so" && file.filename().string().starts_with("lib");
+auto isPlugin(const bfs::path &file) -> bool {
+  return file.extension() == ".so" &&
+         file.filename().string().starts_with("lib");
 }
 
-auto loadPlugins(const bfs::path& dir) -> std::vector<PluginWrapper>{
+auto loadPlugins(const bfs::path &dir,
+                 const std::vector<std::string> &alreadyLoaded)
+    -> std::vector<PluginWrapper> {
   std::vector<bfs::path> sharedLibs;
-  auto dirContents = std::ranges::subrange(bfs::directory_iterator(dir),
-                                           bfs::directory_iterator());
-  std::ranges::copy_if(dirContents, std::back_inserter(sharedLibs), isPlugin);
+  std::ranges::copy_if(
+      bfs::directory_iterator(dir), bfs::directory_iterator(),
+      std::back_inserter(sharedLibs), [alreadyLoaded](const bfs::path &path) {
+        return isPlugin(path) &&
+               alreadyLoaded.end() ==
+                   std::ranges::find(alreadyLoaded, path.string());
+      });
   std::vector<PluginWrapper> plugins;
   plugins.reserve(sharedLibs.size());
-  std::ranges::transform(sharedLibs, std::back_inserter(plugins),
-      [](const bfs::path& libpath) { return PluginWrapper{libpath.string()}; });
+  std::ranges::transform(
+      sharedLibs, std::back_inserter(plugins),
+      [](const bfs::path &libpath) { return PluginWrapper{libpath.string()}; });
   return plugins;
 }
 
-auto reloadPlugins(std::vector<PluginWrapper>& plugins) -> void {
+auto reloadPlugins(std::vector<PluginWrapper> &plugins) -> void {
   std::ranges::for_each(plugins, &PluginWrapper::reload);
 }
 
-auto printHelp(std::vector<PluginWrapper>& plugins) -> void {
+auto printHelp(std::vector<PluginWrapper> &plugins) -> void {
   std::puts("\n"
             "Built-in commands:\n"
             "  help       Print this help message.\n"
             "  reload     Reload all plugins.\n"
             "  quit       Quit the program.\n");
-  for (const auto& plugin : plugins) {
+  for (const auto &plugin : plugins) {
     try {
       plugin.printHelp();
-    } catch(const std::exception &ex) {
+    } catch (const std::exception &ex) {
       std::cerr << "Error: " << ex.what() << '\n';
     }
   }
 }
 
-auto tryHandleInputFromPlugins(std::vector<PluginWrapper>& plugins, const std::string_view input) -> bool {
-  const auto found = std::ranges::find_if(plugins, [&input](const auto& plugin) {
-    try {
-      return plugin.tryHandleInput(input);
-    } catch(const std::exception& ex) {
-      std::cerr << "Error: " << ex.what() << '\n';
-      return false;
-    }
-  });
+auto tryHandleInputFromPlugins(std::vector<PluginWrapper> &plugins,
+                               const std::string_view input) -> bool {
+  const auto found =
+      std::ranges::find_if(plugins, [&input](const auto &plugin) {
+        try {
+          return plugin.tryHandleInput(input);
+        } catch (const std::exception &ex) {
+          std::cerr << "Error: " << ex.what() << '\n';
+          return false;
+        }
+      });
   return found != plugins.end();
 }
 
 } // namespace
 
-int main(int argCount, char* argList[]) {
+int main(int argCount, char *argList[]) {
   if (argCount < 1) {
     std::puts("Error: need at least the argument name");
     return 1;
   }
 
-  std::puts("Dynamic Load Repl.  Press 'help' to see commands and 'quit' to quit.");
+  std::puts(
+      "Dynamic Load Repl.  Press 'help' to see commands and 'quit' to quit.");
   constexpr auto prompt = ">> ";
   const bfs::path appPath{argList[0]};
-  auto plugins = loadPlugins(appPath.parent_path());
+  auto plugins = loadPlugins(appPath.parent_path(), {});
 
-  const auto wrappedFree = [](auto* const ptr) { std::free(ptr); };
-  for (std::unique_ptr<char, decltype(wrappedFree)> buf{readline(prompt)};
-       buf;
-       buf.reset(readline(prompt)))
-  {
+  const auto wrappedFree = [](auto *const ptr) { std::free(ptr); };
+  for (std::unique_ptr<char, decltype(wrappedFree)> buf{readline(prompt)}; buf;
+       buf.reset(readline(prompt))) {
     const std::string_view input{buf.get()};
     if (input.empty()) {
       continue;
@@ -96,10 +105,18 @@ int main(int argCount, char* argList[]) {
       printHelp(plugins);
     } else if (input == "reload") {
       reloadPlugins(plugins);
+      std::vector<std::string> loadedPluginPaths;
+      loadedPluginPaths.reserve(plugins.size());
+      std::ranges::transform(plugins, std::back_inserter(loadedPluginPaths),
+                             &PluginWrapper::getPath);
+      auto newPlugins = loadPlugins(appPath.parent_path(), loadedPluginPaths);
+      plugins.reserve(plugins.size() + newPlugins.size());
+      std::ranges::move(newPlugins, std::back_inserter(plugins));
     } else if (tryHandleInputFromPlugins(plugins, input)) {
       // nothing to do, already handled.
 
-      // TODO: get commands and descriptions from plugin, or have plugin print its help.
+      // TODO: get commands and descriptions from plugin, or have plugin print
+      // its help.
       // TODO: add hotload command
       // TODO: pass them to plugins in alphabetical order.
     } else {

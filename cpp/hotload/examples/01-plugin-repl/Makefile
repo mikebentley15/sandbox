@@ -28,28 +28,32 @@ WARNFLAGS      := -Wall -Wextra -Wpedantic -Werror -Wconversion
 CXXFLAGS        = -I. -std=c++20 -O3 -g $(WARNFLAGS)
 
 APP_INCLUDES   := # -isystem /usr/include
-APP_LINKS      := -lreadline -lfmt -lboost_filesystem
+APP_LINKS      := -lreadline -lboost_filesystem -ldl
 APP_CXXFLAGS    = $(APP_INCLUDES) $(APP_LINKS) $(CXXFLAGS)
 
-PLUG_LINKS     := -fPIC -fno-gnu-unique
+PLUG_LINKS     := -fPIC -L/usr/lib/x86_64-linux-gnu
 
 TEST_PLUG_INCLUDES  :=
-TEST_PLUG_LINKS     := $(PLUG_LINKS) -lfmt
+TEST_PLUG_LINKS     := $(PLUG_LINKS)
 TEST_PLUG_CXXFLAGS   = $(TEST_PLUG_INCLUDES) $(TEST_PLUG_LINKS) $(CXXFLAGS)
 
 WORDLE_PLUG_INCLUDES :=
-WORDLE_PLUG_LINKS    := $(PLUG_LINKS) -lfmt
+WORDLE_PLUG_LINKS    := $(PLUG_LINKS)
 WORDLE_PLUG_CXXFLAGS  = $(WORDLE_PLUG_INCLUDES) $(WORDLE_PLUG_LINKS) $(CXXFLAGS)
 
-.PHONY: default all plug app clean run
+.PHONY: default all app clean run
 default: all
 all: plug app
 clean:
 	$(RM) -r $(BUILDDIR)
-plug: $(TEST_PLUG) $(WORDLE_PLUG)
+plug: plug-test plug-wordle
 app: $(APP)
 
-run: $(APP) $(TEST_PLUG) $(WORDLE_PLUG)
+.PHONY: plug-test plug-wordle
+plug-test: $(TEST_PLUG)
+plug-wordle: $(WORDLE_PLUG)
+
+run: $(APP)
 	@echo "Run $(APP)"
 	@./$(APP)
 
